@@ -335,6 +335,7 @@ async function placeStickers() {
   spots.forEach((p, i) => {
     const { w, h } = stickerDims(arts[i], p.size);
     field.appendChild(buildSticker(arts[i], {
+      href: './works.html', // 仮: すべてのステッカーからWorksページへ
       rot: rand(-16, 16),
       size: p.size,
       x: p.x - w / 2,

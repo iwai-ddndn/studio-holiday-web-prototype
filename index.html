@@ -10,24 +10,107 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <!-- ファーストビュー: 自社アウトプットをステッカーのように乱雑に貼ったコラージュ。
-       リロード / シャッフルのたびに配置・順番・めくれがランダムに変わる。 -->
+  <!-- ファーストビュー: 自社アウトプットをステッカーのように貼り重ねたコラージュ。
+       リロードのたびに配置・順番がランダムに変わる。ステッカーをクリックで仮のWorksページへ。 -->
   <header class="site-header">
     <a class="brand" href="#">
       <span class="brand-dot"></span>
       <span class="brand-name">STUDIO&nbsp;HOLIDAY</span>
     </a>
     <nav class="site-nav">
-      <a href="#work">Work</a>
       <a href="#about">About</a>
+      <a href="#works">Works</a>
+      <a href="#member">Member</a>
       <a href="#contact">Contact</a>
     </nav>
   </header>
 
-  <main class="hero" id="work">
-    <div class="hero-backdrop" aria-hidden="true">HOLIDAY</div>
-    <div class="sticker-field" id="stickerField" aria-label="スタジオホリデーの作品ステッカー"></div>
+  <main>
+    <section class="hero" id="top">
+      <div class="hero-backdrop" aria-hidden="true">HOLIDAY</div>
+      <div class="sticker-field" id="stickerField" aria-label="スタジオホリデーの作品ステッカー"></div>
+      <div class="scroll-hint" aria-hidden="true">scroll ↓</div>
+    </section>
+
+    <!-- ▼ ここから下は仮コンテンツ（スクラップブックの続きのページ） -->
+
+    <section class="page-section" id="about">
+      <h2 class="tape-heading tape-yellow">ABOUT<span class="tape-sub">この本について</span></h2>
+      <div class="letter">
+        <p>
+          スタジオホリデーは、キャラクターデザインをはじめとした「世界観づくり」を得意とするデザインスタジオです。
+          アウターブランディングもインナーブランディングも、コーラづくりも、場の運営も。
+          つくって終わりではなく、世に出して育てるところまで伴走する「デザイン&デプロイパートナー」です。（仮テキスト）
+        </p>
+        <p class="letter-sign">STUDIO HOLIDAY</p>
+      </div>
+    </section>
+
+    <section class="page-section" id="works">
+      <h2 class="tape-heading tape-pink">WORKS<span class="tape-sub">貼ってきたもの</span></h2>
+      <div class="works-grid">
+        <a class="work-card" href="./works.html">
+          <img src="./assets/works_pondelion01.jpg" alt="ポン・デ・ライオン" loading="lazy" />
+          <span class="work-meta"><strong>ポン・デ・ライオン（仮）</strong><em>キャラクターデザイン</em></span>
+        </a>
+        <a class="work-card" href="./works.html">
+          <img src="./assets/works_sushiro.png" alt="スシロー" loading="lazy" />
+          <span class="work-meta"><strong>スシロー（仮）</strong><em>ブランディング</em></span>
+        </a>
+        <a class="work-card" href="./works.html">
+          <img src="./assets/yappy.png" alt="yappy" loading="lazy" />
+          <span class="work-meta"><strong>yappy（仮）</strong><em>ロゴ・世界観</em></span>
+        </a>
+      </div>
+      <p class="section-note">※ 事例は仮。クリックで事例ページ（仮）へ</p>
+    </section>
+
+    <section class="page-section" id="member">
+      <h2 class="tape-heading tape-blue">MEMBER<span class="tape-sub">この本を作ってる人たち</span></h2>
+      <div class="member-grid">
+        <div class="member-card">
+          <img src="./assets/stickers/holiday-kun-thinking.png" alt="" />
+          <strong>メンバー名（仮）</strong><em>代表 / デザイナー</em>
+        </div>
+        <div class="member-card">
+          <img src="./assets/stickers/holiday-kun-thinking.png" alt="" />
+          <strong>メンバー名（仮）</strong><em>ブランディング / 組織開発</em>
+        </div>
+        <div class="member-card">
+          <img src="./assets/stickers/holiday-kun-thinking.png" alt="" />
+          <strong>メンバー名（仮）</strong><em>デザインエンジニア</em>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section" id="company">
+      <h2 class="tape-heading tape-green">COMPANY<span class="tape-sub">奥付</span></h2>
+      <table class="company-table">
+        <tr><th>社名</th><td>株式会社スタジオホリデー（仮）</td></tr>
+        <tr><th>所在地</th><td>東京都〇〇区〇〇 1-2-3（仮）</td></tr>
+        <tr><th>設立</th><td>20XX年X月（仮）</td></tr>
+        <tr><th>事業内容</th><td>デザインスタジオ事業 / 休日コーラ / KDCの運営 / みんなでご飯会（仮）</td></tr>
+      </table>
+    </section>
+
+    <section class="page-section" id="contact">
+      <h2 class="tape-heading tape-orange">CONTACT<span class="tape-sub">連絡先メモ</span></h2>
+      <p class="contact-lead">お仕事のご相談、協業のお誘い、なんとなくの雑談。どれでもどうぞ。（仮テキスト）</p>
+      <a class="contact-btn" href="#" onclick="return false">お問い合わせフォーム（仮・Googleフォーム予定）</a>
+    </section>
   </main>
+
+  <footer class="site-footer">
+    <img class="footer-logo" src="./assets/stickers/sh-logo.png" alt="STUDIO HOLIDAY" />
+    <nav class="footer-nav">
+      <a href="#about">About</a>
+      <a href="#works">Works</a>
+      <a href="#member">Member</a>
+      <a href="#company">Company</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <small>© 2026 STUDIO HOLIDAY</small>
+  </footer>
 
   <script src="./main.js"></script>
 </body>
