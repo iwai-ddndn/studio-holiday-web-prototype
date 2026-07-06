@@ -1,0 +1,143 @@
+/* ===== STUDIO HOLIDAY — sticker-wall first view (prototype) ===== */
+
+:root {
+  --surface: #f1ece1;          /* 壁 / 台紙のようなオフホワイト */
+  --surface-2: #e9e2d3;
+  --ink: #2a2622;
+  --white: #ffffff;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font-family: "Zen Maru Gothic", "Baloo 2", system-ui, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(120% 90% at 50% 0%, var(--surface) 0%, var(--surface-2) 100%);
+  overflow: hidden;
+}
+
+/* ---------- header ---------- */
+.site-header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 26px;
+  pointer-events: none;
+}
+.site-header a, .site-header button { pointer-events: auto; }
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ink);
+  font-family: "Baloo 2", "Zen Maru Gothic", sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  font-size: 18px;
+}
+.brand-dot {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #ff5964;
+  box-shadow: 0 0 0 4px #ffb80055;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.site-nav a {
+  text-decoration: none;
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 14px;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+}
+.site-nav a:hover { opacity: 1; }
+
+/* ---------- hero ---------- */
+.hero {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.hero-backdrop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 800;
+  font-size: clamp(80px, 20vw, 320px);
+  letter-spacing: 0.04em;
+  color: #00000008;
+  user-select: none;
+  pointer-events: none;
+}
+
+.sticker-field {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---------- sticker ----------
+ * 白フチ（輪郭ダイカット）と落ち影はJS側でCanvasに焼き込み済み。
+ * ここでは配置と手触り（ポップイン / ホバーの持ち上げ）だけを担当する。
+ */
+.sticker {
+  position: absolute;
+  transform-origin: center;
+  transform: var(--tf);
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(.2,.8,.2,1.4);
+}
+.sticker.is-popping { animation: pop 0.42s cubic-bezier(.18,.9,.3,1.35) both; }
+
+.sticker img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+@keyframes pop {
+  0%   { transform: var(--tf) scale(0);   opacity: 0; }
+  70%  { transform: var(--tf) scale(1.08); opacity: 1; }
+  100% { transform: var(--tf) scale(1); }
+}
+
+/* hover で少し持ち上がる手触り（989 = 社名ロゴ(990)は超えない） */
+.sticker:hover {
+  z-index: 989 !important;
+  transform: var(--tf) scale(1.06) translateY(-2px);
+}
+
+/* ---------- 社名ロゴステッカー ---------- */
+/* 常にどのステッカーよりも手前。クリックで About へ */
+.sticker-logo,
+.sticker-logo:hover {
+  z-index: 990 !important;
+}
+
+@media (max-width: 640px) {
+  .site-nav a { display: none; }
+  .brand-name { font-size: 15px; }
+}
