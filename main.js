@@ -12,56 +12,43 @@
  *
  * クリック挙動:
  *   ステッカー → ポップアップ（アウトプット概要 + ストーリーへのリンク）
- *   写真       → 外部ページ or サイト内記事（仮リンク）
+ *   写真       → 実際のK,D,C,,,記事
  *   ロゴ       → #about へ
  *
- * ステッカー画像は assets/stickers/*.png で管理する（透過PNG推奨・目安400px角）。
- * 同名のPNGがまだ置かれていない間は、各エントリの ph（SVGプレースホルダー）に
- * 自動でフォールバックして表示する。白フチと落ち影はCanvasでスプライトに焼き込む。
+ * ステッカー画像は assets/stickers/works/*.png で管理する。
+ * 実際のWorks画像から切り抜いた透過PNGに、白フチと落ち影をCanvasで焼き込む。
  */
 
 const STICKER_DIR = './assets/stickers/';
-const K = '#2a2622'; // キーライン（濃い輪郭）
 
-/* work: クリック時のポップアップに出す内容。無いものは汎用の仮テキストになる */
+/* work: クリック時のポップアップに出す実績情報 */
 const STICKERS = [
-  { file: 'star.png', alt: 'にっこり星', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 6 61 38 95 38 67 58 78 92 50 71 22 92 33 58 5 38 39 38Z" fill="#ffb800" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><circle cx="41" cy="55" r="3.5" fill="${K}"/><circle cx="59" cy="55" r="3.5" fill="${K}"/><path d="M42 64 Q50 72 58 64" fill="none" stroke="${K}" stroke-width="4" stroke-linecap="round"/></svg>` },
-  { file: 'cat.png', alt: 'ねこ', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M20 26 30 48 22 52Z M80 26 70 48 78 52Z" fill="#ff8a5b" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><circle cx="50" cy="58" r="34" fill="#ff8a5b" stroke="${K}" stroke-width="5"/><circle cx="40" cy="54" r="4" fill="${K}"/><circle cx="60" cy="54" r="4" fill="${K}"/><path d="M50 62 45 68 55 68Z" fill="${K}"/><path d="M50 68 V74 M32 60 H20 M32 66 H22 M68 60 H80 M68 66 H78" stroke="${K}" stroke-width="3.5" stroke-linecap="round" fill="none"/></svg>` },
-  { file: 'ghost.png', alt: 'おばけ', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M25 46a25 25 0 0 1 50 0v40l-8-8-8 8-9-8-9 8-8-8Z" fill="#a855f7" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><circle cx="42" cy="46" r="5" fill="#fff" stroke="${K}" stroke-width="3"/><circle cx="60" cy="46" r="5" fill="#fff" stroke="${K}" stroke-width="3"/><circle cx="42" cy="47" r="2" fill="${K}"/><circle cx="60" cy="47" r="2" fill="${K}"/><ellipse cx="51" cy="60" rx="4" ry="6" fill="${K}"/></svg>` },
-  { file: 'heart.png', alt: 'ハート', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 84C18 60 16 34 34 26c10-4 16 2 16 8 0-6 6-12 16-8 18 8 16 34-16 58Z" fill="#ff5964" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><path d="M40 40 Q44 34 48 40" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>` },
-  { file: 'bolt.png', alt: 'いなずま', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M58 6 26 56 46 56 40 94 76 40 54 40Z" fill="#facc15" stroke="${K}" stroke-width="5" stroke-linejoin="round"/></svg>` },
-  { file: 'rainbow-cloud.png', alt: 'レインボー雲', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M18 62a20 20 0 0 1 12-34 22 22 0 0 1 42 6 16 16 0 0 1 6 28Z" fill="#7dd3fc" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><path d="M28 70q22 -20 44 0" fill="none" stroke="#ff5964" stroke-width="6" stroke-linecap="round"/><path d="M32 78q18 -16 36 0" fill="none" stroke="#ffb800" stroke-width="6" stroke-linecap="round"/><path d="M36 86q14 -12 28 0" fill="none" stroke="#22c55e" stroke-width="6" stroke-linecap="round"/></svg>` },
-  { file: 'flower.png', alt: '花', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g fill="#ec4899" stroke="${K}" stroke-width="5"><circle cx="50" cy="26" r="14"/><circle cx="74" cy="50" r="14"/><circle cx="50" cy="74" r="14"/><circle cx="26" cy="50" r="14"/></g><circle cx="50" cy="50" r="15" fill="#facc15" stroke="${K}" stroke-width="5"/></svg>` },
-  { file: 'planet.png', alt: '惑星', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="26" fill="#3b82f6" stroke="${K}" stroke-width="5"/><ellipse cx="50" cy="50" rx="44" ry="14" fill="none" stroke="${K}" stroke-width="5" transform="rotate(-20 50 50)"/><circle cx="42" cy="44" r="5" fill="#93c5fd"/><circle cx="58" cy="56" r="7" fill="#93c5fd"/></svg>` },
-  { file: 'speech-bubble.png', alt: 'ふきだし', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M20 22h60a8 8 0 0 1 8 8v34a8 8 0 0 1-8 8H44l-16 16 2-16h-10a8 8 0 0 1-8-8V30a8 8 0 0 1 8-8Z" fill="#22c55e" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><path d="M50 34 V54 M50 60 v2" stroke="#fff" stroke-width="6" stroke-linecap="round"/></svg>` },
-  { file: 'robot.png', alt: 'ロボット', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 10 V22" stroke="${K}" stroke-width="4"/><circle cx="50" cy="8" r="4" fill="#ff5964" stroke="${K}" stroke-width="3"/><rect x="24" y="24" width="52" height="46" rx="12" fill="#06b6d4" stroke="${K}" stroke-width="5"/><circle cx="40" cy="46" r="6" fill="#fff" stroke="${K}" stroke-width="3"/><circle cx="60" cy="46" r="6" fill="#fff" stroke="${K}" stroke-width="3"/><path d="M40 60 h20" stroke="${K}" stroke-width="4" stroke-linecap="round"/><path d="M24 74 h52 v6 a6 6 0 0 1-6 6 H30 a6 6 0 0 1-6-6Z" fill="#0891b2" stroke="${K}" stroke-width="5" stroke-linejoin="round"/></svg>` },
-  { file: 'flame.png', alt: 'ほのお', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 8c14 18 26 22 26 42a26 26 0 0 1-52 0c0-12 8-16 12-24 4 8 0 14 6 14 6 0 4-18 8-32Z" fill="#f97316" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><path d="M50 84a12 12 0 0 0 12-12c0-8-6-10-12-18-6 8-12 10-12 18a12 12 0 0 0 12 12Z" fill="#facc15"/></svg>` },
-  { file: 'gem.png', alt: 'ジェム', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M32 24h36l18 22-36 44-36-44Z" fill="#14b8a6" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><path d="M14 46h72M32 24 50 46 68 24M50 46 50 90" fill="none" stroke="${K}" stroke-width="4"/><path d="M32 24 50 46 68 24" fill="#5eead4"/></svg>` },
-  { file: 'monster.png', alt: 'もじゃ怪獣', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M22 50a28 28 0 0 1 56 0c0 22-12 34-28 34S22 72 22 50Z" fill="#9b5de5" stroke="${K}" stroke-width="5"/><path d="M22 50 12 42M30 34 24 24M50 24 50 12M70 34 76 24M78 50 88 42" stroke="${K}" stroke-width="4" stroke-linecap="round"/><circle cx="50" cy="48" r="10" fill="#fff" stroke="${K}" stroke-width="4"/><circle cx="50" cy="48" r="4" fill="${K}"/><path d="M40 68 q10 8 20 0" fill="none" stroke="${K}" stroke-width="4" stroke-linecap="round"/></svg>` },
-  // --- 実画像（ph なし = PNGが読めなければ表示しない） ---
-  { file: 'holiday-kun-thinking.png', alt: 'ホリデイくん（かんがえる）',
-    work: { kind: '自社キャラクター', title: 'ホリデイくん（仮）', desc: 'スタジオホリデーの公式キャラクター。サイトの余白や404にも現れる予定。ここに概要とストーリーの入口が入ります。（仮テキスト）' } },
-  { file: 'yappy.png', alt: 'yappy',
-    work: { kind: 'ロゴ・世界観', title: 'yappy（仮）', desc: 'どんな依頼で、何を考えて、どうつくったか。アウトプットの概要がここに入ります。詳しいプロセスはストーリーへ。（仮テキスト）' } },
-  { file: 'works-sushiro.png', alt: 'スシロー',
-    work: { kind: 'ブランディング', title: 'スシロー（仮）', desc: 'どんな依頼で、何を考えて、どうつくったか。アウトプットの概要がここに入ります。詳しいプロセスはストーリーへ。（仮テキスト）' } },
-  { file: 'works-pondelion.png', alt: 'ポン・デ・ライオン',
-    work: { kind: 'キャラクターデザイン', title: 'ポン・デ・ライオン（仮）', desc: 'どんな依頼で、何を考えて、どうつくったか。アウトプットの概要がここに入ります。詳しいプロセスはストーリーへ。（仮テキスト）' } },
+  { file: 'works/ebisun.png', alt: 'エビシー',
+    work: { kind: 'キャラクターデザイン', title: 'エビシー', desc: '実際の制作実績から切り抜いたキャラクタービジュアルです。' } },
+  { file: 'works/and-coffee-maison-kayser.png', alt: '&COFFEE MAISON KAYSER',
+    work: { kind: 'ロゴ・ブランディング', title: '&COFFEE MAISON KAYSER', desc: '実際の制作実績から切り抜いたブランドロゴです。' } },
+  { file: 'works/goichi-character.png', alt: 'GOICHI',
+    work: { kind: 'キャラクター・グラフィック', title: 'GOICHI', desc: '実際の制作実績から切り抜いたキャラクタービジュアルです。' } },
+  { file: 'works/ichiban-no-oshigoto.png', alt: 'いちばんのおしごと',
+    work: { kind: 'パッケージ・イラストレーション', title: 'いちばんのおしごと', desc: '実際の制作実績から切り抜いたパッケージビジュアルです。' } },
+  { file: 'works/monster-illustration.png', alt: 'モンスター・イラストレーション',
+    work: { kind: 'イラストレーション', title: 'Monster Illustration', desc: '実際の制作実績から切り抜いたイラストレーションです。' } },
+  { file: 'works/itomaki-ac-adapter.png', alt: 'itomaki AC Adapter',
+    work: { kind: 'プロダクトデザイン', title: 'itomaki AC Adapter', desc: '実際の制作実績から切り抜いたプロダクトビジュアルです。' } },
+  { file: 'works/holiday-cola.png', alt: '休日コーラ GINGER APPLE',
+    work: { kind: 'フード・ブランド開発', title: '休日コーラ GINGER APPLE', desc: '実際の制作実績から切り抜いた商品ビジュアルです。' } },
 ];
 
 /* 社名ロゴ: イントロの最後に「Design & Deploy Partner」の上へ貼られる特別なステッカー。
  * 常に最前面・クリックで About へ */
 const LOGO = { file: 'sh-logo.png', alt: 'STUDIO HOLIDAY', href: '#about' };
 
-/* 写真: ステッカーに混ぜて壁に貼る（想定 3〜6枚）。クリックで外部ページ or サイト内記事へ。
- * img は実写プレースホルダー（picsum.photos・シード固定）。実素材が来たら差し替える。
- * オフライン等で読めない場合は絵文字+グラデにフォールバック。 */
+/* 実際のK,D,C,,,記事。画像もローカルに保持し、クリックで元記事を開く。 */
 const PHOTOS = [
-  { cap: 'KDC イベントレポート（仮）', img: 'https://picsum.photos/seed/kdc-event/640/480', emoji: '📷', href: 'https://kdc-foodlab.com/post/aHOPhmK8', external: true, bg: 'linear-gradient(135deg,#ffe29a,#ff9a8b)' },
-  { cap: 'みんなでご飯会（仮）', img: 'https://picsum.photos/seed/gohan-kai/640/480', emoji: '🍚', href: 'https://kdc-foodlab.com/post/aHOPhmK8', external: true, bg: 'linear-gradient(135deg,#a1ffce,#faffd1)' },
-  { cap: '休日コーラ 試作会（仮）', img: 'https://picsum.photos/seed/holiday-cola/640/480', emoji: '🥤', href: './works.html', bg: 'linear-gradient(135deg,#fbc2eb,#a6c1ee)' },
-  { cap: 'yappy 対談記事（仮・サイト内）', img: 'https://picsum.photos/seed/yappy-talk/640/480', emoji: '🎙', href: './works.html', bg: 'linear-gradient(135deg,#c2e9fb,#81a4fd)' },
-  { cap: 'KDC ワークショップ（仮）', img: 'https://picsum.photos/seed/kdc-workshop/640/480', emoji: '🛠', href: 'https://kdc-foodlab.com/post/aHOPhmK8', external: true, bg: 'linear-gradient(135deg,#fddb92,#d1fdff)' },
+  { cap: '【イベント】台湾料理ワークショップ', img: './assets/articles/taiwan-workshop.jpg', emoji: '📷', href: 'https://kdc-foodlab.com/post/j-Dju3A8', external: true, bg: '#eefafa' },
+  { cap: '【イベント】きくがわ応援大使交流会in　K,D,C,,,', img: './assets/articles/kikugawa-event.png', emoji: '📷', href: 'https://kdc-foodlab.com/post/UzQU7SgF', external: true, bg: '#eefafa' },
+  { cap: '【会員情報】CACAO HUNTERS　特別イベント', img: './assets/articles/cacao-hunters.png', emoji: '📷', href: 'https://kdc-foodlab.com/post/COdVcAEz', external: true, bg: '#eefafa' },
+  { cap: '【インタビュー】日本製を世界へ――地方から未来をつなぐルフィ株式会社の挑戦', img: './assets/articles/luffy-interview.jpg', emoji: '📷', href: 'https://kdc-foodlab.com/post/X1Kh8nm8', external: true, bg: '#eefafa' },
 ];
 
 const genericWork = (alt) => ({
@@ -85,11 +72,6 @@ const shuffle = (arr) => {
 
 /* --- スプライト生成: 白フチ + 落ち影を一度だけ焼き込む --- */
 
-// <img>/canvas に入れるSVGは固有サイズが必要。大きめに指定して高解像度で描く
-const svgURI = (svg) =>
-  'data:image/svg+xml;utf8,' +
-  encodeURIComponent(svg.replace('<svg ', '<svg width="512" height="512" '));
-
 const loadImage = (src) => new Promise((resolve, reject) => {
   const img = new Image();
   img.onload = () => resolve(img);
@@ -102,8 +84,7 @@ async function loadArt(item) {
     const img = await loadImage(STICKER_DIR + item.file); // 本番PNG/JPG
     return trimTransparent(trimWhiteBackground(img));
   } catch {
-    if (!item.ph) return null;                            // 実画像のみのエントリは諦める
-    return trimTransparent(await loadImage(svgURI(item.ph))); // プレースホルダー
+    return null;
   }
 }
 

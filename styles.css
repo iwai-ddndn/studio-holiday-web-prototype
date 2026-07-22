@@ -1146,74 +1146,59 @@ body {
   object-fit: contain;
   pointer-events: none;
   user-select: none;
-  mix-blend-mode: multiply;
   filter:
     drop-shadow(0 0 2px #fff)
-    drop-shadow(0 0 4px #fff)
-    drop-shadow(0 4px 5px rgba(0, 0, 0, 0.08));
+    drop-shadow(0 0 5px #fff)
+    drop-shadow(0 5px 7px rgba(0, 0, 0, 0.1));
 }
 
-.intro-pondelion {
-  top: -44px;
-  left: -4px;
-  width: 250px;
-  transform: rotate(5.47deg);
+.intro-ebisun {
+  top: -72px;
+  left: -34px;
+  width: 300px;
+  transform: rotate(5deg);
 }
 
-.intro-holiday {
-  left: -74px;
-  bottom: -40px;
-  width: 324px;
-  transform: rotate(-4.99deg);
-}
-
-.intro-yappy {
-  top: 4px;
-  right: -16px;
-  width: 266px;
-  transform: rotate(-6.49deg);
-}
-
-.intro-sushiro {
-  right: -18px;
-  bottom: 18px;
-  width: 230px;
-  transform: rotate(5.95deg);
-}
-
-.intro-logo {
-  top: 32px;
-  left: 25%;
-  width: 190px;
+.intro-coffee {
+  top: 34px;
+  right: -52px;
+  width: 330px;
   transform: rotate(-5deg);
 }
 
-.intro-holiday-mini {
-  top: 24%;
-  left: 14%;
-  width: 112px;
-  transform: rotate(9deg);
+.intro-goichi {
+  left: -62px;
+  bottom: -58px;
+  width: 280px;
+  transform: rotate(-5deg);
 }
 
-.intro-pondelion-mini {
-  top: 37%;
-  right: 14%;
-  width: 126px;
-  transform: rotate(-8deg);
+.intro-book {
+  right: -24px;
+  bottom: -52px;
+  width: 250px;
+  transform: rotate(6deg);
 }
 
-.intro-yappy-mini {
-  left: 25%;
-  bottom: 18px;
-  width: 152px;
-  transform: rotate(7deg);
+.intro-monster-work {
+  top: 26px;
+  left: 17%;
+  width: 162px;
+  transform: rotate(-6deg);
 }
 
-.intro-sushiro-mini {
-  top: 18%;
-  right: 27%;
-  width: 138px;
-  transform: rotate(4deg);
+.intro-itomaki {
+  top: 28%;
+  right: 11%;
+  width: 190px;
+  transform: rotate(8deg);
+}
+
+.intro-cola-work {
+  left: 22%;
+  bottom: -22px;
+  width: 230px;
+  transform: rotate(5deg);
 }
 
 /* Figma node 167:576 — business */
@@ -1404,15 +1389,13 @@ body {
     width: min(620px, calc(100% - 160px));
   }
 
-  .intro-pondelion { width: 240px; left: -35px; }
-  .intro-holiday { width: 240px; left: -78px; }
-  .intro-yappy { width: 190px; right: -42px; }
-  .intro-sushiro { width: 230px; right: -70px; }
-  .intro-logo { left: 21%; width: 156px; }
-  .intro-holiday-mini { left: 11%; width: 96px; }
-  .intro-pondelion-mini { right: 10%; width: 108px; }
-  .intro-yappy-mini { left: 22%; width: 126px; }
-  .intro-sushiro-mini { right: 23%; width: 116px; }
+  .intro-ebisun { width: 240px; left: -68px; }
+  .intro-coffee { width: 250px; right: -72px; }
+  .intro-goichi { width: 230px; left: -88px; }
+  .intro-book { width: 210px; right: -64px; }
+  .intro-monster-work { left: 14%; width: 132px; }
+  .intro-itomaki { right: 6%; width: 150px; }
+  .intro-cola-work { left: 20%; width: 190px; }
 
   .home-business-grid {
     min-height: 620px;
@@ -1522,15 +1505,13 @@ body {
     line-height: 1.8;
   }
 
-  .intro-pondelion { top: -58px; left: -62px; width: 180px; opacity: .9; }
-  .intro-holiday { left: -88px; bottom: -55px; width: 190px; opacity: .9; }
-  .intro-yappy { top: 28px; right: -50px; width: 136px; opacity: .9; }
-  .intro-sushiro { right: -68px; bottom: -38px; width: 178px; opacity: .9; }
-  .intro-logo { top: 22px; left: 24%; width: 104px; opacity: .9; }
-  .intro-holiday-mini { top: 25%; left: 4%; width: 76px; opacity: .86; }
-  .intro-pondelion-mini { top: 39%; right: 2%; width: 84px; opacity: .86; }
-  .intro-yappy-mini { left: 22%; bottom: 14px; width: 92px; opacity: .86; }
-  .intro-sushiro-mini { top: 18%; right: 18%; width: 82px; opacity: .86; }
+  .intro-ebisun { top: -44px; left: -60px; width: 150px; opacity: .92; }
+  .intro-coffee { top: 26px; right: -54px; width: 176px; opacity: .92; }
+  .intro-goichi { left: -64px; bottom: -42px; width: 148px; opacity: .92; }
+  .intro-book { right: -52px; bottom: -32px; width: 142px; opacity: .92; }
+  .intro-monster-work { top: 16%; left: 3%; width: 90px; opacity: .86; }
+  .intro-itomaki { top: 33%; right: 1%; width: 108px; opacity: .86; }
+  .intro-cola-work { left: 18%; bottom: 0; width: 128px; opacity: .86; }
 
   .home-business {
     margin-top: 56px;
