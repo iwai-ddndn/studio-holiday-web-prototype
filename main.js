@@ -314,6 +314,24 @@ function artSequence(sprites) {
   return shuffle(seq);
 }
 
+/* 表示枚数が少ないほど中央寄りの狭い候補だけを残し、寂しい散らばりを防ぐ。
+ * 枚数が増えれば候補数も増えるため、自然に外側へ広がる。 */
+function centralSpotPool(candidates, count, focus) {
+  const extraSpots = Math.max(6, Math.ceil(Math.sqrt(count) * 1.5));
+  const poolSize = Math.min(candidates.length, count + extraSpots);
+  return candidates
+    .map((p) => ({
+      p,
+      score: Math.hypot(
+        (p.x - focus.cx) / focus.rx,
+        (p.y - focus.cy) / focus.ry,
+      ) + rand(0, 0.04),
+    }))
+    .sort((a, b) => a.score - b.score)
+    .slice(0, poolSize)
+    .map(({ p }) => p);
+}
+
 /* 候補の中から、写真と他ステッカーからできるだけ離れた配置点を順に選ぶ */
 function selectDistributedSpots(candidates, count, avoid = []) {
   const pool = shuffle(candidates);
@@ -639,7 +657,13 @@ async function build({ intro }) {
   }
   const availableStickerSpots = spots.filter((p) => !photoSpots.includes(p));
   const arts = artSequence(sprites);
-  const stickerSpots = selectDistributedSpots(availableStickerSpots, arts.length, photoSpots);
+  const centralStickerSpots = centralSpotPool(availableStickerSpots, arts.length, {
+    cx: worldW / 2,
+    cy: worldH / 2,
+    rx: vw,
+    ry: vh,
+  });
+  const stickerSpots = selectDistributedSpots(centralStickerSpots, arts.length, photoSpots);
   const total = stickerSpots.length + photoSpots.length;
 
   // 貼られる順番: 全アイテムをシャッフルして、順番に（＝ランダムな順で）ペタペタ
