@@ -37,6 +37,14 @@ const STICKERS = [
     work: { kind: 'プロダクトデザイン', title: 'itomaki AC Adapter', desc: '実際の制作実績から切り抜いたプロダクトビジュアルです。' } },
   { file: 'works/holiday-cola.png', alt: '休日コーラ GINGER APPLE',
     work: { kind: 'フード・ブランド開発', title: '休日コーラ GINGER APPLE', desc: '実際の制作実績から切り抜いた商品ビジュアルです。' } },
+  { file: 'holiday-kun-thinking.png', alt: 'smeedy',
+    work: { kind: 'キャラクターデザイン', title: 'smeedy', desc: 'スタジオホリデーの制作実績から生まれたキャラクタービジュアルです。' } },
+  { file: 'yappy.png', alt: 'yappy',
+    work: { kind: 'ロゴ・世界観', title: 'yappy', desc: 'スタジオホリデーの制作実績から生まれたロゴ・世界観です。' } },
+  { file: 'works-pondelion.png', alt: 'ポン・デ・ライオン',
+    work: { kind: 'キャラクターデザイン', title: 'ポン・デ・ライオン', desc: 'スタジオホリデーのキャラクターデザイン実績です。' } },
+  { file: 'works-sushiro.png', alt: 'スシロー',
+    work: { kind: 'ブランディング', title: 'スシロー', desc: 'スタジオホリデーのブランディング実績です。' } },
 ];
 
 /* 社名ロゴ: イントロの最後に「Design & Deploy Partner」の上へ貼られる特別なステッカー。
@@ -49,6 +57,12 @@ const PHOTOS = [
   { cap: '【イベント】きくがわ応援大使交流会in　K,D,C,,,', img: './assets/articles/kikugawa-event.png', emoji: '📷', href: 'https://kdc-foodlab.com/post/UzQU7SgF', external: true, bg: '#eefafa' },
   { cap: '【会員情報】CACAO HUNTERS　特別イベント', img: './assets/articles/cacao-hunters.png', emoji: '📷', href: 'https://kdc-foodlab.com/post/COdVcAEz', external: true, bg: '#eefafa' },
   { cap: '【インタビュー】日本製を世界へ――地方から未来をつなぐルフィ株式会社の挑戦', img: './assets/articles/luffy-interview.jpg', emoji: '📷', href: 'https://kdc-foodlab.com/post/X1Kh8nm8', external: true, bg: '#eefafa' },
+  { cap: 'ポン・デ・ライオン', img: './assets/works_pondelion01.jpg', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  { cap: 'スシロー', img: './assets/works_sushiro.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  { cap: 'エビシー', img: './assets/works/source/ebisun-osaka.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  { cap: 'いちばんのおしごと', img: './assets/works/source/ichiban-no-oshigoto.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  { cap: 'itomaki AC Adapter', img: './assets/works/source/itomaki-ac-adapter.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  { cap: '休日コーラ GINGER APPLE', img: './assets/works/source/holiday-cola.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
 ];
 
 const genericWork = (alt) => ({
