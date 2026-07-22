@@ -242,12 +242,10 @@ function layoutStickers(W, H, unit, excl) {
   const cellW = W / cols;
   const cellH = H / rows;
 
-  // ステッカーの大きさは3階級: たまに主役級、基本は中、すき間に小
+  // 小さすぎるステッカーは作らず、中〜大の2段階だけにする
   const sizeFactor = () => {
-    const t = Math.random();
-    if (t < 0.15) return rand(1.3, 1.6);  // 大（主役）
-    if (t < 0.8) return rand(0.95, 1.2);  // 中
-    return rand(0.68, 0.82);              // 小
+    if (Math.random() < 0.25) return rand(1.3, 1.55); // 大（主役）
+    return rand(1.0, 1.24);                            // 中
   };
 
   // 1) 全セルに撒く（壁の全面カバー）。ジッターで整列感は消す
@@ -259,7 +257,7 @@ function layoutStickers(W, H, unit, excl) {
         x: c * cellW + cellW / 2 + rand(-cellW, cellW) * 0.28,
         y: r * cellH + cellH / 2 + rand(-cellH, cellH) * 0.28,
         size,
-        minSize: size * 0.78,
+        minSize: size * 0.92,
       });
     }
   }
@@ -307,15 +305,39 @@ function layoutStickers(W, H, unit, excl) {
   return items;
 }
 
-/* 同じ絵柄が続かないよう、シャッフルしたデッキを繰り返して並べる（少量の重複あり） */
-function artSequence(sprites, n) {
-  const seq = [];
-  while (seq.length < n) {
-    const deck = shuffle(sprites);
-    if (seq.length && deck[0] === seq[seq.length - 1]) deck.push(deck.shift());
-    seq.push(...deck);
+/* 各絵柄を必ず2枚、約半数だけ3枚にして、同一絵柄の出現を2〜3枚に制限する */
+function artSequence(sprites) {
+  const seq = sprites.flatMap((sprite) => {
+    const copies = Math.random() < 0.5 ? 2 : 3;
+    return Array.from({ length: copies }, () => sprite);
+  });
+  return shuffle(seq);
+}
+
+/* 候補の中から、写真と他ステッカーからできるだけ離れた配置点を順に選ぶ */
+function selectDistributedSpots(candidates, count, avoid = []) {
+  const pool = shuffle(candidates);
+  const anchors = avoid.slice();
+  const selected = [];
+
+  while (pool.length && selected.length < count) {
+    let bestIndex = 0;
+    let bestDistance = -1;
+    for (let i = 0; i < pool.length; i++) {
+      const p = pool[i];
+      const nearest = anchors.length
+        ? Math.min(...anchors.map((q) => Math.hypot(p.x - q.x, p.y - q.y)))
+        : 0;
+      if (nearest > bestDistance) {
+        bestDistance = nearest;
+        bestIndex = i;
+      }
+    }
+    const [picked] = pool.splice(bestIndex, 1);
+    selected.push(picked);
+    anchors.push(picked);
   }
-  return seq.slice(0, n);
+  return selected;
 }
 
 /* opts.size は長辺のサイズ。スプライトの縦横比に合わせて要素の幅高を決める */
@@ -429,6 +451,7 @@ const DEFAULT_PARAMS = {
 };
 let PARAMS = { ...DEFAULT_PARAMS };
 try { Object.assign(PARAMS, JSON.parse(localStorage.getItem('sh-tune')) || {}); } catch { /* 保存なし */ }
+PARAMS.size = Math.max(0.95, PARAMS.size);
 
 const cam = { cx: 0, cy: 0, s: 1 };      // (cx,cy)=ビューポート中央に映る壁上の点
 
@@ -599,7 +622,6 @@ async function build({ intro }) {
   const unit = base * PARAMS.size;
   const excl = { cx: worldW / 2, cy: worldH / 2, rx: vw * 0.40, ry: vh * 0.28 };
   const spots = layoutStickers(worldW, worldH, unit, excl);
-  const total = spots.length;
 
   // 写真のスポットは互いに離れた場所を選ぶ（足りなければ余りから充当）
   const minPhotoDist = Math.min(worldW, worldH) / 3.5;
@@ -615,7 +637,10 @@ async function build({ intro }) {
     if (photoSpots.length >= PHOTOS.length) break;
     if (!photoSpots.includes(p)) photoSpots.push(p);
   }
-  const stickerSpots = spots.filter((p) => !photoSpots.includes(p));
+  const availableStickerSpots = spots.filter((p) => !photoSpots.includes(p));
+  const arts = artSequence(sprites);
+  const stickerSpots = selectDistributedSpots(availableStickerSpots, arts.length, photoSpots);
+  const total = stickerSpots.length + photoSpots.length;
 
   // 貼られる順番: 全アイテムをシャッフルして、順番に（＝ランダムな順で）ペタペタ
   const PASTE_SEC = 1.9;
@@ -623,7 +648,6 @@ async function build({ intro }) {
   const delayOf = (i) => (order[i] / total) * PASTE_SEC;
   const zOrder = shuffle([...Array(total).keys()]);
 
-  const arts = artSequence(sprites, stickerSpots.length);
   stickerSpots.forEach((p, i) => {
     const sprite = arts[i];
     if (!sprite) return;
@@ -672,7 +696,7 @@ function initTunePanel() {
   if (!/[?&]tune\b/.test(location.search)) return;
   const DEFS = [
     ['world', '壁の広さ（探索範囲）', 1.5, 6, 0.1],
-    ['size', 'ステッカーの大きさ', 0.6, 2.5, 0.05],
+    ['size', 'ステッカーの大きさ', 0.95, 2.5, 0.05],
     ['gap', 'ステッカーの間隔', 1.0, 2.5, 0.05],
     ['introView', '引きで見える範囲', 1.2, 6, 0.1],
   ];
