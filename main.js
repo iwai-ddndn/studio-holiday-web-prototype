@@ -1,22 +1,29 @@
-/* ===== STUDIO HOLIDAY — sticker-wall first view =====
+/* ===== STUDIO HOLIDAY — explorable sticker-wall first view =====
+ * 0721修正: ファーストビューをビューポートより広い「壁」（ワールド）にし、
+ * ドラッグ/ホイールで上下左右に回遊できるようにした。
+ *
+ * イントロの流れ:
+ *   1. 中央に「Design & Deploy Partner」（カメラは引きで、壁全体が見える）
+ *   2. ステッカー・写真が順番に（ランダムな順で）貼られていく
+ *   3. カメラが中央へズームイン（100%）
+ *   4. 文字の上に STUDIO HOLIDAY のロゴが貼られる
+ *   5. 自由に回遊できるようになる
+ *   ※ クリックでスキップ可 / prefers-reduced-motion では即・完成状態
+ *
+ * クリック挙動:
+ *   ステッカー → ポップアップ（アウトプット概要 + ストーリーへのリンク）
+ *   写真       → 外部ページ or サイト内記事（仮リンク）
+ *   ロゴ       → #about へ
+ *
  * ステッカー画像は assets/stickers/*.png で管理する（透過PNG推奨・目安400px角）。
  * 同名のPNGがまだ置かれていない間は、各エントリの ph（SVGプレースホルダー）に
- * 自動でフォールバックして表示する。
- *
- * 描画:
- *   白フチ（輪郭ダイカット）と落ち影は Canvas で一度だけスプライトに焼き込む。
- *   以前は CSS の drop-shadow ×9 を全ステッカーに掛けていて、ポップイン中に
- *   毎フレーム再計算されカクつきの原因になっていた。焼き込み後はただの <img>。
- *
- * 配置:
- *   1. 画面をグリッドに切り、各セルにジッター付きでステッカーを撒く（全面カバー）
- *   2. 反発シミュレーションで重なりを解消（ほぼ非重なりまで広げる）
- *   3. それでも詰まる場所はサイズを少しずつ縮めて逃がす
+ * 自動でフォールバックして表示する。白フチと落ち影はCanvasでスプライトに焼き込む。
  */
 
 const STICKER_DIR = './assets/stickers/';
 const K = '#2a2622'; // キーライン（濃い輪郭）
 
+/* work: クリック時のポップアップに出す内容。無いものは汎用の仮テキストになる */
 const STICKERS = [
   { file: 'star.png', alt: 'にっこり星', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 6 61 38 95 38 67 58 78 92 50 71 22 92 33 58 5 38 39 38Z" fill="#ffb800" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><circle cx="41" cy="55" r="3.5" fill="${K}"/><circle cx="59" cy="55" r="3.5" fill="${K}"/><path d="M42 64 Q50 72 58 64" fill="none" stroke="${K}" stroke-width="4" stroke-linecap="round"/></svg>` },
   { file: 'cat.png', alt: 'ねこ', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M20 26 30 48 22 52Z M80 26 70 48 78 52Z" fill="#ff8a5b" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><circle cx="50" cy="58" r="34" fill="#ff8a5b" stroke="${K}" stroke-width="5"/><circle cx="40" cy="54" r="4" fill="${K}"/><circle cx="60" cy="54" r="4" fill="${K}"/><path d="M50 62 45 68 55 68Z" fill="${K}"/><path d="M50 68 V74 M32 60 H20 M32 66 H22 M68 60 H80 M68 66 H78" stroke="${K}" stroke-width="3.5" stroke-linecap="round" fill="none"/></svg>` },
@@ -32,18 +39,39 @@ const STICKERS = [
   { file: 'gem.png', alt: 'ジェム', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M32 24h36l18 22-36 44-36-44Z" fill="#14b8a6" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><path d="M14 46h72M32 24 50 46 68 24M50 46 50 90" fill="none" stroke="${K}" stroke-width="4"/><path d="M32 24 50 46 68 24" fill="#5eead4"/></svg>` },
   { file: 'monster.png', alt: 'もじゃ怪獣', ph: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M22 50a28 28 0 0 1 56 0c0 22-12 34-28 34S22 72 22 50Z" fill="#9b5de5" stroke="${K}" stroke-width="5"/><path d="M22 50 12 42M30 34 24 24M50 24 50 12M70 34 76 24M78 50 88 42" stroke="${K}" stroke-width="4" stroke-linecap="round"/><circle cx="50" cy="48" r="10" fill="#fff" stroke="${K}" stroke-width="4"/><circle cx="50" cy="48" r="4" fill="${K}"/><path d="M40 68 q10 8 20 0" fill="none" stroke="${K}" stroke-width="4" stroke-linecap="round"/></svg>` },
   // --- 実画像（ph なし = PNGが読めなければ表示しない） ---
-  { file: 'holiday-kun-thinking.png', alt: 'ホリデイくん（かんがえる）' },
-  { file: 'yappy.png', alt: 'yappy' },
-  { file: 'works-sushiro.png', alt: 'スシロー' },
-  { file: 'works-pondelion.png', alt: 'ポン・デ・ライオン' },
+  { file: 'holiday-kun-thinking.png', alt: 'ホリデイくん（かんがえる）',
+    work: { kind: '自社キャラクター', title: 'ホリデイくん（仮）', desc: 'スタジオホリデーの公式キャラクター。サイトの余白や404にも現れる予定。ここに概要とストーリーの入口が入ります。（仮テキスト）' } },
+  { file: 'yappy.png', alt: 'yappy',
+    work: { kind: 'ロゴ・世界観', title: 'yappy（仮）', desc: 'どんな依頼で、何を考えて、どうつくったか。アウトプットの概要がここに入ります。詳しいプロセスはストーリーへ。（仮テキスト）' } },
+  { file: 'works-sushiro.png', alt: 'スシロー',
+    work: { kind: 'ブランディング', title: 'スシロー（仮）', desc: 'どんな依頼で、何を考えて、どうつくったか。アウトプットの概要がここに入ります。詳しいプロセスはストーリーへ。（仮テキスト）' } },
+  { file: 'works-pondelion.png', alt: 'ポン・デ・ライオン',
+    work: { kind: 'キャラクターデザイン', title: 'ポン・デ・ライオン（仮）', desc: 'どんな依頼で、何を考えて、どうつくったか。アウトプットの概要がここに入ります。詳しいプロセスはストーリーへ。（仮テキスト）' } },
 ];
 
-/* 社名ロゴ: 通常のデッキには入れない特別なステッカー。
- * 常に1枚だけ・最大ステッカーより大きく・最前面・四隅のどこかに貼られ、
- * クリックで About へ飛ぶ。 */
+/* 社名ロゴ: イントロの最後に「Design & Deploy Partner」の上へ貼られる特別なステッカー。
+ * 常に最前面・クリックで About へ */
 const LOGO = { file: 'sh-logo.png', alt: 'STUDIO HOLIDAY', href: '#about' };
 
-const field = document.getElementById('stickerField');
+/* 写真: ステッカーに混ぜて壁に貼る（想定 3〜6枚）。クリックで外部ページ or サイト内記事へ。
+ * img は実写プレースホルダー（picsum.photos・シード固定）。実素材が来たら差し替える。
+ * オフライン等で読めない場合は絵文字+グラデにフォールバック。 */
+const PHOTOS = [
+  { cap: 'KDC イベントレポート（仮）', img: 'https://picsum.photos/seed/kdc-event/640/480', emoji: '📷', href: 'https://kdc-foodlab.com/post/aHOPhmK8', external: true, bg: 'linear-gradient(135deg,#ffe29a,#ff9a8b)' },
+  { cap: 'みんなでご飯会（仮）', img: 'https://picsum.photos/seed/gohan-kai/640/480', emoji: '🍚', href: 'https://kdc-foodlab.com/post/aHOPhmK8', external: true, bg: 'linear-gradient(135deg,#a1ffce,#faffd1)' },
+  { cap: '休日コーラ 試作会（仮）', img: 'https://picsum.photos/seed/holiday-cola/640/480', emoji: '🥤', href: './works.html', bg: 'linear-gradient(135deg,#fbc2eb,#a6c1ee)' },
+  { cap: 'yappy 対談記事（仮・サイト内）', img: 'https://picsum.photos/seed/yappy-talk/640/480', emoji: '🎙', href: './works.html', bg: 'linear-gradient(135deg,#c2e9fb,#81a4fd)' },
+  { cap: 'KDC ワークショップ（仮）', img: 'https://picsum.photos/seed/kdc-workshop/640/480', emoji: '🛠', href: 'https://kdc-foodlab.com/post/aHOPhmK8', external: true, bg: 'linear-gradient(135deg,#fddb92,#d1fdff)' },
+];
+
+const genericWork = (alt) => ({
+  kind: 'グラフィック（仮）',
+  title: `${alt}（仮）`,
+  desc: 'ここにアウトプットの概要が入ります。どんな依頼で、なにを考えてつくったか。実データが入るまでのダミーテキストです。（仮）',
+});
+
+const hero = document.getElementById('hero');
+const world = document.getElementById('world');
 
 const rand = (min, max) => min + Math.random() * (max - min);
 const shuffle = (arr) => {
@@ -79,8 +107,7 @@ async function loadArt(item) {
   }
 }
 
-/* 透過の余白をトリムして、絵柄ぴったりのcanvasにする。
- * （ロゴ等、書き出し時の余白が大きい素材でもサイズ感が揃う） */
+/* 透過の余白をトリムして、絵柄ぴったりのcanvasにする。 */
 function trimTransparent(art) {
   const w = art.naturalWidth || art.width;
   const h = art.naturalHeight || art.height;
@@ -150,12 +177,11 @@ function trimWhiteBackground(img) {
   return c;
 }
 
-function makeDiecutSprite(art) {
-  const ART = 520;                  // 絵柄の描画サイズ（長辺。表示は最大~450pxなので十分）
+function makeDiecutSprite(art, artSize) {
+  const ART = artSize || 520;       // 絵柄の描画サイズ（長辺）。ロゴ等の大判は高解像度で焼く
   const OUTLINE = ART * 0.045;      // 白フチの太さ
   const PAD = OUTLINE + ART * 0.07; // 白フチ+影のための余白
 
-  // 縦横比を保つ（スプライト自体を絵柄の比率で作る）
   const aw = art.naturalWidth || art.width;
   const ah = art.naturalHeight || art.height;
   const ratio = aw / ah;
@@ -197,56 +223,54 @@ function getSprites() {
   spritesPromise ??= Promise.all(
     STICKERS.map(async (item) => {
       const art = await loadArt(item);
-      return art && { alt: item.alt, ...makeDiecutSprite(art) };
+      return art && { alt: item.alt, work: item.work, ...makeDiecutSprite(art) };
     }),
   ).then((list) => list.filter(Boolean));
   return spritesPromise;
 }
 
-let logoSpritePromise = null;
-function getLogoSprite() {
-  logoSpritePromise ??= loadArt(LOGO).then((art) => art && makeDiecutSprite(art));
-  return logoSpritePromise;
-}
+/* ロゴは Canvas 焼き込みではなく、白い台紙のDOM要素として貼る。
+ * （Canvas 系はブラウザ差・画像ロード失敗で丸ごと消えるリスクがあるため。
+ *   DOM なら画像が読めなくても白い台紙は必ず中央に出る） */
 
 /* --- 配置: グリッド撒き → 反発シミュレーション ---
- * 「ちょっとずつ重なる」の作り方:
- *   絵柄はスプライトの約81%を占めるので、反発の停止距離 GAP をそれより
- *   小さく(0.72)取り、かつサイズを過密気味(セルの1.3〜1.6倍)に撒く。
- *   押し合いの均衡点が「隣と縁が少し重なった状態」で安定する。
+ * 壁の全セルにアイテムを撒く（絵柄の重複はOK）。
+ * unit ≒ 100%ズーム時のステッカーの標準サイズ。グリッド間隔は
+ * unit × PARAMS.gap で決まり、サイズと間隔を独立に調整できる。
+ * 反発の停止距離 GAP=0.88 は「隣とわずかに隙間」の下限保証。
+ * excl: 中央の「Design & Deploy Partner」の文字を空けておく楕円。
  */
-function layoutStickers(W, H) {
-  const base = W < 560 ? 150 : W < 900 ? 175 : 190; // ステッカー1枚のだいたいの領域
-  const padTop = 64;                                 // ヘッダーぶん空ける
-  const cols = Math.max(2, Math.round(W / base));
-  const rows = Math.max(2, Math.round((H - padTop) / base));
+function layoutStickers(W, H, unit, excl) {
+  const cell = unit * PARAMS.gap; // グリッド間隔（＝ステッカー間の距離感）
+  const cols = Math.max(3, Math.round(W / cell));
+  const rows = Math.max(3, Math.round(H / cell));
   const cellW = W / cols;
-  const cellH = (H - padTop) / rows;
+  const cellH = H / rows;
 
   // ステッカーの大きさは3階級: たまに主役級、基本は中、すき間に小
   const sizeFactor = () => {
     const t = Math.random();
-    if (t < 0.15) return rand(1.9, 2.4);  // 大（主役）
-    if (t < 0.75) return rand(1.15, 1.6); // 中
-    return rand(0.75, 1.0);               // 小（すき間埋め）
+    if (t < 0.15) return rand(1.3, 1.6);  // 大（主役）
+    if (t < 0.8) return rand(0.95, 1.2);  // 中
+    return rand(0.68, 0.82);              // 小
   };
 
-  // 1) 全セルに撒く（全面カバー）。ジッターで整列感は消す
+  // 1) 全セルに撒く（壁の全面カバー）。ジッターで整列感は消す
   const items = [];
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const size = Math.min(cellW, cellH) * sizeFactor();
+      const size = unit * sizeFactor(); // サイズは間隔（gap）と独立
       items.push({
         x: c * cellW + cellW / 2 + rand(-cellW, cellW) * 0.28,
-        y: padTop + r * cellH + cellH / 2 + rand(-cellH, cellH) * 0.28,
+        y: r * cellH + cellH / 2 + rand(-cellH, cellH) * 0.28,
         size,
         minSize: size * 0.78,
       });
     }
   }
 
-  // 2) 反発で押し広げる。過密なので、均衡点＝少し重なった状態になる
-  const GAP = 0.72; // 絵柄同士が縁で重なる距離（0.81で絵柄が外接）
+  // 2) 反発で押し広げる。均衡点＝隣とわずかに隙間が開いた状態
+  const GAP = 0.88;
   for (let it = 0; it < 90; it++) {
     let moved = false;
     for (let i = 0; i < items.length; i++) {
@@ -268,18 +292,27 @@ function layoutStickers(W, H) {
         }
       }
     }
-    // 画面内にクランプ（端は少しだけ見切れてよい）
     for (const p of items) {
+      // 中央の文字エリア（楕円）から押し出す
+      const rx = excl.rx + p.size * 0.45, ry = excl.ry + p.size * 0.45;
+      const ex = (p.x - excl.cx) / rx, ey = (p.y - excl.cy) / ry;
+      const d = Math.hypot(ex, ey);
+      if (d < 1) {
+        const f = 1 / (d || 0.001);
+        p.x = excl.cx + ex * f * rx;
+        p.y = excl.cy + ey * f * ry;
+      }
+      // 壁の内側にクランプ（端は少しだけ見切れてよい）
       const inset = p.size * 0.42;
       p.x = Math.min(W - inset, Math.max(inset, p.x));
-      p.y = Math.min(H - inset, Math.max(padTop + inset * 0.8, p.y));
+      p.y = Math.min(H - inset, Math.max(inset, p.y));
     }
     if (!moved) break;
   }
   return items;
 }
 
-/* 同じ絵柄が隣り合いにくいよう、シャッフルしたデッキを繰り返して並べる */
+/* 同じ絵柄が続かないよう、シャッフルしたデッキを繰り返して並べる（少量の重複あり） */
 function artSequence(sprites, n) {
   const seq = [];
   while (seq.length < n) {
@@ -308,7 +341,6 @@ function buildSticker(sprite, opts) {
   el.style.left = opts.x + 'px';
   el.style.top = opts.y + 'px';
   el.style.zIndex = opts.z;
-  el.style.animationDelay = opts.delay + 's';
 
   const img = document.createElement('img');
   img.alt = sprite.alt;
@@ -316,63 +348,390 @@ function buildSticker(sprite, opts) {
   img.src = sprite.url;
   el.appendChild(img);
 
-  // ポップ後はアニメを外して、ホバーの持ち上げが効くようにする
-  el.classList.add('is-popping');
-  el.addEventListener('animationend', () => el.classList.remove('is-popping'), { once: true });
+  if (opts.onOpen) {
+    el.setAttribute('role', 'button');
+    el.tabIndex = 0;
+    el.addEventListener('click', opts.onOpen);
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); opts.onOpen(); }
+    });
+  }
+
+  if (opts.pop) {
+    el.style.animationDelay = opts.delay + 's';
+    el.classList.add('is-popping');
+    el.addEventListener('animationend', () => el.classList.remove('is-popping'), { once: true });
+  }
   return el;
 }
 
-async function placeStickers() {
-  const [sprites, logoSprite] = await Promise.all([getSprites(), getLogoSprite()]); // 初回のみ生成、以降はキャッシュ
-  field.innerHTML = '';
-  const W = field.clientWidth || window.innerWidth;
-  const H = field.clientHeight || window.innerHeight;
+function buildPhoto(data, opts) {
+  const el = document.createElement('a');
+  el.className = 'photo-card';
+  el.href = data.href;
+  if (data.external) { el.target = '_blank'; el.rel = 'noopener'; }
+  el.style.setProperty('--tf', `rotate(${opts.rot}deg)`);
+  el.style.width = opts.w + 'px';
+  el.style.left = opts.x + 'px';
+  el.style.top = opts.y + 'px';
+  el.style.zIndex = opts.z;
+  el.innerHTML =
+    `<span class="photo-img" style="background:${data.bg}"><span class="photo-emoji">${data.emoji}</span></span>` +
+    `<span class="photo-cap">${data.cap}${data.external ? ' ↗' : ''}</span>`;
+  if (data.img) {
+    const img = document.createElement('img');
+    img.alt = '';
+    img.loading = 'lazy';
+    img.draggable = false;
+    img.src = data.img;
+    img.onerror = () => img.remove(); // 読めなければ絵文字+グラデのまま
+    el.querySelector('.photo-img').appendChild(img);
+  }
+  if (opts.pop) {
+    el.style.animationDelay = opts.delay + 's';
+    el.classList.add('is-popping');
+    el.addEventListener('animationend', () => el.classList.remove('is-popping'), { once: true });
+  }
+  return el;
+}
 
-  const spots = layoutStickers(W, H);
-  const arts = artSequence(sprites, spots.length);
-  const zOrder = shuffle([...Array(spots.length).keys()]);
+/* ==========================================================
+   ▼ ポップアップ（ステッカー → アウトプット概要 + ストーリー）
+   ========================================================== */
 
-  spots.forEach((p, i) => {
-    const { w, h } = stickerDims(arts[i], p.size);
-    field.appendChild(buildSticker(arts[i], {
-      href: './works.html', // 仮: すべてのステッカーからWorksページへ
+const modal = document.getElementById('workModal');
+
+function openModal(work, imgURL) {
+  document.getElementById('modalImg').src = imgURL;
+  document.getElementById('modalKind').textContent = work.kind;
+  document.getElementById('modalTitle').textContent = work.title;
+  document.getElementById('modalDesc').textContent = work.desc;
+  modal.hidden = false;
+}
+function closeModal() { modal.hidden = true; }
+
+modal.addEventListener('click', (e) => {
+  if (e.target.closest('[data-close]')) closeModal();
+});
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !modal.hidden) closeModal();
+});
+
+/* ==========================================================
+   ▼ カメラ（回遊）: world を translate+scale して壁の上を動き回る
+   ========================================================== */
+
+let vw = 0, vh = 0, worldW = 0, worldH = 0;
+
+/* --- 配置・カメラの調整パラメータ ---
+ * URLに ?tune を付けるとスライダーで live 調整できる（localStorageに保存され、
+ * 以降は ?tune なしでもその値で表示。リセットボタンで初期値に戻る）。 */
+const DEFAULT_PARAMS = {
+  world: 3.9,     // 壁の広さ = ビューポートの何倍四方を探索できるか
+  size: 1.2,      // ステッカーの大きさ倍率
+  gap: 1.25,      // ステッカー間隔（1でほぼ密着）
+  introView: 1.6, // 引きのカメラで見える範囲（ビューポート比）。壁全体は見せなくてよい
+};
+let PARAMS = { ...DEFAULT_PARAMS };
+try { Object.assign(PARAMS, JSON.parse(localStorage.getItem('sh-tune')) || {}); } catch { /* 保存なし */ }
+
+const cam = { cx: 0, cy: 0, s: 1 };      // (cx,cy)=ビューポート中央に映る壁上の点
+
+function applyCam() {
+  const tx = vw / 2 - cam.cx * cam.s;
+  const ty = vh / 2 - cam.cy * cam.s;
+  world.style.transform = `translate3d(${tx}px, ${ty}px, 0) scale(${cam.s})`;
+}
+function clampCam() {
+  const hw = vw / (2 * cam.s), hh = vh / (2 * cam.s);
+  cam.cx = Math.min(worldW - hw, Math.max(hw, cam.cx));
+  cam.cy = Math.min(worldH - hh, Math.max(hh, cam.cy));
+}
+
+/* --- パン操作（ドラッグ / ホイール） --- */
+
+let mode = 'loading'; // 'loading' | 'intro' | 'zooming' | 'explore'
+let pdown = null;
+let didDrag = false;
+
+hero.addEventListener('pointerdown', (e) => {
+  if (mode === 'intro' || mode === 'zooming') { skipIntro(); return; }
+  if (mode !== 'explore' || e.button !== 0) return;
+  pdown = { x: e.clientX, y: e.clientY, cx: cam.cx, cy: cam.cy, id: e.pointerId };
+  didDrag = false;
+});
+window.addEventListener('pointermove', (e) => {
+  if (!pdown || e.pointerId !== pdown.id) return;
+  const dx = e.clientX - pdown.x, dy = e.clientY - pdown.y;
+  if (!didDrag && Math.hypot(dx, dy) > 6) {
+    didDrag = true;
+    hero.classList.add('is-panning');
+  }
+  if (didDrag) {
+    cam.cx = pdown.cx - dx / cam.s;
+    cam.cy = pdown.cy - dy / cam.s;
+    clampCam();
+    applyCam();
+  }
+});
+window.addEventListener('pointerup', (e) => {
+  if (!pdown || e.pointerId !== pdown.id) return;
+  pdown = null;
+  hero.classList.remove('is-panning');
+});
+// ドラッグ直後の click は「クリック」として扱わない（リンク遷移・ポップアップを抑止）
+window.addEventListener('click', (e) => {
+  if (didDrag) {
+    e.preventDefault();
+    e.stopPropagation();
+    didDrag = false;
+  }
+}, true);
+
+/* ホイール/トラックパッドはページスクロールに使う（壁のパンはドラッグ専用）。
+ * 「scrollで本編に行ける」を分かりやすくするため、壁はホイールを奪わない。 */
+
+/* ==========================================================
+   ▼ イントロ → 回遊 の進行
+   ========================================================== */
+
+const timers = [];
+const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+const clearTimers = () => { timers.forEach(clearTimeout); timers.length = 0; };
+
+let logoPlaced = false;
+
+function placeLogo(pop) {
+  if (logoPlaced) return;
+  logoPlaced = true;
+  // Figmaの白い台紙比率を保ちつつ、画面中央に収まるサイズへ。
+  // 貼られる順番・クリック挙動・カメラ制御は従来どおり。
+  const w = Math.min(vw < 560 ? 260 : 374, vw * 0.72);
+  const h = w * 0.55;
+
+  const el = document.createElement('a');
+  el.href = LOGO.href;
+  el.className = 'sticker sticker-logo logo-plate';
+  el.style.setProperty('--tf', `rotate(${rand(-3, 3)}deg)`);
+  el.style.width = w + 'px';
+  el.style.height = h + 'px';
+  el.style.left = (worldW / 2 - w / 2) + 'px';
+  el.style.top = (worldH / 2 - h / 2) + 'px';
+  el.style.zIndex = 1090;
+  el.style.borderRadius = (h * 0.12) + 'px';
+  const img = document.createElement('img');
+  img.src = STICKER_DIR + LOGO.file;
+  img.alt = LOGO.alt;
+  img.draggable = false;
+  el.appendChild(img);
+  if (pop) {
+    el.classList.add('is-popping');
+    el.addEventListener('animationend', () => el.classList.remove('is-popping'), { once: true });
+  }
+  world.appendChild(el);
+}
+
+function startZoom() {
+  mode = 'zooming';
+  world.classList.add('is-zooming');
+  // rAF はタブ非表示時に発火しないため使わない。リフローで
+  // クラス変更（transition有効化）を確定させてから transform を変える
+  void world.offsetWidth;
+  cam.s = 1;
+  clampCam();
+  applyCam();
+  later(finishZoom, 1550); // CSS transition 1.45s + 余裕
+}
+
+async function finishZoom() {
+  world.classList.remove('is-zooming');
+  await placeLogo(true);
+  later(enableExplore, 550);
+}
+
+function enableExplore() {
+  mode = 'explore';
+  hero.classList.remove('is-intro');
+  hero.classList.add('can-pan');
+}
+
+async function skipIntro() {
+  clearTimers();
+  world.classList.remove('is-zooming');
+  world.style.transition = 'none';
+  cam.s = 1;
+  cam.cx = worldW / 2;
+  cam.cy = worldH / 2;
+  clampCam();
+  applyCam();
+  void world.offsetWidth; // transition:none をこのフレームで確定させる
+  world.style.transition = '';
+  await placeLogo(false);
+  enableExplore();
+}
+
+async function build({ intro }) {
+  world.querySelectorAll('.sticker, .photo-card').forEach((el) => el.remove());
+  logoPlaced = false;
+  clearTimers();
+
+  vw = hero.clientWidth || window.innerWidth;
+  vh = hero.clientHeight || window.innerHeight;
+  worldW = Math.round(vw * PARAMS.world);
+  worldH = Math.round(vh * PARAMS.world);
+  world.style.width = worldW + 'px';
+  world.style.height = worldH + 'px';
+
+  // カメラはスプライト生成（重い・数秒かかる）を待たずに先に構える。
+  // 後回しにすると、ロード中に「未初期化の壁」（左上に巨大な文字）が見えてしまう
+  mode = 'loading';
+  cam.cx = worldW / 2;
+  cam.cy = worldH / 2;
+  if (intro) {
+    hero.classList.add('is-intro');
+    hero.classList.remove('can-pan');
+    // 引きの画: 中央の introView×ビューポート分だけ見せる（壁全体は見せなくてよい）
+    cam.s = Math.max(vw / worldW, 1 / PARAMS.introView);
+  } else {
+    cam.s = 1;
+  }
+  applyCam();
+
+  const sprites = await getSprites();
+
+  // 中央の文字エリアを空けて、壁の全面にステッカー + 写真を撒く
+  const base = vw < 560 ? 150 : vw < 900 ? 190 : 235;
+  const unit = base * PARAMS.size;
+  const excl = { cx: worldW / 2, cy: worldH / 2, rx: vw * 0.40, ry: vh * 0.28 };
+  const spots = layoutStickers(worldW, worldH, unit, excl);
+  const total = spots.length;
+
+  // 写真のスポットは互いに離れた場所を選ぶ（足りなければ余りから充当）
+  const minPhotoDist = Math.min(worldW, worldH) / 3.5;
+  const photoSpots = [];
+  const shuffled = shuffle(spots);
+  for (const p of shuffled) {
+    if (photoSpots.length >= PHOTOS.length) break;
+    if (photoSpots.every((q) => Math.hypot(p.x - q.x, p.y - q.y) >= minPhotoDist)) {
+      photoSpots.push(p);
+    }
+  }
+  for (const p of shuffled) {
+    if (photoSpots.length >= PHOTOS.length) break;
+    if (!photoSpots.includes(p)) photoSpots.push(p);
+  }
+  const stickerSpots = spots.filter((p) => !photoSpots.includes(p));
+
+  // 貼られる順番: 全アイテムをシャッフルして、順番に（＝ランダムな順で）ペタペタ
+  const PASTE_SEC = 1.9;
+  const order = shuffle([...Array(total).keys()]);
+  const delayOf = (i) => (order[i] / total) * PASTE_SEC;
+  const zOrder = shuffle([...Array(total).keys()]);
+
+  const arts = artSequence(sprites, stickerSpots.length);
+  stickerSpots.forEach((p, i) => {
+    const sprite = arts[i];
+    if (!sprite) return;
+    const { w, h } = stickerDims(sprite, p.size);
+    world.appendChild(buildSticker(sprite, {
       rot: rand(-16, 16),
       size: p.size,
       x: p.x - w / 2,
       y: p.y - h / 2,
       z: zOrder[i] + 1,
-      delay: rand(0, 0.45),
+      pop: intro,
+      delay: delayOf(i),
+      onOpen: () => openModal(sprite.work || genericWork(sprite.alt), sprite.url),
     }));
   });
 
-  // 社名ロゴ: 最大ステッカーより大きく、最前面、下側の隅どちらかに1枚だけ
-  // （上の隅はヘッダーのナビと被るため下側に限定。ヘッダーの z=1000 より下）
-  if (logoSprite) {
-    const sprite = { alt: LOGO.alt, ...logoSprite };
-    // ロゴは横長ロックアップなので、長辺基準だと見た目が細く負ける。
-    // 幅を最大ステッカーの1.5倍に取り（画面幅は超えない）、存在感を確保する
-    const M = 14; // 隅からの余白
-    const L = Math.min(Math.max(...spots.map((p) => p.size)) * 1.5, W - M * 2);
-    const { w, h } = stickerDims(sprite, L);
-    const corner = Math.random() < 0.5
-      ? { x: M, y: H - h - M }          // 左下
-      : { x: W - w - M, y: H - h - M }; // 右下
-    field.appendChild(buildSticker(sprite, {
-      href: LOGO.href,
-      cls: 'sticker-logo',
-      rot: rand(-6, 6),
-      size: L,
-      x: corner.x,
-      y: corner.y,
-      z: 990, // どのステッカー（通常 z ≤ 数十、hover時 989）よりも手前
-      delay: 0.55, // 最後にバチンと貼られる
+  photoSpots.forEach((p, i) => {
+    const w = p.size * 1.15;
+    world.appendChild(buildPhoto(PHOTOS[i % PHOTOS.length], {
+      rot: rand(-7, 7),
+      w,
+      x: p.x - w / 2,
+      y: p.y - w * 0.62,
+      z: zOrder[stickerSpots.length + i] + 1,
+      pop: intro,
+      delay: delayOf(stickerSpots.length + i),
     }));
+  });
+
+  if (!intro) {
+    placeLogo(false);
+    enableExplore();
+    return;
   }
+
+  mode = 'intro';
+  later(startZoom, 300 + PASTE_SEC * 1000); // 貼り終わりを見せてからズーム
 }
+
+/* ==========================================================
+   ▼ 調整デモ: URLに ?tune を付けるとスライダーが出る
+   （値は localStorage に保存。リセットで初期値に戻る）
+   ========================================================== */
+
+function initTunePanel() {
+  if (!/[?&]tune\b/.test(location.search)) return;
+  const DEFS = [
+    ['world', '壁の広さ（探索範囲）', 1.5, 6, 0.1],
+    ['size', 'ステッカーの大きさ', 0.6, 2.5, 0.05],
+    ['gap', 'ステッカーの間隔', 1.0, 2.5, 0.05],
+    ['introView', '引きで見える範囲', 1.2, 6, 0.1],
+  ];
+  const panel = document.createElement('div');
+  panel.className = 'tune-panel';
+  panel.innerHTML =
+    '<strong>配置の調整デモ</strong>' +
+    DEFS.map(([k, label]) =>
+      `<label>${label}<output id="tune-${k}"></output><input type="range" data-key="${k}" /></label>`
+    ).join('') +
+    '<div class="tune-actions">' +
+    '<button type="button" data-act="intro">イントロ再生</button>' +
+    '<button type="button" data-act="reset">リセット</button></div>';
+  document.body.appendChild(panel);
+
+  DEFS.forEach(([k, , min, max, step]) => {
+    Object.assign(panel.querySelector(`[data-key="${k}"]`), { min, max, step });
+  });
+  const sync = () => DEFS.forEach(([k]) => {
+    panel.querySelector(`[data-key="${k}"]`).value = PARAMS[k];
+    panel.querySelector(`#tune-${k}`).textContent = '×' + Number(PARAMS[k]).toFixed(2);
+  });
+  sync();
+
+  let debounce;
+  panel.addEventListener('input', (e) => {
+    const k = e.target.dataset.key;
+    if (!k) return;
+    PARAMS[k] = +e.target.value;
+    localStorage.setItem('sh-tune', JSON.stringify(PARAMS));
+    sync();
+    clearTimeout(debounce);
+    debounce = setTimeout(() => build({ intro: false }), 250);
+  });
+  panel.addEventListener('click', (e) => {
+    const act = e.target.dataset.act;
+    if (act === 'intro') build({ intro: true });
+    if (act === 'reset') {
+      PARAMS = { ...DEFAULT_PARAMS };
+      localStorage.removeItem('sh-tune');
+      sync();
+      build({ intro: false });
+    }
+  });
+}
+
+initTunePanel();
+
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+build({ intro: !reducedMotion }).then(() => {
+  if (reducedMotion) skipIntro();
+});
 
 window.addEventListener('resize', () => {
   clearTimeout(window.__rz);
-  window.__rz = setTimeout(placeStickers, 200);
+  window.__rz = setTimeout(() => build({ intro: false }), 200);
 });
-
-placeStickers();

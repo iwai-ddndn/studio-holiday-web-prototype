@@ -4,15 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex" /><!-- 確認用サイトのため検索除け -->
-  <title>Works（仮）— STUDIO HOLIDAY</title>
+  <title>ストーリー（仮）— STUDIO HOLIDAY</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <!-- 事例詳細（仮）: コンセプト「作りかけのスクラップブック」の見開きルール
-       左ページ = 貼り込み（ビジュアル・カオス） / 右ページ = キャプション（整然・ファクト） -->
+  <!-- ストーリーページ（仮）: 事例を「読み物」として深掘りする記事テンプレート。
+       情報量と粒度はBIOTOPEのプロジェクト事例ページを参考にしている:
+       タイトル+タグ → 基本情報(期間/体制) → ポイント3つ → 本文(小見出し数本) →
+       途中に現場写真 → 振り返り → クレジット → 次のストーリー -->
   <header class="site-header">
     <a class="brand" href="./index.html">
       <span class="brand-dot"></span>
@@ -20,37 +22,141 @@
     </a>
     <nav class="site-nav">
       <a href="./index.html#about">About</a>
+      <a href="./index.html#philosophy">Philosophy</a>
+      <a href="./index.html#business">Business</a>
       <a href="./index.html#works">Works</a>
-      <a href="./index.html#member">Member</a>
       <a href="./index.html#contact">Contact</a>
     </nav>
   </header>
 
-  <main class="spread">
-    <!-- 左ページ: 貼り込み -->
-    <div class="spread-visual">
-      <img src="./assets/works_pondelion01.jpg" alt="ポン・デ・ライオン" />
-    </div>
+  <main class="story">
+    <!-- ▼ ヘッダー: タイトル・サブタイトル・担当領域タグ -->
+    <header class="story-head">
+      <p class="story-eyebrow">STORY（仮）</p>
+      <h1>ポン・デ・ライオンと、世界観のつくりなおし（仮タイトル）</h1>
+      <p class="story-sub">キャラクターを起点に、ブランドの世界観を再設計したプロジェクト（仮サブタイトル）</p>
+      <ul class="story-tags">
+        <li>キャラクターデザイン</li>
+        <li>世界観設計</li>
+        <li>ブランディング</li>
+        <li>デプロイ伴走</li>
+      </ul>
+    </header>
 
-    <!-- 右ページ: キャプション -->
-    <div class="spread-caption">
-      <span class="work-kind">キャラクターデザイン</span>
-      <h1>ポン・デ・ライオン（仮）</h1>
+    <!-- ▼ 基本情報: 期間・体制 -->
+    <dl class="story-info">
+      <div><dt>クライアント</dt><dd>株式会社〇〇〇〇（仮）</dd></div>
+      <div><dt>期間</dt><dd>20XX年X月 〜 20XX年X月（仮）</dd></div>
+      <div><dt>体制</dt><dd>プロデュース: 〇〇 ／ デザイン: 〇〇 ／ コピー: 〇〇（仮）</dd></div>
+    </dl>
+
+    <!-- ▼ ポイント: このプロジェクトの要点3つ -->
+    <section class="story-points">
+      <h2>このプロジェクトのポイント</h2>
+      <ol>
+        <li>キャラクターを「絵」ではなく「世界観の入口」として捉え直す（仮）</li>
+        <li>社内の誰もが使える運用ルールまで含めてデザインする（仮）</li>
+        <li>世に出したあとの反応を見ながら、一緒に育てていく（仮）</li>
+      </ol>
+    </section>
+
+    <!-- ▼ 本文: 小見出し付きセクション（実データが入るまでの粒度サンプル） -->
+    <section class="story-body">
+      <h2>「かわいい」の先にある課題（仮見出し）</h2>
       <p>
-        ここに事例の説明が入ります。どんな依頼で、何を考えて、どうつくったか。
-        ダミーテキストです。実データが入るまでの構成確認用のページなので、
-        文章のボリューム感だけ参考にしてください。（仮テキスト）
+        ここに、プロジェクトが始まった背景が入ります。クライアントがどんな課題を抱えていて、
+        なぜスタジオホリデーに声がかかったのか。最初の打ち合わせで交わした会話や、
+        そのとき感じた違和感・可能性など、具体的なエピソードから書き起こします。（仮テキスト）
       </p>
-      <table class="fact-table">
-        <tr><th>クライアント</th><td>株式会社〇〇〇〇（仮）</td></tr>
-        <tr><th>年</th><td>20XX</td></tr>
-        <tr><th>担当領域</th><td>キャラクターデザイン / 世界観設計（仮）</td></tr>
-        <tr><th>クレジット</th><td>Design: 〇〇 / Direction: 〇〇（仮）</td></tr>
-      </table>
-      <a class="back-link" href="./index.html#works">← ステッカーの山にもどる</a>
-    </div>
+      <p>
+        導入は2〜3段落を想定。読み物として引き込みつつ、「単にデザインを納品する会社ではない」
+        ことが伝わる粒度で書きます。（仮テキスト）
+      </p>
+
+      <h2>上流の考えごとから、一緒に（仮見出し）</h2>
+      <p>
+        ここには、実際の進め方・プロセスが入ります。ワークショップ、リサーチ、スケッチ、
+        試作、社内での対話……。どんな順番で何をやったか、途中でどんな議論があったかを、
+        現場の写真やラフ案とあわせて紹介します。（仮テキスト）
+      </p>
+      <figure class="story-photo">
+        <img src="https://picsum.photos/seed/story-process/1200/675" alt="プロジェクト進行風景（仮）" loading="lazy" />
+        <figcaption>ワークショップの様子（仮・実写真に差し替え）</figcaption>
+      </figure>
+      <p>
+        プロセスの説明は1〜2セクション。意思決定の理由（なぜこの方向にしたか）を必ず書くのが
+        このテンプレートのルールです。（仮テキスト）
+      </p>
+
+      <h2>デプロイして、育てる（仮見出し）</h2>
+      <p>
+        ここには、アウトプットとその後の話が入ります。何がどんな形で世に出たのか、
+        出したあとにどんな反応があり、どう育てているのか。「つくって終わり」ではないことが
+        伝わるセクションです。（仮テキスト）
+      </p>
+    </section>
+
+    <!-- ▼ 振り返り: プロジェクトから何が残ったか -->
+    <section class="story-close">
+      <h2>このプロジェクトから残ったもの</h2>
+      <p>
+        プロジェクトを通じてクライアントとスタホリ双方に何が残ったか、
+        次にどう繋がっていくかを短く振り返ります。対談形式にしてもよい枠です。（仮テキスト）
+      </p>
+    </section>
+
+    <!-- ▼ クレジット -->
+    <table class="fact-table">
+      <tr><th>クライアント</th><td>株式会社〇〇〇〇（仮）</td></tr>
+      <tr><th>期間</th><td>20XX年X月 〜 20XX年X月（仮）</td></tr>
+      <tr><th>担当領域</th><td>キャラクターデザイン / 世界観設計 / 運用ガイドライン（仮）</td></tr>
+      <tr><th>クレジット</th><td>Produce: 〇〇 / Design: 〇〇 / Copy: 〇〇（仮）</td></tr>
+      <tr><th>関連リンク</th><td><a href="https://kdc-foodlab.com/post/aHOPhmK8" target="_blank" rel="noopener">プレスリリース（仮リンク）↗</a></td></tr>
+    </table>
+
+    <!-- ▼ 次のストーリー -->
+    <nav class="story-next">
+      <span>NEXT STORY</span>
+      <a href="./works.html">yappy — 名前とロゴから始まった世界観（仮）→</a>
+    </nav>
+
+    <a class="back-link" href="./index.html">← ステッカーの壁にもどる</a>
   </main>
 
+  <footer class="site-footer">
+    <img class="footer-logo" src="./assets/stickers/sh-logo.png" alt="STUDIO HOLIDAY" />
+    <nav class="footer-nav">
+      <a href="./index.html#about">About</a>
+      <a href="./index.html#philosophy">Philosophy</a>
+      <a href="./index.html#business">Business</a>
+      <a href="./index.html#works">Works</a>
+      <a href="./index.html#contact">Contact</a>
+    </nav>
+    <small>© 2026 STUDIO HOLIDAY</small>
+  </footer>
+
   <div class="wip-stamp" aria-hidden="true">仮ページ</div>
+  <!-- ▼ ニュースレター（Substack）動線: 左端の縦型電光掲示板（全ページ共通） -->
+  <div class="news-ticker">
+    <span class="ticker-label"><span class="ticker-led" aria-hidden="true"></span>NEWSLETTER</span>
+    <a class="ticker-window" href="https://substack.studioholiday.jp/" target="_blank" rel="noopener" aria-label="ニュースレターを読む">
+      <span class="ticker-track" aria-hidden="true">
+        <span class="ticker-set">
+          <span>vol.48 偶発的な出会いがプロジェクトになるまで（仮）</span>
+          <span>vol.47 休日コーラ、次の一手（仮）</span>
+          <span>vol.46 KDCに集まる人たちの話（仮）</span>
+          <span>vol.45 「デザイン&amp;デプロイ」という仕事（仮）</span>
+        </span>
+        <span class="ticker-set">
+          <span>vol.48 偶発的な出会いがプロジェクトになるまで（仮）</span>
+          <span>vol.47 休日コーラ、次の一手（仮）</span>
+          <span>vol.46 KDCに集まる人たちの話（仮）</span>
+          <span>vol.45 「デザイン&amp;デプロイ」という仕事（仮）</span>
+        </span>
+      </span>
+    </a>
+    <a class="ticker-cta" href="https://substack.studioholiday.jp/" target="_blank" rel="noopener">購読する ↗</a>
+  </div>
+
 </body>
 </html>

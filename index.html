@@ -7,12 +7,13 @@
   <title>STUDIO HOLIDAY — キャラクター & グラフィック</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Geom:wght@400;600;700;800;900&amp;family=Noto+Sans+JP:wght@400;600;700;800;900&amp;family=Nunito+Sans:opsz,wght@6..12,600;6..12,700;6..12,800;6..12,900&amp;display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css?v=20260722" />
 </head>
-<body>
-  <!-- ファーストビュー: 自社アウトプットをステッカーのように貼り重ねたコラージュ。
-       リロードのたびに配置・順番がランダムに変わる。ステッカーをクリックで仮のWorksページへ。 -->
+<body class="home-page">
+  <!-- ファーストビュー: ビューポートより広い「壁」にステッカーと写真を貼り重ね、
+       イントロ（引きの画 → ペタペタ → ズームイン → ロゴ）のあと上下左右に回遊できる。
+       ステッカーはクリックでポップアップ、写真は外部ページ/サイト内記事へ。 -->
   <header class="site-header">
     <a class="brand" href="#">
       <span class="brand-dot"></span>
@@ -20,42 +21,105 @@
     </a>
     <nav class="site-nav">
       <a href="#about">About</a>
+      <a href="#about">Philosophy</a>
+      <a href="#business">Business</a>
       <a href="#works">Works</a>
-      <a href="#member">Member</a>
       <a href="#contact">Contact</a>
     </nav>
   </header>
 
   <main>
-    <section class="hero" id="top">
-      <div class="hero-backdrop" aria-hidden="true">HOLIDAY</div>
-      <div class="sticker-field" id="stickerField" aria-label="スタジオホリデーの作品ステッカー"></div>
-      <div class="scroll-hint" aria-hidden="true">scroll ↓</div>
+    <section class="hero is-intro" id="hero">
+      <!-- ニュースレター動線はファーストビュー内だけに表示する -->
+      <div class="news-ticker">
+        <span class="ticker-label"><img src="./assets/newsletter-icon.svg" alt="" aria-hidden="true" />Newsletter</span>
+        <a class="ticker-window" href="https://substack.studioholiday.jp/" target="_blank" rel="noopener" aria-label="ニュースレターを読む">
+          <span class="ticker-track" aria-hidden="true">
+            <span class="ticker-set">
+              <span>vol.48 偶発的な出会いがプロジェクトになるまで（仮）</span>
+              <span>vol.47 休日コーラ、次の一手（仮）</span>
+              <span>vol.46 KDCに集まる人たちの話（仮）</span>
+              <span>vol.45 「デザイン&amp;デプロイ」という仕事（仮）</span>
+            </span>
+            <span class="ticker-set">
+              <span>vol.48 偶発的な出会いがプロジェクトになるまで（仮）</span>
+              <span>vol.47 休日コーラ、次の一手（仮）</span>
+              <span>vol.46 KDCに集まる人たちの話（仮）</span>
+              <span>vol.45 「デザイン&amp;デプロイ」という仕事（仮）</span>
+            </span>
+          </span>
+        </a>
+        <a class="ticker-cta" href="https://substack.studioholiday.jp/" target="_blank" rel="noopener"><span>購読する</span><img src="./assets/open-in-new.svg" alt="" aria-hidden="true" /></a>
+      </div>
+
+      <div class="world" id="world" aria-label="スタジオホリデーのアウトプットの壁">
+        <div class="world-center" aria-hidden="true">
+          <p class="ddp">Design &amp; Deploy Partners</p>
+        </div>
+        <!-- ステッカー・写真・ロゴは main.js がここに貼っていく -->
+      </div>
+      <p class="drag-hint" aria-hidden="true">Drag &amp; Explore!</p>
+      <a class="scroll-cta" href="#about"><span>Scroll down</span><em aria-hidden="true">↓</em></a>
     </section>
 
-    <!-- ▼ ここから下は仮コンテンツ（スクラップブックの続きのページ） -->
-
-    <section class="page-section" id="about">
-      <h2 class="tape-heading tape-yellow">ABOUT<span class="tape-sub">この本について</span></h2>
-      <div class="letter">
+    <section class="home-intro" id="about">
+      <div class="home-intro-copy">
+        <h1>Design &amp; Deploy Partners</h1>
         <p>
           スタジオホリデーは、キャラクターデザインをはじめとした「世界観づくり」を得意とするデザインスタジオです。
           アウターブランディングもインナーブランディングも、コーラづくりも、場の運営も。
-          つくって終わりではなく、世に出して育てるところまで伴走する「デザイン&デプロイパートナー」です。（仮テキスト）
+          つくって終わりではなく、世に出して育てるところまで伴走する「デザイン&amp;デプロイパートナー」です。（仮テキスト）
         </p>
-        <p class="letter-sign">STUDIO HOLIDAY</p>
+      </div>
+      <img class="intro-sticker intro-pondelion" src="./assets/stickers/works-pondelion.png" alt="" aria-hidden="true" />
+      <img class="intro-sticker intro-holiday" src="./assets/stickers/holiday-kun-thinking.png" alt="" aria-hidden="true" />
+      <img class="intro-sticker intro-yappy" src="./assets/yappy.png" alt="" aria-hidden="true" />
+      <img class="intro-sticker intro-sushiro" src="./assets/stickers/works-sushiro.png" alt="" aria-hidden="true" />
+      <img class="intro-sticker intro-logo" src="./assets/stickers/sh-logo.png" alt="" aria-hidden="true" />
+      <img class="intro-sticker intro-holiday-mini" src="./assets/stickers/holiday-kun-thinking.png" alt="" aria-hidden="true" />
+      <img class="intro-sticker intro-pondelion-mini" src="./assets/stickers/works-pondelion.png" alt="" aria-hidden="true" />
+      <img class="intro-sticker intro-yappy-mini" src="./assets/yappy.png" alt="" aria-hidden="true" />
+      <img class="intro-sticker intro-sushiro-mini" src="./assets/stickers/works-sushiro.png" alt="" aria-hidden="true" />
+    </section>
+
+    <section class="home-business" id="business">
+      <h2>Our Business</h2>
+      <div class="home-business-grid">
+        <a class="home-business-card" href="./business-design.html">
+          <span class="home-business-visual"><img src="./assets/pose05_かんがえる.png" alt="青と紫のキャラクター" /></span>
+          <span class="home-business-copy">
+            <strong>Design studio</strong>
+            <span>キャラクター・ブランディング・世界観づくり。上流の考えごとからアウトプットまで。（仮テキスト）</span>
+          </span>
+        </a>
+        <a class="home-business-card" href="./business-food.html">
+          <span class="home-business-visual"><img src="./assets/business-food-cola.png" alt="休日コーラ ジンジャーアップル" /></span>
+          <span class="home-business-copy">
+            <strong>Food</strong>
+            <span>休日コーラ、みんなでご飯会。つくって、ふるまって、たしかめる。（仮テキスト）</span>
+          </span>
+        </a>
+        <a class="home-business-card" href="./business-space.html">
+          <span class="home-business-visual"><img src="./assets/business-space.png" alt="コワーキングスペースでのイベント" /></span>
+          <span class="home-business-copy">
+            <strong>Co-working space</strong>
+            <span>KDCの運営。人と人が混ざる場所から、次のプロジェクトが生まれる。（仮テキスト）</span>
+          </span>
+        </a>
       </div>
     </section>
 
     <section class="page-section" id="works">
-      <h2 class="tape-heading tape-pink">WORKS<span class="tape-sub">貼ってきたもの</span></h2>
+      <h2 class="tape-heading tape-green">WORKS<span class="tape-sub">貼ってきたもの</span></h2>
+      <span class="date-stamp" aria-hidden="true">最終更新 2026.07（仮）</span>
       <div class="works-grid">
         <a class="work-card" href="./works.html">
+          <span class="new-fusen" aria-hidden="true">NEW!</span>
           <img src="./assets/works_pondelion01.jpg" alt="ポン・デ・ライオン" loading="lazy" />
           <span class="work-meta"><strong>ポン・デ・ライオン（仮）</strong><em>キャラクターデザイン</em></span>
         </a>
         <a class="work-card" href="./works.html">
-          <img src="./assets/works_sushiro.png" alt="スシロー" loading="lazy" />
+          <img src="./assets/stickers/works-sushiro.png" alt="スシロー" loading="lazy" />
           <span class="work-meta"><strong>スシロー（仮）</strong><em>ブランディング</em></span>
         </a>
         <a class="work-card" href="./works.html">
@@ -63,11 +127,11 @@
           <span class="work-meta"><strong>yappy（仮）</strong><em>ロゴ・世界観</em></span>
         </a>
       </div>
-      <p class="section-note">※ 事例は仮。クリックで事例ページ（仮）へ</p>
+      <p class="section-note">※ 事例は仮。クリックでストーリーページ（仮）へ</p>
     </section>
 
     <section class="page-section" id="member">
-      <h2 class="tape-heading tape-blue">MEMBER<span class="tape-sub">この本を作ってる人たち</span></h2>
+      <h2 class="tape-heading tape-yellow">MEMBER<span class="tape-sub">この本を作ってる人たち</span></h2>
       <div class="member-grid">
         <div class="member-card">
           <img src="./assets/stickers/holiday-kun-thinking.png" alt="" />
@@ -85,19 +149,20 @@
     </section>
 
     <section class="page-section" id="company">
-      <h2 class="tape-heading tape-green">COMPANY<span class="tape-sub">奥付</span></h2>
+      <h2 class="tape-heading tape-orange">COMPANY<span class="tape-sub">奥付</span></h2>
       <table class="company-table">
         <tr><th>社名</th><td>株式会社スタジオホリデー（仮）</td></tr>
         <tr><th>所在地</th><td>東京都〇〇区〇〇 1-2-3（仮）</td></tr>
         <tr><th>設立</th><td>20XX年X月（仮）</td></tr>
-        <tr><th>事業内容</th><td>デザインスタジオ事業 / 休日コーラ / KDCの運営 / みんなでご飯会（仮）</td></tr>
+        <tr><th>事業内容</th><td>デザインスタジオ事業 / フード事業 / コワーキングスペース事業（仮）</td></tr>
       </table>
     </section>
 
     <section class="page-section" id="contact">
-      <h2 class="tape-heading tape-orange">CONTACT<span class="tape-sub">連絡先メモ</span></h2>
+      <h2 class="tape-heading tape-pink">CONTACT<span class="tape-sub">連絡先メモ</span></h2>
       <p class="contact-lead">お仕事のご相談、協業のお誘い、なんとなくの雑談。どれでもどうぞ。（仮テキスト）</p>
       <a class="contact-btn" href="#" onclick="return false">お問い合わせフォーム（仮・Googleフォーム予定）</a>
+      <img class="contact-mascot" src="./assets/stickers/holiday-kun-thinking.png" alt="" aria-hidden="true" />
     </section>
   </main>
 
@@ -105,6 +170,8 @@
     <img class="footer-logo" src="./assets/stickers/sh-logo.png" alt="STUDIO HOLIDAY" />
     <nav class="footer-nav">
       <a href="#about">About</a>
+      <a href="#about">Philosophy</a>
+      <a href="#business">Business</a>
       <a href="#works">Works</a>
       <a href="#member">Member</a>
       <a href="#company">Company</a>
@@ -113,6 +180,19 @@
     <small>© 2026 STUDIO HOLIDAY</small>
   </footer>
 
-  <script src="./main.js"></script>
+  <!-- ▼ ステッカークリック時のポップアップ（アウトプット概要 + ストーリーへの入口） -->
+  <div class="work-modal" id="workModal" hidden>
+    <div class="work-modal-backdrop" data-close></div>
+    <div class="work-modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="work-modal-close" type="button" data-close aria-label="閉じる">×</button>
+      <img id="modalImg" alt="" />
+      <span class="work-kind" id="modalKind"></span>
+      <h3 id="modalTitle"></h3>
+      <p id="modalDesc"></p>
+      <a class="modal-story-link" href="./works.html">ストーリーを読む →</a>
+    </div>
+  </div>
+
+  <script src="./main.js?v=20260722"></script>
 </body>
 </html>

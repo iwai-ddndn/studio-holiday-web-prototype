@@ -1,10 +1,17 @@
 /* ===== STUDIO HOLIDAY — sticker-wall first view (prototype) ===== */
 
 :root {
-  --surface: #f1ece1;          /* 壁 / 台紙のようなオフホワイト */
-  --surface-2: #e9e2d3;
-  --ink: #2a2622;
+  --surface: #f1fcfc;
+  --surface-2: #f0f0f0;
+  --ink: #1a1a1a;
   --white: #ffffff;
+  --lime: #d5f409;
+  --orange: #f57424;
+  --blue: #3b73f8;
+  --green: #36f718;
+  --grid-line: #dff5f7;
+  --font-en: "Geom", "Nunito Sans", "Arial Rounded MT Bold", sans-serif;
+  --font-ja: "Noto Sans CJK JP", "Noto Sans JP", system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -18,10 +25,10 @@ html, body {
 }
 
 body {
-  font-family: "Zen Maru Gothic", "Baloo 2", system-ui, sans-serif;
+  font-family: var(--font-ja);
   color: var(--ink);
-  background:
-    radial-gradient(120% 90% at 50% 0%, var(--surface) 0%, var(--surface-2) 100%);
+  background: var(--white);
+  padding-left: 0;
 }
 
 /* ---------- header ---------- */
@@ -75,53 +82,105 @@ body {
 }
 .site-nav a:hover { opacity: 1; }
 
-/* ---------- hero ---------- */
+/* ---------- hero: 回遊できる「壁」 ---------- */
 .hero {
   position: relative;
   height: 100vh;
   height: 100svh;
   width: 100%;
   overflow: hidden;
+  touch-action: none; /* モバイルはドラッグ＝壁のパン。下層へはナビから */
+  user-select: none;  /* ドラッグ回遊中に文字が選択されないように */
+  -webkit-user-select: none;
+}
+.hero.can-pan { cursor: grab; }
+.hero.can-pan.is-panning { cursor: grabbing; }
+
+/* ドラッグ操作のヒント（控えめ） */
+.drag-hint {
+  position: absolute;
+  left: 18px;
+  bottom: 16px;
+  margin: 0;
+  font-family: "Baloo 2", "Zen Maru Gothic", sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: #2a262277;
+  z-index: 991;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
 }
 
-.scroll-hint {
+/* スクロールで本編に行けることをはっきり示すCTA */
+.scroll-cta {
   position: absolute;
   left: 50%;
-  bottom: 14px;
+  bottom: 18px;
   transform: translateX(-50%);
-  font-family: "Baloo 2", sans-serif;
-  font-weight: 800;
-  font-size: 13px;
-  letter-spacing: 0.12em;
-  color: #2a262288;
-  z-index: 991; /* ロゴ(990)より上・ヘッダー(1000)より下 */
-  animation: bob 1.6s ease-in-out infinite;
-  pointer-events: none;
-}
-@keyframes bob {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50%      { transform: translateX(-50%) translateY(6px); }
-}
-
-.hero-backdrop {
-  position: absolute;
-  inset: 0;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-family: "Baloo 2", sans-serif;
-  font-weight: 800;
-  font-size: clamp(80px, 20vw, 320px);
-  letter-spacing: 0.04em;
-  color: #00000008;
-  user-select: none;
-  pointer-events: none;
+  gap: 10px;
+  background: var(--white);
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 3px 3px 0 var(--ink);
+  padding: 10px 22px;
+  color: var(--ink);
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  z-index: 991; /* ロゴ(990)より上・ヘッダー(1000)より下 */
+  transition: opacity 0.4s ease, transform 0.1s ease, box-shadow 0.1s ease;
+}
+.scroll-cta em {
+  font-style: normal;
+  animation: bob 1.4s ease-in-out infinite;
+}
+.scroll-cta:hover { transform: translateX(-50%) translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+.hero.is-intro .drag-hint,
+.hero.is-intro .scroll-cta { opacity: 0; pointer-events: none; }
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(4px); }
 }
 
-.sticker-field {
+/* ビューポートより広い壁。カメラ（translate+scale）で映す範囲を動かす。
+ * JSがサイズを設定するまでの一瞬はビューポートと同サイズ（中央の文字が正しく中央に出る） */
+.world {
   position: absolute;
-  inset: 0;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
 }
+.world.is-zooming { transition: transform 1.45s cubic-bezier(0.7, 0, 0.25, 1); }
+
+/* 壁の中央: Design & Deploy Partner。イントロの最後にロゴが上に貼られる */
+.world-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 200; /* 通常ステッカー(〜数百)より手前・ロゴ(990)より奥 */
+  pointer-events: none;
+}
+.ddp {
+  margin: 0;
+  font-family: "Baloo 2", "Zen Maru Gothic", sans-serif;
+  font-weight: 800;
+  font-size: clamp(36px, 5.8vw, 84px);
+  line-height: 1.08;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  white-space: nowrap;
+  animation: fadeIn 0.6s ease both;
+}
+@keyframes fadeIn { from { opacity: 0; } }
 
 /* ---------- sticker ----------
  * 白フチ（輪郭ダイカット）と落ち影はJS側でCanvasに焼き込み済み。
@@ -152,7 +211,7 @@ body {
   100% { transform: var(--tf) scale(1); }
 }
 
-/* hover で少し持ち上がる手触り（989 = 社名ロゴ(990)は超えない） */
+/* hover で少し持ち上がる手触り（989 = 社名ロゴ(1090)は超えない） */
 .sticker:hover {
   z-index: 989 !important;
   transform: var(--tf) scale(1.06) translateY(-2px);
@@ -162,8 +221,221 @@ body {
 /* 常にどのステッカーよりも手前。クリックで About へ */
 .sticker-logo,
 .sticker-logo:hover {
-  z-index: 990 !important;
+  z-index: 1090 !important;
 }
+
+/* ロゴの白台紙（DOM版）: 中央の「Design & Deploy Partner」に覆い被さる */
+.logo-plate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  box-shadow: 6px 10px 18px rgba(40, 33, 24, 0.28);
+}
+.logo-plate img {
+  width: 88% !important;
+  height: auto !important;
+  object-fit: contain;
+}
+
+/* ---------- 写真（ポラロイド風カード） ---------- */
+/* クリックで外部ページ（KDCイベントレポート等）かサイト内記事へ */
+.photo-card {
+  position: absolute;
+  display: block;
+  background: var(--white);
+  padding: 8px 8px 10px;
+  box-shadow: 3px 6px 12px rgba(40, 33, 24, 0.22);
+  transform: var(--tf);
+  transform-origin: center;
+  transition: transform 0.18s cubic-bezier(.2,.8,.2,1.4);
+  text-decoration: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.photo-card.is-popping { animation: pop 0.42s cubic-bezier(.18,.9,.3,1.35) both; }
+.photo-card:hover {
+  z-index: 989 !important;
+  transform: var(--tf) scale(1.05) translateY(-2px);
+}
+.photo-img {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+.photo-emoji { font-size: 44px; }
+.photo-img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  -webkit-user-drag: none;
+}
+.photo-cap {
+  display: block;
+  padding-top: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ---------- ステッカーのポップアップ（概要 + ストーリー入口） ---------- */
+.work-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+.work-modal[hidden] { display: none; }
+.work-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(42, 38, 34, 0.45);
+}
+.work-modal-card {
+  position: relative;
+  background: var(--white);
+  width: min(430px, 100%);
+  padding: 30px 32px 26px;
+  box-shadow: 6px 10px 26px rgba(40, 33, 24, 0.35);
+  transform: rotate(-0.6deg);
+  animation: modalIn 0.22s cubic-bezier(.2,.8,.3,1.2) both;
+}
+@keyframes modalIn {
+  from { transform: rotate(-0.6deg) scale(0.92); opacity: 0; }
+}
+.work-modal-card img {
+  display: block;
+  width: 55%;
+  max-height: 180px;
+  object-fit: contain;
+  margin: 0 auto 18px;
+}
+.work-modal-card h3 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.4;
+}
+.work-modal-card p {
+  margin: 0 0 20px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.9;
+}
+.work-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: none;
+  background: none;
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--ink);
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0.6;
+}
+.work-modal-close:hover { opacity: 1; }
+.modal-story-link {
+  display: inline-block;
+  color: var(--ink);
+  font-weight: 900;
+  font-size: 14px;
+  text-decoration: none;
+  border-bottom: 3px solid var(--ink);
+  padding-bottom: 2px;
+}
+.modal-story-link:hover { opacity: 0.7; }
+
+/* ---------- ニュースレター（Substack）動線: 左端の縦型電光掲示板 ---------- */
+.news-ticker {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 46px;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: #17140f;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.25);
+}
+.ticker-label {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 14px 0 12px;
+  writing-mode: vertical-rl;
+  align-self: center;
+  color: #ffc63a;
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  border-bottom: 2px solid #ffffff1a;
+}
+.ticker-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffc63a;
+  box-shadow: 0 0 6px #ffc63a;
+  animation: blink 1.4s steps(2) infinite;
+}
+@keyframes blink { 50% { opacity: 0.25; } }
+.ticker-window {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  text-decoration: none;
+}
+.ticker-track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: tickerMove 40s linear infinite;
+}
+.ticker-window:hover .ticker-track { animation-play-state: paused; }
+.ticker-set {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 56px;
+  padding-bottom: 56px;
+  color: #ffd94e;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-shadow: 0 0 8px #ffb80055;
+}
+.ticker-set span { writing-mode: vertical-rl; white-space: nowrap; }
+@keyframes tickerMove { to { transform: translateY(-50%); } }
+.ticker-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0;
+  background: #ffc63a;
+  color: #17140f;
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+}
+.ticker-cta:hover { background: #ffd94e; }
 
 /* ==========================================================
    ▼ スクロールコンテンツ（仮）: スクラップブックの続きのページ
@@ -203,8 +475,9 @@ body {
 .tape-green  { background: #9fe6a0cc; }
 .tape-orange { background: #ffb37dcc; }
 
-/* About: 手紙のページ */
+/* About: 手紙のページ（四隅にマステで貼ってある紙） */
 .letter {
+  position: relative;
   background: var(--white);
   border-radius: 4px;
   padding: 36px 40px;
@@ -214,6 +487,18 @@ body {
   line-height: 2.1;
   font-weight: 700;
 }
+.letter::before,
+.letter::after {
+  content: "";
+  position: absolute;
+  width: 88px;
+  height: 24px;
+  background: #ffd94ebb;
+  box-shadow: 1px 2px 4px rgba(40, 33, 24, 0.15);
+  clip-path: polygon(2% 0, 100% 8%, 98% 100%, 0 92%);
+}
+.letter::before { top: -10px; left: -24px; transform: rotate(-38deg); }
+.letter::after  { bottom: -8px; right: -22px; transform: rotate(-40deg); }
 .letter p { margin: 0 0 1.2em; }
 .letter-sign {
   text-align: right;
@@ -221,14 +506,99 @@ body {
   font-weight: 800;
   opacity: 0.7;
 }
+.philosophy-line {
+  font-family: "Baloo 2", "Zen Maru Gothic", sans-serif;
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1.3;
+}
+
+/* Business: 3つの事業（クリックで各事業ページへ） */
+.biz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 30px;
+}
+.biz-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  padding: 26px 24px 20px;
+  box-shadow: 3px 6px 12px rgba(40, 33, 24, 0.14);
+  transform: rotate(var(--tilt, -0.8deg));
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform 0.16s cubic-bezier(.2,.8,.25,1.3), box-shadow 0.16s ease;
+}
+.biz-card:nth-child(2) { --tilt: 0.9deg; }
+.biz-card:nth-child(3) { --tilt: -0.4deg; }
+.biz-card:hover {
+  transform: rotate(var(--tilt, -0.8deg)) scale(1.03) translateY(-3px);
+  box-shadow: 5px 9px 18px rgba(40, 33, 24, 0.2);
+}
+.biz-emoji { font-size: 34px; display: block; margin-bottom: 10px; }
+.biz-card strong { display: block; font-size: 17px; margin-bottom: 8px; }
+.biz-card p { margin: 0 0 16px; font-size: 13px; line-height: 1.9; opacity: 0.85; }
+.biz-more {
+  margin-top: auto;
+  font-size: 12px;
+  font-weight: 900;
+  border-bottom: 2px solid var(--ink);
+  align-self: flex-start;
+  padding-bottom: 2px;
+}
+.biz-card:hover .biz-more { opacity: 0.7; }
+
+/* 事業紹介ページ（仮） */
+.biz-page { padding-top: 120px; }
+.biz-page .tape-heading { font-size: 34px; }
+.biz-page .letter { margin-bottom: 52px; }
+.biz-works-heading {
+  margin: 0 0 24px;
+  font-size: 19px;
+  font-weight: 900;
+  border-left: 6px solid #ffd94e;
+  padding-left: 14px;
+}
+.biz-page .back-link { display: inline-block; margin-top: 40px; }
 
 /* Works: 貼り込みのグリッド */
+.date-stamp {
+  display: inline-block;
+  margin: -22px 0 26px 16px;
+  border: 2.5px solid #c0392baa;
+  color: #c0392bcc;
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  transform: rotate(-3deg);
+  vertical-align: middle;
+}
+.new-fusen {
+  position: absolute;
+  top: -12px;
+  right: 14px;
+  background: #ff5964;
+  color: #fff;
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  padding: 4px 12px 5px;
+  transform: rotate(4deg);
+  box-shadow: 1px 2px 5px rgba(40, 33, 24, 0.25);
+  z-index: 1;
+}
 .works-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 34px;
 }
 .work-card {
+  position: relative;
   display: block;
   background: var(--white);
   padding: 14px 14px 12px;
@@ -263,7 +633,7 @@ body {
   opacity: 0.55;
 }
 
-/* Member */
+/* Member: ポラロイド風カード */
 .member-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -273,15 +643,20 @@ body {
 .member-card {
   text-align: center;
   font-weight: 700;
-}
-.member-card img {
-  width: 120px;
-  height: 120px;
-  object-fit: contain;
   background: var(--white);
-  border-radius: 50%;
-  padding: 12px;
-  box-shadow: 3px 5px 10px rgba(40, 33, 24, 0.14);
+  padding: 12px 12px 18px;
+  box-shadow: 3px 6px 12px rgba(40, 33, 24, 0.16);
+  transform: rotate(var(--tilt, -1.2deg));
+  transition: transform 0.16s cubic-bezier(.2,.8,.25,1.3);
+}
+.member-card:nth-child(2) { --tilt: 1deg; }
+.member-card:nth-child(3) { --tilt: -0.5deg; }
+.member-card:hover { transform: rotate(var(--tilt, -1.2deg)) scale(1.03) translateY(-3px); }
+.member-card img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  background: var(--surface);
   margin-bottom: 12px;
 }
 .member-card strong { display: block; font-size: 15px; }
@@ -310,6 +685,15 @@ body {
 .company-table th { width: 7em; opacity: 0.6; font-weight: 900; }
 
 /* Contact */
+#contact { position: relative; }
+.contact-mascot {
+  position: absolute;
+  right: 40px;
+  bottom: -10px;
+  width: 130px;
+  transform: rotate(6deg);
+  pointer-events: none;
+}
 .contact-lead { font-weight: 700; margin: 0 0 26px; }
 .contact-btn {
   display: inline-block;
@@ -359,68 +743,159 @@ body {
 .site-footer small { font-size: 11px; opacity: 0.55; }
 
 /* ==========================================================
-   ▼ Worksページ（仮）: 見開き（左=貼り込み / 右=キャプション）
+   ▼ ストーリーページ（仮）: 事例を読み物として深掘りする記事
+   （情報量・粒度はBIOTOPEの事例ページを参考にしたテンプレート）
    ========================================================== */
 
-.spread {
-  max-width: 1020px;
+.story {
+  max-width: 760px;
   margin: 0 auto;
-  padding: 110px 28px 60px;
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 48px;
-  align-items: start;
-}
-@media (max-width: 760px) {
-  .spread { grid-template-columns: 1fr; }
+  padding: 120px 28px 60px;
 }
 
-/* 左ページ: 貼り込み */
-.spread-visual {
-  position: relative;
-  background: var(--white);
-  padding: 20px;
-  box-shadow: 4px 8px 16px rgba(40, 33, 24, 0.18);
-  transform: rotate(-1.2deg);
+.story-head { margin-bottom: 36px; }
+.story-eyebrow {
+  margin: 0 0 14px;
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  opacity: 0.55;
 }
-.spread-visual img {
-  display: block;
-  width: 100%;
-  object-fit: contain;
-}
-.spread-visual::before,
-.spread-visual::after { /* 四隅のマステ */
-  content: "";
-  position: absolute;
-  width: 92px;
-  height: 26px;
-  background: #ffd94ebb;
-  box-shadow: 1px 2px 4px rgba(40, 33, 24, 0.15);
-}
-.spread-visual::before { top: -10px; left: -26px; transform: rotate(-40deg); }
-.spread-visual::after  { bottom: -8px; right: -24px; transform: rotate(-38deg); }
-
-/* 右ページ: キャプション（整然・ファクト） */
-.spread-caption h1 {
-  margin: 0 0 6px;
-  font-size: 30px;
+.story-head h1 {
+  margin: 0 0 12px;
+  font-size: clamp(26px, 4vw, 38px);
   font-weight: 900;
-  line-height: 1.4;
+  line-height: 1.5;
 }
-.spread-caption .work-kind {
-  display: inline-block;
+.story-sub {
+  margin: 0 0 18px;
+  font-size: 15px;
+  font-weight: 700;
+  opacity: 0.75;
+  line-height: 1.9;
+}
+.story-tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+.story-tags li {
   background: #ff9ec4cc;
   font-size: 12px;
   font-weight: 900;
   padding: 4px 14px;
-  transform: rotate(-1.5deg);
-  margin-bottom: 22px;
+  transform: rotate(-1deg);
 }
-.spread-caption p {
-  line-height: 2;
+.story-tags li:nth-child(2n) { background: #8fd6ffcc; transform: rotate(0.8deg); }
+.story-tags li:nth-child(3n) { background: #ffd94ecc; }
+
+.story-info {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 44px;
+  padding: 20px 24px;
+  background: var(--white);
+  box-shadow: 3px 5px 12px rgba(40, 33, 24, 0.12);
+}
+.story-info div { display: flex; gap: 16px; font-size: 13px; }
+.story-info dt { width: 7em; flex-shrink: 0; opacity: 0.55; font-weight: 900; }
+.story-info dd { margin: 0; font-weight: 700; }
+
+.story-points {
+  margin: 0 0 48px;
+  padding: 24px 28px;
+  border: 3px dashed #2a262233;
+  border-radius: 8px;
+}
+.story-points h2 {
+  margin: 0 0 14px;
+  font-size: 16px;
+  font-weight: 900;
+}
+.story-points ol {
+  margin: 0;
+  padding-left: 1.4em;
+  font-size: 14px;
   font-weight: 700;
-  margin: 0 0 26px;
+  line-height: 2.1;
 }
+
+.story-body h2,
+.story-close h2 {
+  margin: 52px 0 18px;
+  font-size: 21px;
+  font-weight: 900;
+  line-height: 1.6;
+  border-left: 6px solid #ffd94e;
+  padding-left: 14px;
+}
+.story-body p,
+.story-close p {
+  margin: 0 0 1.6em;
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 2.2;
+}
+
+.story-photo {
+  margin: 32px 0;
+}
+.story-photo img {
+  display: block;
+  width: 100%;
+  background: var(--white);
+  padding: 10px;
+  box-sizing: border-box;
+  box-shadow: 3px 6px 14px rgba(40, 33, 24, 0.18);
+  transform: rotate(-0.8deg);
+}
+.story-photo figcaption {
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.55;
+  text-align: center;
+}
+
+.story-close {
+  margin: 56px 0 44px;
+  padding: 26px 30px;
+  background: #fff7dd;
+  box-shadow: 3px 5px 12px rgba(40, 33, 24, 0.1);
+  transform: rotate(-0.3deg);
+}
+.story-close h2 { margin-top: 0; border-left-color: #ff9ec4; }
+.story-close p { margin-bottom: 0; }
+
+.story-next {
+  margin: 40px 0 32px;
+  padding: 20px 24px;
+  background: var(--white);
+  box-shadow: 3px 5px 12px rgba(40, 33, 24, 0.12);
+}
+.story-next span {
+  display: block;
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  opacity: 0.5;
+  margin-bottom: 6px;
+}
+.story-next a {
+  color: var(--ink);
+  font-weight: 900;
+  font-size: 15px;
+  text-decoration: none;
+}
+.story-next a:hover { opacity: 0.7; }
+
+.fact-table a { color: var(--ink); font-weight: 900; }
+
 .fact-table {
   border-collapse: collapse;
   width: 100%;
@@ -466,9 +941,626 @@ body {
 }
 
 @media (max-width: 640px) {
-  .site-nav { gap: 14px; padding: 7px 12px; }
-  .site-nav a { font-size: 12px; }
+  body { padding-left: 40px; }
+  .site-header { inset: 0 0 auto 40px; padding: 12px 14px; align-items: flex-start; }
+  .site-nav { gap: 8px 12px; padding: 7px 12px; flex-wrap: wrap; justify-content: flex-end; max-width: 60vw; }
+  .site-nav a { font-size: 11px; }
   .brand-name { font-size: 15px; }
   .page-section { padding: 64px 20px 28px; }
   .tape-heading { font-size: 24px; }
+  .news-ticker { width: 40px; }
+  .ticker-label { display: none; }
+  .ticker-cta { padding: 12px 0; font-size: 11px; }
+  .scroll-cta { font-size: 12px; padding: 9px 16px; }
+  .contact-mascot { width: 90px; right: 16px; }
+}
+
+/* ---------- 配置の調整デモパネル（URLに ?tune で表示） ---------- */
+.tune-panel {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 1300;
+  width: 232px;
+  background: #17140fee;
+  color: #f1ece1;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 14px 16px 12px;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+.tune-panel strong {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 10px;
+  color: #ffc63a;
+  letter-spacing: 0.08em;
+}
+.tune-panel label { display: block; margin-bottom: 10px; }
+.tune-panel output {
+  float: right;
+  color: #ffd94e;
+  font-family: "Baloo 2", sans-serif;
+}
+.tune-panel input[type="range"] {
+  width: 100%;
+  margin: 4px 0 0;
+  accent-color: #ffc63a;
+}
+.tune-actions { display: flex; gap: 8px; margin-top: 4px; }
+.tune-actions button {
+  flex: 1;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 0;
+  font-family: inherit;
+  font-weight: 900;
+  font-size: 11px;
+  cursor: pointer;
+  background: #ffc63a;
+  color: #17140f;
+}
+.tune-actions button[data-act="reset"] { background: #3a352d; color: #f1ece1; }
+
+/* ==========================================================
+   Figma renewal — TOP page
+   ========================================================== */
+
+.home-page {
+  padding-left: 0;
+  background-color: var(--white);
+}
+
+.home-page main {
+  background-color: var(--white);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.home-page .site-header {
+  display: none;
+}
+
+.home-page .hero {
+  min-height: 700px;
+  background: var(--white);
+}
+
+.home-page .world {
+  background-color: var(--white);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.home-page .world-center {
+  top: calc(50% - 112px);
+  width: max-content;
+  z-index: 991;
+}
+
+.home-page .ddp {
+  display: inline-block;
+  padding: 6px 12px 8px;
+  color: var(--white);
+  background: var(--orange);
+  font-family: var(--font-en);
+  font-size: clamp(28px, 3.35vw, 48px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  transform: rotate(2.38deg);
+  box-shadow: none;
+}
+
+.home-page .logo-plate,
+.home-page .logo-plate:hover {
+  border-radius: 24px !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.home-page .logo-plate img {
+  width: 150% !important;
+  max-width: none;
+  height: auto !important;
+}
+
+.home-page .photo-card {
+  padding: 12px 12px 16px;
+  border-radius: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+}
+
+.home-page .photo-img,
+.home-page .photo-img img {
+  border-radius: 12px;
+}
+
+.home-page .photo-cap {
+  padding: 12px 8px 0;
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.home-page .drag-hint {
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  font-family: var(--font-en);
+  font-size: 14px;
+  letter-spacing: 0;
+  color: #666;
+  white-space: nowrap;
+}
+
+.home-page .scroll-cta {
+  display: none;
+}
+
+/* Figma node 167:576 — introduction */
+.home-intro {
+  position: relative;
+  min-height: 80vh;
+  min-height: 80svh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.home-intro-copy {
+  position: relative;
+  z-index: 2;
+  width: min(720px, calc(100% - 48px));
+  color: #000;
+}
+
+.home-intro-copy h1 {
+  margin: 0 0 40px;
+  font-family: var(--font-en);
+  font-size: clamp(34px, 4vw, 48px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-align: center;
+}
+
+.home-intro-copy p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.intro-sticker {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  mix-blend-mode: multiply;
+  filter:
+    drop-shadow(0 0 2px #fff)
+    drop-shadow(0 0 4px #fff)
+    drop-shadow(0 4px 5px rgba(0, 0, 0, 0.08));
+}
+
+.intro-pondelion {
+  top: -44px;
+  left: -4px;
+  width: 250px;
+  transform: rotate(5.47deg);
+}
+
+.intro-holiday {
+  left: -74px;
+  bottom: -40px;
+  width: 324px;
+  transform: rotate(-4.99deg);
+}
+
+.intro-yappy {
+  top: 4px;
+  right: -16px;
+  width: 266px;
+  transform: rotate(-6.49deg);
+}
+
+.intro-sushiro {
+  right: -18px;
+  bottom: 18px;
+  width: 230px;
+  transform: rotate(5.95deg);
+}
+
+.intro-logo {
+  top: 32px;
+  left: 25%;
+  width: 190px;
+  transform: rotate(-5deg);
+}
+
+.intro-holiday-mini {
+  top: 24%;
+  left: 14%;
+  width: 112px;
+  transform: rotate(9deg);
+}
+
+.intro-pondelion-mini {
+  top: 37%;
+  right: 14%;
+  width: 126px;
+  transform: rotate(-8deg);
+}
+
+.intro-yappy-mini {
+  left: 25%;
+  bottom: 18px;
+  width: 152px;
+  transform: rotate(7deg);
+}
+
+.intro-sushiro-mini {
+  top: 18%;
+  right: 27%;
+  width: 138px;
+  transform: rotate(4deg);
+}
+
+/* Figma node 167:576 — business */
+.home-business {
+  position: relative;
+  margin-top: 70px;
+  padding: 0;
+}
+
+.home-business > h2 {
+  position: absolute;
+  z-index: 4;
+  top: -42px;
+  left: 50%;
+  margin: 0;
+  padding: 6px 10px;
+  color: var(--white);
+  background: var(--blue);
+  font-family: var(--font-en);
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+  transform: translateX(-50%) rotate(-2.88deg);
+}
+
+.home-business-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  min-height: 695px;
+  background: var(--white);
+}
+
+.home-business-card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  color: #000;
+  background: rgba(241, 252, 252, 0.94);
+  text-decoration: none;
+}
+
+.home-business-visual {
+  min-height: 0;
+  flex: 1 1 auto;
+  display: block;
+  overflow: hidden;
+}
+
+.home-business-visual img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform 0.45s cubic-bezier(.2, .75, .2, 1);
+}
+
+.home-business-card:first-child .home-business-visual img {
+  object-fit: contain;
+  padding: 58px 42px 18px;
+}
+
+.home-business-card:hover .home-business-visual img {
+  transform: scale(1.035);
+}
+
+.home-business-copy {
+  flex: 0 0 156px;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+  padding: 8px 20px 20px;
+}
+
+.home-business-copy strong {
+  display: block;
+  font-family: var(--font-en);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.home-business-copy > span {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* The unfinished sections continue on the same graph-paper background. */
+.home-page .page-section {
+  position: relative;
+  z-index: 1;
+  max-width: 1080px;
+}
+
+/* Temporary: hide the unfinished content from WORKS downward on the TOP page. */
+.home-page #works,
+.home-page #member,
+.home-page #company,
+.home-page #contact,
+.home-page > .site-footer {
+  display: none;
+}
+
+.home-page .tape-heading {
+  font-family: var(--font-en);
+}
+
+/* Figma node 166:249 — newsletter rail */
+.home-page .news-ticker {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  bottom: 20px;
+  width: 60px;
+  border-radius: 30px;
+  overflow: hidden;
+  background: #1a1a1a;
+  box-shadow: none;
+}
+
+.home-page .ticker-label {
+  gap: 12px;
+  padding: 24px 0 18px;
+  color: var(--lime);
+  border-bottom: none;
+  font-family: var(--font-en);
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.home-page .ticker-label img {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.home-page .ticker-window {
+  min-height: 0;
+}
+
+.home-page .ticker-track {
+  animation-duration: 46s;
+}
+
+.home-page .ticker-set {
+  gap: 52px;
+  padding-bottom: 52px;
+  color: var(--lime);
+  font-family: var(--font-ja);
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  text-shadow: none;
+}
+
+.home-page .ticker-cta {
+  min-height: 170px;
+  gap: 12px;
+  padding: 18px 0;
+  background: var(--lime);
+  color: #1a1a1a;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+}
+
+.home-page .ticker-cta:hover {
+  background: var(--green);
+}
+
+.home-page .ticker-cta img {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .home-page .world-center {
+    top: calc(50% - 82px);
+  }
+
+  .home-intro-copy {
+    width: min(620px, calc(100% - 160px));
+  }
+
+  .intro-pondelion { width: 240px; left: -35px; }
+  .intro-holiday { width: 240px; left: -78px; }
+  .intro-yappy { width: 190px; right: -42px; }
+  .intro-sushiro { width: 230px; right: -70px; }
+  .intro-logo { left: 21%; width: 156px; }
+  .intro-holiday-mini { left: 11%; width: 96px; }
+  .intro-pondelion-mini { right: 10%; width: 108px; }
+  .intro-yappy-mini { left: 22%; width: 126px; }
+  .intro-sushiro-mini { right: 23%; width: 116px; }
+
+  .home-business-grid {
+    min-height: 620px;
+  }
+
+  .home-business-copy strong { font-size: 21px; }
+  .home-business-copy > span { font-size: 13px; }
+}
+
+@media (max-width: 640px) {
+  .home-page {
+    padding-left: 0;
+  }
+
+  .home-page .hero {
+    min-height: 620px;
+  }
+
+  .home-page .world,
+  .home-page main {
+    background-size: 20px 20px;
+  }
+
+  .home-page .world-center {
+    top: calc(50% - 72px);
+    left: calc(50% + 22px);
+    width: calc(100vw - 92px);
+    max-width: none;
+  }
+
+  .home-page .ddp {
+    width: 100%;
+    font-size: clamp(18px, 5.2vw, 22px);
+    white-space: nowrap;
+  }
+
+  .home-page .drag-hint {
+    bottom: 20px;
+    font-size: 12px;
+  }
+
+  .home-page .scroll-cta {
+    right: 12px;
+    bottom: 12px;
+    left: auto;
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+    transform: none;
+  }
+
+  .home-page .scroll-cta span { display: none; }
+
+  .home-page .news-ticker {
+    left: 10px;
+    top: 10px;
+    bottom: 10px;
+    width: 48px;
+    border-radius: 24px;
+  }
+
+  .home-page .ticker-label {
+    display: flex;
+    padding: 18px 0 14px;
+    font-size: 11px;
+  }
+
+  .home-page .ticker-label img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .home-page .ticker-set {
+    font-size: 11px;
+    gap: 36px;
+    padding-bottom: 36px;
+  }
+
+  .home-page .ticker-cta {
+    min-height: 136px;
+    padding: 12px 0;
+    font-size: 11px;
+  }
+
+  .home-intro {
+    min-height: 80vh;
+    min-height: 80svh;
+    padding: 86px 28px;
+  }
+
+  .home-intro-copy {
+    width: min(100%, 440px);
+  }
+
+  .home-intro-copy h1 {
+    margin-bottom: 28px;
+    font-size: 32px;
+  }
+
+  .home-intro-copy p {
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  .intro-pondelion { top: -58px; left: -62px; width: 180px; opacity: .9; }
+  .intro-holiday { left: -88px; bottom: -55px; width: 190px; opacity: .9; }
+  .intro-yappy { top: 28px; right: -50px; width: 136px; opacity: .9; }
+  .intro-sushiro { right: -68px; bottom: -38px; width: 178px; opacity: .9; }
+  .intro-logo { top: 22px; left: 24%; width: 104px; opacity: .9; }
+  .intro-holiday-mini { top: 25%; left: 4%; width: 76px; opacity: .86; }
+  .intro-pondelion-mini { top: 39%; right: 2%; width: 84px; opacity: .86; }
+  .intro-yappy-mini { left: 22%; bottom: 14px; width: 92px; opacity: .86; }
+  .intro-sushiro-mini { top: 18%; right: 18%; width: 82px; opacity: .86; }
+
+  .home-business {
+    margin-top: 56px;
+  }
+
+  .home-business > h2 {
+    top: -32px;
+    font-size: 28px;
+  }
+
+  .home-business-grid {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .home-business-card {
+    min-height: 520px;
+  }
+
+  .home-business-copy {
+    flex-basis: 144px;
+    gap: 26px;
+  }
+
+  .home-business-copy strong {
+    font-size: 22px;
+  }
+
+  .home-page .page-section {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
 }
