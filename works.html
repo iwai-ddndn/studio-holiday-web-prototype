@@ -7,7 +7,7 @@
   <title>ストーリー（仮）— STUDIO HOLIDAY</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -16,17 +16,19 @@
        タイトル+タグ → 基本情報(期間/体制) → ポイント3つ → 本文(小見出し数本) →
        途中に現場写真 → 振り返り → クレジット → 次のストーリー -->
   <header class="site-header">
-    <a class="brand" href="./index.html">
-      <span class="brand-dot"></span>
-      <span class="brand-name">STUDIO&nbsp;HOLIDAY</span>
-    </a>
-    <nav class="site-nav">
-      <a href="./index.html#about">About</a>
-      <a href="./index.html#philosophy">Philosophy</a>
-      <a href="./index.html#business">Business</a>
-      <a href="./index.html#works">Works</a>
-      <a href="./index.html#contact">Contact</a>
-    </nav>
+    <div class="header-pill">
+      <a class="brand" href="./index.html">
+        <svg class="brand-mark" viewBox="0 0 44 22" aria-hidden="true"><path d="M7 21 A15 15 0 0 1 37 21" fill="none" stroke="currentColor" stroke-width="8" /></svg>
+        <span>STUDIO&nbsp;HOLIDAY</span>
+      </a>
+      <nav class="site-nav">
+        <a href="./index.html">TOP</a>
+        <a href="./index.html#about">About us</a>
+        <a href="./index.html#business">Business</a>
+        <a href="./index.html#works">Works</a>
+      </nav>
+    </div>
+    <a class="header-contact" href="./index.html#contact">お問い合わせ</a>
   </header>
 
   <main class="story">
@@ -136,27 +138,6 @@
   </footer>
 
   <div class="wip-stamp" aria-hidden="true">仮ページ</div>
-  <!-- ▼ ニュースレター（Substack）動線: 左端の縦型電光掲示板（全ページ共通） -->
-  <div class="news-ticker">
-    <span class="ticker-label"><span class="ticker-led" aria-hidden="true"></span>NEWSLETTER</span>
-    <a class="ticker-window" href="https://substack.studioholiday.jp/" target="_blank" rel="noopener" aria-label="ニュースレターを読む">
-      <span class="ticker-track" aria-hidden="true">
-        <span class="ticker-set">
-          <span>vol.48 偶発的な出会いがプロジェクトになるまで（仮）</span>
-          <span>vol.47 休日コーラ、次の一手（仮）</span>
-          <span>vol.46 KDCに集まる人たちの話（仮）</span>
-          <span>vol.45 「デザイン&amp;デプロイ」という仕事（仮）</span>
-        </span>
-        <span class="ticker-set">
-          <span>vol.48 偶発的な出会いがプロジェクトになるまで（仮）</span>
-          <span>vol.47 休日コーラ、次の一手（仮）</span>
-          <span>vol.46 KDCに集まる人たちの話（仮）</span>
-          <span>vol.45 「デザイン&amp;デプロイ」という仕事（仮）</span>
-        </span>
-      </span>
-    </a>
-    <a class="ticker-cta" href="https://substack.studioholiday.jp/" target="_blank" rel="noopener">購読する ↗</a>
-  </div>
 
 </body>
 </html>

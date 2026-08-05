@@ -21,8 +21,33 @@
 
 const STICKER_DIR = './assets/stickers/';
 
+/* Drive「Webサイト:事例集」由来の素材は assets/works/jirei/ に置く。
+ * STICKER_DIR 起点の相対パスで参照する（../works/jirei/...）。
+ * 紹介文はスプレッドシート「WORKS_Webサイト 事例集」の反映待ち（仮文言）。 */
+const JIREI = '../works/jirei/';
+
 /* work: クリック時のポップアップに出す実績情報 */
 const STICKERS = [
+  { file: JIREI + 'smeedy-pose04.png', alt: 'スミーディ',
+    work: { kind: 'キャラクターデザイン', title: 'スミーディ', desc: '掲載事例 No.01。紹介文はWORKSシート反映待ち（仮）。' } },
+  { file: JIREI + 'ai-interviewer-logo.jpg', alt: 'AI面接官',
+    work: { kind: '事業開発・サービスロゴ', title: 'AI面接官', desc: '掲載事例 No.07。紹介文はWORKSシート反映待ち（仮）。' } },
+  { file: JIREI + 'aburi-kikou.png', alt: '炙り紀行',
+    work: { kind: 'グラフィック', title: '炙り紀行', desc: '掲載事例 No.08。紹介文はWORKSシート反映待ち（仮）。' } },
+  { file: JIREI + 'kdc-logo.jpg', alt: 'K,D,C,,,',
+    work: { kind: 'ロゴ・場の運営', title: 'K,D,C,,,', desc: '掲載事例 No.16。紹介文はWORKSシート反映待ち（仮）。' } },
+  { file: JIREI + 'seiryu-okoshi-logo.png', alt: '清流おこし',
+    work: { kind: 'ロゴ・ブランディング', title: '清流おこし', desc: '掲載事例 No.21。紹介文はWORKSシート反映待ち（仮）。' } },
+  { file: JIREI + 'holiday-cola-logo.png', alt: '休日COLA',
+    work: { kind: 'フード・ブランド開発', title: '休日COLA', desc: '掲載事例 No.27。紹介文はWORKSシート反映待ち（仮）。' } },
+  { file: JIREI + 'holidaykun-hirune.png', alt: 'ホリデイくん（ひるね）',
+    work: { kind: 'キャラクターデザイン', title: 'ホリデイくん', desc: '掲載事例 No.32。紹介文はWORKSシート反映待ち（仮）。' } },
+  { file: JIREI + 'holidaykun-tozan.png', alt: 'ホリデイくん（とざん）',
+    work: { kind: 'キャラクターデザイン', title: 'ホリデイくん', desc: '掲載事例 No.32。紹介文はWORKSシート反映待ち（仮）。' } },
+  { file: JIREI + 'minna-gohankai-logo.png', alt: 'みんなでごはん会',
+    work: { kind: 'ロゴ・イベント', title: 'みんなでごはん会', desc: '掲載事例 No.31。紹介文はWORKSシート反映待ち（仮）。' } },
+  { file: JIREI + 'juzan-asset1.png', alt: '十山ブランディング',
+    work: { kind: 'ブランディング', title: '十山', desc: '掲載事例 No.06。紹介文はWORKSシート反映待ち（仮）。' } },
   { file: 'works/ebisun.png', alt: 'エビシー',
     work: { kind: 'キャラクターデザイン', title: 'エビシー', desc: '実際の制作実績から切り抜いたキャラクタービジュアルです。' } },
   { file: 'works/and-coffee-maison-kayser.png', alt: '&COFFEE MAISON KAYSER',
@@ -37,8 +62,6 @@ const STICKERS = [
     work: { kind: 'プロダクトデザイン', title: 'itomaki AC Adapter', desc: '実際の制作実績から切り抜いたプロダクトビジュアルです。' } },
   { file: 'works/holiday-cola.png', alt: '休日コーラ GINGER APPLE',
     work: { kind: 'フード・ブランド開発', title: '休日コーラ GINGER APPLE', desc: '実際の制作実績から切り抜いた商品ビジュアルです。' } },
-  { file: 'holiday-kun-thinking.png', alt: 'smeedy',
-    work: { kind: 'キャラクターデザイン', title: 'smeedy', desc: 'スタジオホリデーの制作実績から生まれたキャラクタービジュアルです。' } },
   { file: 'yappy.png', alt: 'yappy',
     work: { kind: 'ロゴ・世界観', title: 'yappy', desc: 'スタジオホリデーの制作実績から生まれたロゴ・世界観です。' } },
   { file: 'works-pondelion.png', alt: 'ポン・デ・ライオン',
@@ -63,6 +86,17 @@ const PHOTOS = [
   { cap: 'いちばんのおしごと', img: './assets/works/source/ichiban-no-oshigoto.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
   { cap: 'itomaki AC Adapter', img: './assets/works/source/itomaki-ac-adapter.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
   { cap: '休日コーラ GINGER APPLE', img: './assets/works/source/holiday-cola.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  /* ▼ Drive「Webサイト:事例集」掲載事例（紹介文はWORKSシート反映待ち） */
+  { cap: 'うねり 企業ブランディング', img: './assets/works/jirei/uneri-ogp.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  { cap: '十山ブランディング', img: './assets/works/jirei/juzan-photo1.jpg', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  { cap: '採用ブランディング支援', img: './assets/works/jirei/recruit-branding-pc.jpg', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  { cap: '「みんなで知りたい」シリーズ', img: './assets/works/jirei/minna-shiritai-1.jpg', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  { cap: 'yappy', img: './assets/works/jirei/yappy-a2-layout.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  { cap: 'K,D,C,,,', img: './assets/works/jirei/kdc-top-visual.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  { cap: 'K,D,C,,,meet クラフトシードル', img: './assets/works/jirei/craft-cidre.jpg', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  { cap: '休日COLA', img: './assets/works/jirei/holiday-cola-top.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  { cap: '休日COLA de お知らせ（2026夏）', img: './assets/works/jirei/holiday-cola-card.jpg', emoji: '📷', href: './works.html', bg: '#eefafa' },
+  { cap: '学際型メッシュネットワーク', img: './assets/works/jirei/mesh-network.jpg', emoji: '📷', href: './works.html', bg: '#eefafa' },
 ];
 
 const genericWork = (alt) => ({
@@ -203,10 +237,13 @@ function makeDiecutSprite(art, artSize) {
   const out = document.createElement('canvas');
   out.width = SW; out.height = SH;
   const ctx = out.getContext('2d');
-  ctx.shadowColor = 'rgba(40, 33, 24, 0.30)';
-  ctx.shadowOffsetX = ART * 0.018;
-  ctx.shadowOffsetY = ART * 0.030;
-  ctx.shadowBlur = ART * 0.022;
+  // Figmaのeffect style「sticker-ds」準拠: X0 / Y4 / Blur6 / Spread0 / #000 8%
+  // （Figma上のステッカー幅324pxを基準に、描画サイズへスケール）
+  const FIG = ART / 324;
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 4 * FIG;
+  ctx.shadowBlur = 6 * FIG;
   ctx.drawImage(silhouette, 0, 0);
   ctx.shadowColor = 'transparent';
   ctx.drawImage(art, PAD, PAD, dw, dh);
@@ -356,6 +393,33 @@ function selectDistributedSpots(candidates, count, avoid = []) {
     anchors.push(picked);
   }
   return selected;
+}
+
+/* 同じ絵柄のコピー同士ができるだけ離れるように、絵柄→スポットを割り当てる。
+ * 各絵柄の1枚目はランダムなスポット、2枚目以降は「同じ絵柄の既配置」から
+ * 最も遠い残りスポットを選ぶ（他の絵柄との距離は問わない）。 */
+function assignArtsToSpots(arts, spots) {
+  const remaining = spots.slice();
+  const placedByArt = new Map();
+  const assignments = [];
+  for (const sprite of arts) {
+    if (!remaining.length) break;
+    const placed = placedByArt.get(sprite) || [];
+    let bestI = 0;
+    let bestD = -1;
+    for (let i = 0; i < remaining.length; i++) {
+      const p = remaining[i];
+      const d = placed.length
+        ? Math.min(...placed.map((q) => Math.hypot(p.x - q.x, p.y - q.y)))
+        : rand(0, 1); // 1枚目はランダム選択
+      if (d > bestD) { bestD = d; bestI = i; }
+    }
+    const [spot] = remaining.splice(bestI, 1);
+    assignments.push({ sprite, spot });
+    placed.push(spot);
+    placedByArt.set(sprite, placed);
+  }
+  return assignments;
 }
 
 /* opts.size は長辺のサイズ。スプライトの縦横比に合わせて要素の幅高を決める */
@@ -672,9 +736,9 @@ async function build({ intro }) {
   const delayOf = (i) => (order[i] / total) * PASTE_SEC;
   const zOrder = shuffle([...Array(total).keys()]);
 
-  stickerSpots.forEach((p, i) => {
-    const sprite = arts[i];
-    if (!sprite) return;
+  // 同じ絵柄が近くに固まらないよう、絵柄→スポットを距離最大化で割り当てる
+  const assignments = assignArtsToSpots(arts, stickerSpots);
+  assignments.forEach(({ sprite, spot: p }, i) => {
     const { w, h } = stickerDims(sprite, p.size);
     world.appendChild(buildSticker(sprite, {
       rot: rand(-16, 16),

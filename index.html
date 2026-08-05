@@ -7,25 +7,27 @@
   <title>STUDIO HOLIDAY — キャラクター & グラフィック</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geom:wght@400;600;700;800;900&amp;family=Noto+Sans+JP:wght@400;600;700;800;900&amp;family=Nunito+Sans:opsz,wght@6..12,600;6..12,700;6..12,800;6..12,900&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=20260722-3" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;family=Noto+Sans+JP:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css?v=20260805-3" />
 </head>
 <body class="home-page">
   <!-- ファーストビュー: ビューポートより広い「壁」にステッカーと写真を貼り重ね、
        イントロ（引きの画 → ペタペタ → ズームイン → ロゴ）のあと上下左右に回遊できる。
        ステッカーはクリックでポップアップ、写真は外部ページ/サイト内記事へ。 -->
   <header class="site-header">
-    <a class="brand" href="#">
-      <span class="brand-dot"></span>
-      <span class="brand-name">STUDIO&nbsp;HOLIDAY</span>
-    </a>
-    <nav class="site-nav">
-      <a href="#about">About</a>
-      <a href="#about">Philosophy</a>
-      <a href="#business">Business</a>
-      <a href="#works">Works</a>
-      <a href="#contact">Contact</a>
-    </nav>
+    <div class="header-pill">
+      <a class="brand" href="#">
+        <svg class="brand-mark" viewBox="0 0 44 22" aria-hidden="true"><path d="M7 21 A15 15 0 0 1 37 21" fill="none" stroke="currentColor" stroke-width="8" /></svg>
+        <span>STUDIO&nbsp;HOLIDAY</span>
+      </a>
+      <nav class="site-nav">
+        <a href="#">TOP</a>
+        <a href="#about">About us</a>
+        <a href="#business">Business</a>
+        <a href="#works">Works</a>
+      </nav>
+    </div>
+    <a class="header-contact" href="#contact">お問い合わせ</a>
   </header>
 
   <main>
@@ -124,8 +126,34 @@
           <img src="./assets/yappy.png" alt="yappy" loading="lazy" />
           <span class="work-meta"><strong>yappy（仮）</strong><em>ロゴ・世界観</em></span>
         </a>
+        <!-- ▼ Drive「Webサイト:事例集」掲載事例（紹介文はWORKSシート反映待ち） -->
+        <a class="work-card" href="./works.html">
+          <span class="new-fusen" aria-hidden="true">NEW!</span>
+          <img src="./assets/works/jirei/kdc-top-visual.png" alt="K,D,C,,," loading="lazy" />
+          <span class="work-meta"><strong>K,D,C,,,</strong><em>ロゴ・場の運営</em></span>
+        </a>
+        <a class="work-card" href="./works.html">
+          <img src="./assets/works/jirei/holiday-cola-top.png" alt="休日COLA" loading="lazy" />
+          <span class="work-meta"><strong>休日COLA</strong><em>フード・ブランド開発</em></span>
+        </a>
+        <a class="work-card" href="./works.html">
+          <img src="./assets/works/jirei/juzan-photo1.jpg" alt="十山ブランディング" loading="lazy" />
+          <span class="work-meta"><strong>十山</strong><em>ブランディング</em></span>
+        </a>
+        <a class="work-card" href="./works.html">
+          <img src="./assets/works/jirei/uneri-ogp.png" alt="うねり 企業ブランディング" loading="lazy" />
+          <span class="work-meta"><strong>うねり</strong><em>企業ブランディング</em></span>
+        </a>
+        <a class="work-card" href="./works.html">
+          <img src="./assets/works/jirei/recruit-branding-pc.jpg" alt="採用ブランディング支援" loading="lazy" />
+          <span class="work-meta"><strong>採用ブランディング支援</strong><em>ブランディング</em></span>
+        </a>
+        <a class="work-card" href="./works.html">
+          <img src="./assets/works/jirei/craft-cidre.jpg" alt="K,D,C,,,meet クラフトシードル" loading="lazy" />
+          <span class="work-meta"><strong>K,D,C,,,meet クラフトシードル</strong><em>イベント・フード</em></span>
+        </a>
       </div>
-      <p class="section-note">※ 事例は仮。クリックでストーリーページ（仮）へ</p>
+      <p class="section-note">※ 事例画像はDrive「Webサイト:事例集」より反映。紹介文はWORKSシート反映待ち。クリックでストーリーページ（仮）へ</p>
     </section>
 
     <section class="page-section" id="member">
@@ -191,6 +219,6 @@
     </div>
   </div>
 
-  <script src="./main.js?v=20260722-5"></script>
+  <script src="./main.js?v=20260805-2"></script>
 </body>
 </html>
