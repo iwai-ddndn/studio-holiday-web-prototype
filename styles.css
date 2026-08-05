@@ -41,17 +41,17 @@ body {
   z-index: 1150; /* ticker(1100)より手前・モーダル(1200)より奥 */
   display: flex;
   align-items: stretch;
-  gap: 18px;
+  gap: 16px; /* Figma: ピル↔ボタン間 16 */
   pointer-events: none;
 }
 .header-pill {
   display: flex;
   align-items: center;
-  gap: 36px;
+  gap: 40px; /* Figma: ロゴ→ナビ間 40 */
   background: var(--white);
   border-radius: 999px;
-  padding: 13px 36px 13px 22px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+  padding: 16px 24px 16px 16px; /* Figma: 上下16 / 左16 / 右24 */
+  border: 1px solid rgba(26, 26, 26, 0.2); /* bk-20。シャドウではなく枠線 */
   pointer-events: auto;
 }
 .brand {
@@ -99,7 +99,6 @@ body {
   font-weight: 700;
   font-size: 15px;
   text-decoration: none;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.10);
   pointer-events: auto;
   transition: transform 0.15s ease, background 0.15s ease;
 }
