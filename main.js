@@ -530,10 +530,20 @@ const DEFAULT_PARAMS = {
   size: 1.2,      // ステッカーの大きさ倍率
   gap: 1.25,      // ステッカー間隔（1でほぼ密着）
   introView: 1.6, // 引きのカメラで見える範囲（ビューポート比）。壁全体は見せなくてよい
+  fvBg: '#ececec', // FVの背景色（ライトグレー）
+  fvGrid: 0,       // 方眼の表示（0=なし / 1=あり）
 };
 let PARAMS = { ...DEFAULT_PARAMS };
 try { Object.assign(PARAMS, JSON.parse(localStorage.getItem('sh-tune')) || {}); } catch { /* 保存なし */ }
 PARAMS.size = Math.max(0.95, PARAMS.size);
+
+/* FVの背景色・方眼をCSS変数へ反映（再ビルド不要・即時反映） */
+function applyFvParams() {
+  const root = document.documentElement.style;
+  root.setProperty('--fv-bg', PARAMS.fvBg);
+  root.setProperty('--fv-grid-line', PARAMS.fvGrid ? 'var(--grid-line)' : 'transparent');
+}
+applyFvParams();
 
 const cam = { cx: 0, cy: 0, s: 1 };      // (cx,cy)=ビューポート中央に映る壁上の点
 
@@ -795,6 +805,8 @@ function initTunePanel() {
     DEFS.map(([k, label]) =>
       `<label>${label}<output id="tune-${k}"></output><input type="range" data-key="${k}" /></label>`
     ).join('') +
+    '<label>FVの背景色<input type="color" data-key="fvBg" /></label>' +
+    '<label>方眼を表示<input type="checkbox" data-key="fvGrid" /></label>' +
     '<div class="tune-actions">' +
     '<button type="button" data-act="intro">イントロ再生</button>' +
     '<button type="button" data-act="reset">リセット</button></div>';
@@ -803,19 +815,30 @@ function initTunePanel() {
   DEFS.forEach(([k, , min, max, step]) => {
     Object.assign(panel.querySelector(`[data-key="${k}"]`), { min, max, step });
   });
-  const sync = () => DEFS.forEach(([k]) => {
-    panel.querySelector(`[data-key="${k}"]`).value = PARAMS[k];
-    panel.querySelector(`#tune-${k}`).textContent = '×' + Number(PARAMS[k]).toFixed(2);
-  });
+  const sync = () => {
+    DEFS.forEach(([k]) => {
+      panel.querySelector(`[data-key="${k}"]`).value = PARAMS[k];
+      panel.querySelector(`#tune-${k}`).textContent = '×' + Number(PARAMS[k]).toFixed(2);
+    });
+    panel.querySelector('[data-key="fvBg"]').value = PARAMS.fvBg;
+    panel.querySelector('[data-key="fvGrid"]').checked = !!PARAMS.fvGrid;
+  };
   sync();
 
   let debounce;
   panel.addEventListener('input', (e) => {
     const k = e.target.dataset.key;
     if (!k) return;
-    PARAMS[k] = +e.target.value;
+    if (k === 'fvBg') {
+      PARAMS.fvBg = e.target.value;
+    } else if (k === 'fvGrid') {
+      PARAMS.fvGrid = e.target.checked ? 1 : 0;
+    } else {
+      PARAMS[k] = +e.target.value;
+    }
     localStorage.setItem('sh-tune', JSON.stringify(PARAMS));
     sync();
+    if (k === 'fvBg' || k === 'fvGrid') { applyFvParams(); return; } // 背景系は再ビルド不要
     clearTimeout(debounce);
     debounce = setTimeout(() => build({ intro: false }), 250);
   });
@@ -826,6 +849,7 @@ function initTunePanel() {
       PARAMS = { ...DEFAULT_PARAMS };
       localStorage.removeItem('sh-tune');
       sync();
+      applyFvParams();
       build({ intro: false });
     }
   });

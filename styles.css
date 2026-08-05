@@ -10,6 +10,9 @@
   --blue: #3b73f8;
   --green: #36f718;
   --grid-line: #dff5f7;
+  /* FV（ファーストビュー）の背景。?tune パネルからJSで上書きできる */
+  --fv-bg: #ececec;             /* ライトグレー */
+  --fv-grid-line: transparent;  /* 方眼の線色。transparent=方眼オフ */
   --font-en: "Roboto", "Helvetica Neue", Arial, sans-serif;
   --font-ja: "Noto Sans CJK JP", "Noto Sans JP", system-ui, sans-serif;
 }
@@ -1049,14 +1052,14 @@ body {
 
 .home-page .hero {
   min-height: 700px;
-  background: var(--white);
+  background: var(--fv-bg);
 }
 
 .home-page .world {
-  background-color: var(--white);
+  background-color: var(--fv-bg);
   background-image:
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    linear-gradient(var(--fv-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--fv-grid-line) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
