@@ -10,9 +10,12 @@
   --blue: #3b73f8;
   --green: #36f718;
   --grid-line: #dff5f7;
-  /* FV（ファーストビュー）の背景。?tune パネルからJSで上書きできる */
-  --fv-bg: #ececec;             /* ライトグレー */
-  --fv-grid-line: transparent;  /* 方眼の線色。transparent=方眼オフ */
+  /* FV（ファーストビュー）の背景。?tune パネルからJSで上書きできる。
+   * テクスチャ（方眼・ドット等）は main.js の applyFvParams() が
+   * --fv-texture / --fv-texture-size に合成してセットする */
+  --fv-bg: #ececec;        /* ライトグレー */
+  --fv-texture: none;      /* デフォルトはテクスチャなし */
+  --fv-texture-size: 24px 24px;
   --font-en: "Roboto", "Helvetica Neue", Arial, sans-serif;
   --font-ja: "Noto Sans CJK JP", "Noto Sans JP", system-ui, sans-serif;
 }
@@ -1057,10 +1060,8 @@ body {
 
 .home-page .world {
   background-color: var(--fv-bg);
-  background-image:
-    linear-gradient(var(--fv-grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--fv-grid-line) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-image: var(--fv-texture);
+  background-size: var(--fv-texture-size);
 }
 
 .home-page .world-center {

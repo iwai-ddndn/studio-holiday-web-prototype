@@ -530,18 +530,50 @@ const DEFAULT_PARAMS = {
   size: 1.2,      // ステッカーの大きさ倍率
   gap: 1.25,      // ステッカー間隔（1でほぼ密着）
   introView: 1.6, // 引きのカメラで見える範囲（ビューポート比）。壁全体は見せなくてよい
-  fvBg: '#ececec', // FVの背景色（ライトグレー）
-  fvGrid: 0,       // 方眼の表示（0=なし / 1=あり）
+  fvBg: '#ececec',        // FVの背景色（ライトグレー）
+  fvTexture: 'none',      // FVのテクスチャ（FV_TEXTURES のキー）
+  fvTexColor: '#dff5f7',  // テクスチャの色（方眼の線・ドット等）
+  fvTexSize: 24,          // テクスチャの細かさ（px）
 };
 let PARAMS = { ...DEFAULT_PARAMS };
 try { Object.assign(PARAMS, JSON.parse(localStorage.getItem('sh-tune')) || {}); } catch { /* 保存なし */ }
 PARAMS.size = Math.max(0.95, PARAMS.size);
+// 旧パラメータ（fvGrid: 0/1）からの引き継ぎ
+if (PARAMS.fvGrid === 1 && !('fvTexture' in (JSON.parse(localStorage.getItem('sh-tune') || '{}')))) {
+  PARAMS.fvTexture = 'grid';
+}
+delete PARAMS.fvGrid;
 
-/* FVの背景色・方眼をCSS変数へ反映（再ビルド不要・即時反映） */
+/* FVの背景テクスチャ: 色(c)とサイズ(s)を受け取り、
+ * background-image / background-size を返す。すべてCSSグラデーション
+ * （＋SVGノイズ）で生成し、画像ファイルは使わない */
+const FV_TEXTURES = {
+  none:  { label: 'なし', css: () => ({ image: 'none', size: 'auto' }) },
+  grid:  { label: '方眼', css: (c, s) => ({
+    image: `linear-gradient(${c} 1px, transparent 1px), linear-gradient(90deg, ${c} 1px, transparent 1px)`,
+    size: `${s}px ${s}px` }) },
+  dots:  { label: 'ドット', css: (c, s) => ({
+    image: `radial-gradient(${c} 1.5px, transparent 1.6px)`,
+    size: `${s}px ${s}px` }) },
+  lines: { label: '横罫線（ノート）', css: (c, s) => ({
+    image: `linear-gradient(${c} 1px, transparent 1px)`,
+    size: `100% ${s}px` }) },
+  diag:  { label: '斜めストライプ', css: (c, s) => ({
+    image: `repeating-linear-gradient(45deg, ${c} 0, ${c} 1px, transparent 1px, transparent ${s}px)`,
+    size: 'auto' }) },
+  paper: { label: '紙（ノイズ）', css: () => ({
+    image: `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.06 0"/></filter><rect width="180" height="180" filter="url(#n)"/></svg>')}")`,
+    size: '180px 180px' }) },
+};
+
+/* FVの背景色・テクスチャをCSS変数へ反映（再ビルド不要・即時反映） */
 function applyFvParams() {
   const root = document.documentElement.style;
   root.setProperty('--fv-bg', PARAMS.fvBg);
-  root.setProperty('--fv-grid-line', PARAMS.fvGrid ? 'var(--grid-line)' : 'transparent');
+  const tex = FV_TEXTURES[PARAMS.fvTexture] || FV_TEXTURES.none;
+  const { image, size } = tex.css(PARAMS.fvTexColor, PARAMS.fvTexSize);
+  root.setProperty('--fv-texture', image);
+  root.setProperty('--fv-texture-size', size);
 }
 applyFvParams();
 
@@ -806,7 +838,11 @@ function initTunePanel() {
       `<label>${label}<output id="tune-${k}"></output><input type="range" data-key="${k}" /></label>`
     ).join('') +
     '<label>FVの背景色<input type="color" data-key="fvBg" /></label>' +
-    '<label>方眼を表示<input type="checkbox" data-key="fvGrid" /></label>' +
+    '<label>テクスチャ<select data-key="fvTexture">' +
+      Object.entries(FV_TEXTURES).map(([k, t]) => `<option value="${k}">${t.label}</option>`).join('') +
+    '</select></label>' +
+    '<label>テクスチャの色<input type="color" data-key="fvTexColor" /></label>' +
+    '<label>テクスチャの細かさ<output id="tune-fvTexSize"></output><input type="range" data-key="fvTexSize" min="8" max="64" step="1" /></label>' +
     '<div class="tune-actions">' +
     '<button type="button" data-act="intro">イントロ再生</button>' +
     '<button type="button" data-act="reset">リセット</button></div>';
@@ -821,7 +857,10 @@ function initTunePanel() {
       panel.querySelector(`#tune-${k}`).textContent = '×' + Number(PARAMS[k]).toFixed(2);
     });
     panel.querySelector('[data-key="fvBg"]').value = PARAMS.fvBg;
-    panel.querySelector('[data-key="fvGrid"]').checked = !!PARAMS.fvGrid;
+    panel.querySelector('[data-key="fvTexture"]').value = PARAMS.fvTexture;
+    panel.querySelector('[data-key="fvTexColor"]').value = PARAMS.fvTexColor;
+    panel.querySelector('[data-key="fvTexSize"]').value = PARAMS.fvTexSize;
+    panel.querySelector('#tune-fvTexSize').textContent = PARAMS.fvTexSize + 'px';
   };
   sync();
 
@@ -829,16 +868,14 @@ function initTunePanel() {
   panel.addEventListener('input', (e) => {
     const k = e.target.dataset.key;
     if (!k) return;
-    if (k === 'fvBg') {
-      PARAMS.fvBg = e.target.value;
-    } else if (k === 'fvGrid') {
-      PARAMS.fvGrid = e.target.checked ? 1 : 0;
+    if (k === 'fvBg' || k === 'fvTexture' || k === 'fvTexColor') {
+      PARAMS[k] = e.target.value;
     } else {
       PARAMS[k] = +e.target.value;
     }
     localStorage.setItem('sh-tune', JSON.stringify(PARAMS));
     sync();
-    if (k === 'fvBg' || k === 'fvGrid') { applyFvParams(); return; } // 背景系は再ビルド不要
+    if (k.startsWith('fv')) { applyFvParams(); return; } // 背景系は再ビルド不要
     clearTimeout(debounce);
     debounce = setTimeout(() => build({ intro: false }), 250);
   });
