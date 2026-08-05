@@ -530,8 +530,8 @@ const DEFAULT_PARAMS = {
   size: 1.2,      // ステッカーの大きさ倍率
   gap: 1.25,      // ステッカー間隔（1でほぼ密着）
   introView: 1.6, // 引きのカメラで見える範囲（ビューポート比）。壁全体は見せなくてよい
-  fvBg: '#ececec',        // FVの背景色（ライトグレー）
-  fvTexture: 'none',      // FVのテクスチャ（FV_TEXTURES のキー）
+  fvBg: '#ffffff',        // FVの背景色（本番デフォルト: 白）
+  fvTexture: 'grid',      // FVのテクスチャ（本番デフォルト: 方眼）
   fvTexColor: '#dff5f7',  // テクスチャの色（方眼の線・ドット等）
   fvTexSize: 24,          // テクスチャの細かさ（px）
 };
