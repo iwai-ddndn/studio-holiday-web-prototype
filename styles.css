@@ -919,7 +919,8 @@ body {
   padding: 24px 0;
 }
 .biz-feature .biz-copy { flex: 1; justify-content: center; }
-.biz-feature .btn-lime { width: 100%; margin-top: 24px; }
+/* 矢印ボタンは幅100%ではなく右下寄せのコンパクトな正方形（Figmaレンダリング準拠） */
+.biz-feature .btn-lime { align-self: flex-end; margin-top: 24px; }
 
 /* 2枚目・3枚目（縦型2カラム） */
 .biz-row { display: flex; height: 698px; }
@@ -934,6 +935,7 @@ body {
 }
 .biz-card .biz-visual { flex: 1 1 0; min-height: 0; }
 .biz-card-body { display: flex; flex-direction: column; gap: 24px; padding: 24px; }
+.biz-card-body .btn-lime { align-self: flex-end; }
 
 /* --- COMPANY --- */
 .sec-company { margin: 134px 20px 0; }
