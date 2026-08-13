@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "static",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8931", "--bind", "127.0.0.1"],
-      "port": 8931
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "python3 -m http.server ${PORT:-8931} --bind 127.0.0.1"],
+      "port": 8931,
+      "autoPort": true
     }
   ]
 }
