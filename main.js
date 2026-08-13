@@ -256,7 +256,7 @@ function makeDiecutSprite(art, artSize) {
  * 白フチ台紙のアルファを縮小してMoore境界追跡（radial sweep）し、
  * 平滑化してから法線方向に少し外へオフセットする。人型のような
  * 凹凸のある形でも輪郭をなぞれる */
-const TAG_OUTSET = 16; // 輪郭からの外側オフセット（スプライトpx）
+const TAG_OUTSET = 28; // 輪郭からの外側オフセット（スプライトpx）
 
 function traceOutline(mask, sw, sh) {
   const MAXD = 120;
@@ -302,16 +302,22 @@ function traceOutline(mask, sw, sh) {
   }
   if (pts.length < 12) return null;
 
-  // 間引き → スプライト座標へ → 移動平均で平滑化（2回）
-  let p = pts.filter((_, i) => i % 2 === 0).map(([x, y]) => [x / sc, y / sc]);
-  for (let pass = 0; pass < 2; pass++) {
-    p = p.map((_, i) => {
-      const a1 = p[(i - 1 + p.length) % p.length];
-      const b1 = p[i];
-      const c1 = p[(i + 1) % p.length];
-      return [(a1[0] + b1[0] + c1[0]) / 3, (a1[1] + b1[1] + c1[1]) / 3];
-    });
-  }
+  // 間引き → スプライト座標へ → 移動平均で強めに平滑化
+  // （急カーブでは textPath の文字が折り重なって読めなくなるため、
+  //   細かい凹凸を落として曲率をなだらかにする）
+  const smooth = (arr, passes) => {
+    let q = arr;
+    for (let pass = 0; pass < passes; pass++) {
+      q = q.map((_, i) => {
+        const a1 = q[(i - 1 + q.length) % q.length];
+        const b1 = q[i];
+        const c1 = q[(i + 1) % q.length];
+        return [(a1[0] + b1[0] + c1[0]) / 3, (a1[1] + b1[1] + c1[1]) / 3];
+      });
+    }
+    return q;
+  };
+  let p = smooth(pts.filter((_, i) => i % 3 === 0).map(([x, y]) => [x / sc, y / sc]), 4);
 
   // 時計回りに統一（y下向き座標では符号付き面積が正 = 時計回り）
   let area = 0;
@@ -327,13 +333,14 @@ function traceOutline(mask, sw, sh) {
   p = p.slice(topI).concat(p.slice(0, topI));
 
   // 接線から外向き法線を出してオフセット（時計回りなら (ty, -tx) が外側）
-  return p.map((pt, i) => {
+  const off = p.map((pt, i) => {
     const [ax, ay] = p[(i - 1 + p.length) % p.length];
     const [bx, by] = p[(i + 1) % p.length];
     const tx = bx - ax, ty = by - ay;
     const len = Math.hypot(tx, ty) || 1;
     return [pt[0] + (ty / len) * TAG_OUTSET, pt[1] - (tx / len) * TAG_OUTSET];
   });
+  return smooth(off, 2); // オフセットで生まれる折れも均す
 }
 
 function outlineToPathD(pts) {
@@ -639,26 +646,38 @@ function showTagsFor(el) {
   path.setAttribute('id', id);
   path.setAttribute('d', sprite.pathD);
   path.setAttribute('fill', 'none');
-  const text = document.createElementNS(ns, 'text');
   // viewBox座標系で描かれるため、表示サイズ比でスケールして画面上12pxに揃える
   const k = sprite.w / (el.offsetWidth || sprite.w);
+  // 文字の下に敷くライムの帯。タイプに合わせてダッシュを伸ばす
+  path.setAttribute('stroke-width', ((TAG_FONT_PX + 10) * k).toFixed(1));
+  const text = document.createElementNS(ns, 'text');
   text.setAttribute('font-size', (TAG_FONT_PX * k).toFixed(1));
-  text.setAttribute('stroke-width', (3 * k).toFixed(1));
+  text.setAttribute('dominant-baseline', 'central');
   const tp = document.createElementNS(ns, 'textPath');
   tp.setAttribute('href', `#${id}`);
   tp.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${id}`);
+  const pad = 10 * k; // 帯の前後の余白
+  tp.setAttribute('startOffset', pad.toFixed(1));
   text.appendChild(tp);
   svg.appendChild(path);
   svg.appendChild(text);
   el.appendChild(svg);
 
+  const total = path.getTotalLength();
+  path.setAttribute('stroke-dasharray', `0 ${total}`);
+  const fitBand = () => {
+    const len = Math.min(total, text.getComputedTextLength() + pad * 2);
+    path.setAttribute('stroke-dasharray', `${len.toFixed(1)} ${total.toFixed(1)}`);
+  };
+
   const full = tagTextOf(sprite);
   activeTag = { svg, timer: 0 };
-  if (tagsReducedMotion) { tp.textContent = full; return; }
+  if (tagsReducedMotion) { tp.textContent = full; fitBand(); return; }
   let i = 0;
   activeTag.timer = setInterval(() => {
     i++;
     tp.textContent = full.slice(0, i);
+    fitBand();
     if (i >= full.length) clearInterval(activeTag.timer);
   }, TAG_TYPE_MS);
 }

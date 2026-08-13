@@ -275,13 +275,17 @@ body {
   transition: opacity 0.35s ease;
 }
 .tag-svg.is-hiding { opacity: 0; }
+/* 文字の下に敷くライムの帯（パスをダッシュで文字分だけ描く。太さはJS側で指定） */
+.tag-svg path {
+  stroke: var(--fig-lime);
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .tag-svg text {
   font-family: var(--font-ja);
   font-weight: 700;
   fill: var(--ink);
-  paint-order: stroke;
-  stroke: rgba(255, 255, 255, 0.92); /* 背景がにぎやかでも読めるように白フチ */
-  stroke-linejoin: round;
 }
 
 /* ---------- 社名ロゴステッカー ---------- */
