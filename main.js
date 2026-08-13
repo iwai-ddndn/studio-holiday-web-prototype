@@ -1282,33 +1282,92 @@ async function fetchCMS(endpoint) {
 }
 
 async function loadCMSContent() {
-  const [works, letters] = await Promise.all([fetchCMS('works'), fetchCMS('newsletter')]);
+  const works = await fetchCMS('works');
 
-  // works → FVステッカー（画像必須。タグ・ドロワーの中身もここから）
+  // works → FVステッカー（タグ・ドロワーの中身もここから）。
+  // CMSに画像が添付されていればそれを使い、未添付ならタイトル一致で
+  // リポジトリ内のローカル素材を使う（メディアアップロードAPIが使えない環境向け）
   if (works && works.length) {
+    const localByTitle = new Map(FALLBACK_STICKERS.map((s) => [s.alt, s.file]));
     const mapped = works
-      .filter((w) => w.sticker && w.sticker.url)
-      .map((w) => ({
+      .map((w) => {
         // imgix変換で幅を抑えつつPNG化（切り抜きの透過を保持）
-        src: `${w.sticker.url}?w=1000&fm=png`,
-        alt: w.title,
-        client: w.client || '',
-        work: { kind: w.kind || '', title: w.title, desc: w.description || '', body: w.body || '' },
-      }));
+        const src = w.sticker && w.sticker.url ? `${w.sticker.url}?w=1000&fm=png` : null;
+        const file = src ? null : localByTitle.get(w.title);
+        if (!src && !file) return null; // 画像の当てが無い事例はスキップ
+        return {
+          src,
+          file,
+          alt: w.title,
+          client: w.client || '',
+          work: { kind: w.kind || '', title: w.title, desc: w.description || '', body: w.body || '' },
+        };
+      })
+      .filter(Boolean);
     if (mapped.length) STICKERS = mapped;
   }
+}
 
-  // newsletter → 左端の電光掲示板（2セットとも同内容にして無限ループを保つ）
-  if (letters && letters.length) {
-    document.querySelectorAll('.ticker-set').forEach((set) => {
-      set.innerHTML = '';
-      letters.forEach((l) => {
-        const span = document.createElement('span');
-        span.textContent = l.title;
-        set.appendChild(span);
-      });
-    });
+/* ==========================================================
+   ▼ ニュースレター: Substack のRSSから自動取得して電光掲示板を更新。
+   手動更新は不要。タイトルクリックで該当記事へ飛ぶ。
+   SubstackはCORS未対応のため、直接fetchが弾かれたら読み取り専用
+   プロキシ(allorigins)経由で再試行。全滅時はHTMLの仮タイトルのまま。
+   ========================================================== */
+
+const SUBSTACK_URL = 'https://substack.studioholiday.jp/';
+
+async function fetchSubstackPosts() {
+  const get = async (url) => {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 6000);
+    try {
+      const res = await fetch(url, { signal: ctl.signal });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res;
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
+  // 1) GitHub Actionsが日次生成する data/newsletter.json（同一オリジンなので最も確実）
+  try {
+    const posts = (await (await get('./data/newsletter.json')).json()).posts;
+    if (posts && posts.length) return posts.slice(0, 10);
+  } catch { /* 次の手段へ */ }
+
+  // 2) フィードを直接取得（SubstackがCORSを許可した場合に将来有効になる保険）
+  try {
+    const xml = await (await get(`${SUBSTACK_URL}feed`)).text();
+    const doc = new DOMParser().parseFromString(xml, 'text/xml');
+    const posts = [...doc.querySelectorAll('item')]
+      .map((item) => ({
+        title: item.querySelector('title')?.textContent.trim() || '',
+        url: item.querySelector('link')?.textContent.trim() || SUBSTACK_URL,
+      }))
+      .filter((p) => p.title);
+    if (posts.length) return posts.slice(0, 10);
+  } catch (e) {
+    console.warn('[substack] フィード取得に失敗。仮タイトルのまま表示します:', e);
   }
+  return null;
+}
+
+async function applySubstackTicker() {
+  const posts = await fetchSubstackPosts();
+  if (!posts) return;
+  document.querySelectorAll('.ticker-set').forEach((set, i) => {
+    set.innerHTML = '';
+    posts.forEach((p) => {
+      const a = document.createElement('a');
+      a.href = p.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = p.title;
+      if (i > 0) a.tabIndex = -1; // 2セット目はループ用の複製なのでフォーカス対象外
+      set.appendChild(a);
+    });
+  });
 }
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1317,6 +1376,7 @@ loadCMSContent().finally(() => {
     if (reducedMotion) skipIntro();
   });
 });
+applySubstackTicker(); // 壁の構築とは独立に、取得でき次第差し替える
 
 window.addEventListener('resize', () => {
   clearTimeout(window.__rz);

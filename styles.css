@@ -524,7 +524,10 @@ body {
   letter-spacing: 0.14em;
   text-shadow: 0 0 8px #ffb80055;
 }
-.ticker-set span { writing-mode: vertical-rl; white-space: nowrap; }
+.ticker-set span,
+.ticker-set a { writing-mode: vertical-rl; white-space: nowrap; }
+.ticker-set a { color: inherit; text-decoration: none; }
+.ticker-set a:hover { text-decoration: underline; text-underline-offset: 4px; }
 @keyframes tickerMove { to { transform: translateY(-50%); } }
 .ticker-cta {
   display: flex;

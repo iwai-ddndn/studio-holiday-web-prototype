@@ -4,6 +4,6 @@
  * 空のままでもリポジトリ内のフォールバックデータで今まで通り表示される。
  * サービスの作り方・APIスキーマは CMS-SETUP.md を参照 */
 window.MICROCMS_CONFIG = {
-  serviceDomain: '', // 例: 'studioholiday'（xxxx.microcms.io の xxxx 部分）
-  apiKey: '',        // GET専用のAPIキー（コンテンツ参照のみの権限にすること）
+  serviceDomain: 'sthl', // 例: 'studioholiday'（xxxx.microcms.io の xxxx 部分）
+  apiKey: 'vIHTkxXH6B2X1NxElT9PqyTTj9ROlqnBSDAQ',        // GET専用のAPIキー（コンテンツ参照のみの権限にすること）
 };

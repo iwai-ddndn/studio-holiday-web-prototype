@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;family=Noto+Sans+JP:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=20260813-14" />
+  <link rel="stylesheet" href="./styles.css?v=20260813-16" />
 </head>
 <body class="home-page">
   <!-- ファーストビュー: ビューポートより広い「壁」にステッカーと写真を貼り重ね、
@@ -36,22 +36,24 @@
       <!-- ニュースレター動線はファーストビュー内だけに表示する -->
       <div class="news-ticker">
         <span class="ticker-label"><img src="./assets/newsletter-icon.svg" alt="" aria-hidden="true" />Newsletter</span>
-        <a class="ticker-window" href="https://substack.studioholiday.jp/" target="_blank" rel="noopener" aria-label="ニュースレターを読む">
-          <span class="ticker-track" aria-hidden="true">
+        <!-- 記事一覧はSubstackのRSSからJSが自動取得して差し替える（タイトルクリックで該当記事へ）。
+             以下はフィード取得失敗時のフォールバック -->
+        <div class="ticker-window" aria-label="ニュースレターの新着">
+          <span class="ticker-track">
             <span class="ticker-set">
-              <span>vol.48 偶発的な出会いがプロジェクトになるまで（仮）</span>
-              <span>vol.47 休日コーラ、次の一手（仮）</span>
-              <span>vol.46 KDCに集まる人たちの話（仮）</span>
-              <span>vol.45 「デザイン&amp;デプロイ」という仕事（仮）</span>
+              <a href="https://substack.studioholiday.jp/" target="_blank" rel="noopener">vol.48 偶発的な出会いがプロジェクトになるまで（仮）</a>
+              <a href="https://substack.studioholiday.jp/" target="_blank" rel="noopener">vol.47 休日コーラ、次の一手（仮）</a>
+              <a href="https://substack.studioholiday.jp/" target="_blank" rel="noopener">vol.46 KDCに集まる人たちの話（仮）</a>
+              <a href="https://substack.studioholiday.jp/" target="_blank" rel="noopener">vol.45 「デザイン&amp;デプロイ」という仕事（仮）</a>
             </span>
-            <span class="ticker-set">
-              <span>vol.48 偶発的な出会いがプロジェクトになるまで（仮）</span>
-              <span>vol.47 休日コーラ、次の一手（仮）</span>
-              <span>vol.46 KDCに集まる人たちの話（仮）</span>
-              <span>vol.45 「デザイン&amp;デプロイ」という仕事（仮）</span>
+            <span class="ticker-set" aria-hidden="true">
+              <a href="https://substack.studioholiday.jp/" target="_blank" rel="noopener" tabindex="-1">vol.48 偶発的な出会いがプロジェクトになるまで（仮）</a>
+              <a href="https://substack.studioholiday.jp/" target="_blank" rel="noopener" tabindex="-1">vol.47 休日コーラ、次の一手（仮）</a>
+              <a href="https://substack.studioholiday.jp/" target="_blank" rel="noopener" tabindex="-1">vol.46 KDCに集まる人たちの話（仮）</a>
+              <a href="https://substack.studioholiday.jp/" target="_blank" rel="noopener" tabindex="-1">vol.45 「デザイン&amp;デプロイ」という仕事（仮）</a>
             </span>
           </span>
-        </a>
+        </div>
         <a class="ticker-cta" href="https://substack.studioholiday.jp/" target="_blank" rel="noopener"><span>購読する</span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg></a>
       </div>
 
@@ -256,7 +258,7 @@
     </article>
   </aside>
 
-  <script src="./cms-config.js?v=20260813-14"></script>
-  <script src="./main.js?v=20260813-14"></script>
+  <script src="./cms-config.js?v=20260813-16"></script>
+  <script src="./main.js?v=20260813-16"></script>
 </body>
 </html>
