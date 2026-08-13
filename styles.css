@@ -443,6 +443,22 @@ body {
   font-weight: 400 !important;
   color: var(--bk-80);
 }
+/* microCMSリッチエディタ本文（入稿HTMLをそのまま表示） */
+.drawer-body {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.9;
+}
+.drawer-body h2,
+.drawer-body h3 {
+  margin: 28px 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.drawer-body p { margin: 0 0 1.4em; font-weight: 400; }
+.drawer-body img { max-width: 100%; height: auto; margin: 8px 0 16px; }
+.drawer-body a { color: var(--ink); }
 
 /* ---------- ニュースレター（Substack）動線: 左端の縦型電光掲示板 ---------- */
 .news-ticker {

@@ -26,8 +26,10 @@ const STICKER_DIR = './assets/stickers/';
  * 紹介文はスプレッドシート「WORKS_Webサイト 事例集」の反映待ち（仮文言）。 */
 const JIREI = '../works/jirei/';
 
-/* work: クリック時のポップアップに出す実績情報 */
-const STICKERS = [
+/* work: クリック時のドロワーに出す実績情報。
+ * microCMS（works API）が設定されていればそちらで上書きされる。
+ * 以下はCMS未設定・取得失敗時のフォールバックデータ */
+const FALLBACK_STICKERS = [
   { file: JIREI + 'smeedy-pose04.png', alt: 'スミーディ', client: '住友電気工業',
     work: { kind: 'キャラクターデザイン', title: 'スミーディ', desc: '掲載事例 No.01。紹介文はWORKSシート反映待ち（仮）。' } },
   { file: JIREI + 'ai-interviewer-logo.jpg', alt: 'AI面接官',
@@ -69,6 +71,7 @@ const STICKERS = [
   { file: 'works-sushiro.png', alt: 'スシロー',
     work: { kind: 'ブランディング', title: 'スシロー', desc: 'スタジオホリデーのブランディング実績です。' } },
 ];
+let STICKERS = FALLBACK_STICKERS;
 
 /* 社名ロゴ: イントロの最後に「Design & Deploy Partner」の上へ貼られる特別なステッカー。
  * 常に最前面・クリックで About へ */
@@ -122,6 +125,7 @@ const shuffle = (arr) => {
 
 const loadImage = (src) => new Promise((resolve, reject) => {
   const img = new Image();
+  if (/^https?:/.test(src)) img.crossOrigin = 'anonymous'; // CMS画像はCanvasで加工するためCORS付きで読む
   img.onload = () => resolve(img);
   img.onerror = reject;
   img.src = src;
@@ -129,7 +133,7 @@ const loadImage = (src) => new Promise((resolve, reject) => {
 
 async function loadArt(item) {
   try {
-    const img = await loadImage(STICKER_DIR + item.file); // 本番PNG/JPG
+    const img = await loadImage(item.src || STICKER_DIR + item.file); // src=CMSの絶対URL / file=ローカル
     return trimTransparent(trimWhiteBackground(img));
   } catch {
     return null;
@@ -349,14 +353,20 @@ function outlineToPathD(pts) {
     .join('') + 'Z';
 }
 
+const spriteOf = async (item) => {
+  const art = await loadArt(item);
+  return art && { alt: item.alt, work: item.work, client: item.client, ...makeDiecutSprite(art) };
+};
+
 let spritesPromise = null;
 function getSprites() {
-  spritesPromise ??= Promise.all(
-    STICKERS.map(async (item) => {
-      const art = await loadArt(item);
-      return art && { alt: item.alt, work: item.work, client: item.client, ...makeDiecutSprite(art) };
-    }),
-  ).then((list) => list.filter(Boolean));
+  spritesPromise ??= Promise.all(STICKERS.map(spriteOf)).then(async (list) => {
+    const okList = list.filter(Boolean);
+    if (okList.length) return okList;
+    // CMS画像が1枚も読めなかった（CORS・リンク切れ等）→ ローカル素材で作り直す
+    STICKERS = FALLBACK_STICKERS;
+    return (await Promise.all(FALLBACK_STICKERS.map(spriteOf))).filter(Boolean);
+  });
   return spritesPromise;
 }
 
@@ -731,6 +741,18 @@ function openModal(work, imgURL, client) {
   document.getElementById('drawerKind').textContent = work.kind;
   document.getElementById('drawerTitle').textContent = work.title;
   document.getElementById('drawerDesc').textContent = work.desc;
+  // microCMSのリッチエディタ本文があれば記事として表示し、仮の注記は隠す
+  const body = document.getElementById('drawerBody');
+  const note = document.querySelector('.drawer-note');
+  if (work.body) {
+    body.innerHTML = work.body; // 自社CMSの入稿HTMLをそのまま流し込む
+    body.hidden = false;
+    if (note) note.hidden = true;
+  } else {
+    body.innerHTML = '';
+    body.hidden = true;
+    if (note) note.hidden = false;
+  }
   const tags = document.getElementById('drawerTags');
   tags.innerHTML = '';
   [client, work.kind, work.title].filter(Boolean).forEach((t) => {
@@ -1233,9 +1255,67 @@ function initTunePanel() {
 
 initTunePanel();
 
+/* ==========================================================
+   ▼ microCMS連携: 事例（works）とニュースレター（newsletter）を取得。
+   cms-config.js が未設定・取得失敗時はフォールバックデータのまま動く。
+   APIスキーマと設定手順は CMS-SETUP.md を参照。
+   ========================================================== */
+
+async function fetchCMS(endpoint) {
+  const cfg = window.MICROCMS_CONFIG || {};
+  if (!cfg.serviceDomain || !cfg.apiKey) return null; // 未設定なら静かにフォールバック
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 4000); // CMS障害時もFVを待たせない
+  try {
+    const res = await fetch(
+      `https://${cfg.serviceDomain}.microcms.io/api/v1/${endpoint}?limit=100`,
+      { headers: { 'X-MICROCMS-API-KEY': cfg.apiKey }, signal: ctl.signal },
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()).contents;
+  } catch (e) {
+    console.warn(`[microCMS] ${endpoint} の取得に失敗。フォールバックで表示します:`, e);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function loadCMSContent() {
+  const [works, letters] = await Promise.all([fetchCMS('works'), fetchCMS('newsletter')]);
+
+  // works → FVステッカー（画像必須。タグ・ドロワーの中身もここから）
+  if (works && works.length) {
+    const mapped = works
+      .filter((w) => w.sticker && w.sticker.url)
+      .map((w) => ({
+        // imgix変換で幅を抑えつつPNG化（切り抜きの透過を保持）
+        src: `${w.sticker.url}?w=1000&fm=png`,
+        alt: w.title,
+        client: w.client || '',
+        work: { kind: w.kind || '', title: w.title, desc: w.description || '', body: w.body || '' },
+      }));
+    if (mapped.length) STICKERS = mapped;
+  }
+
+  // newsletter → 左端の電光掲示板（2セットとも同内容にして無限ループを保つ）
+  if (letters && letters.length) {
+    document.querySelectorAll('.ticker-set').forEach((set) => {
+      set.innerHTML = '';
+      letters.forEach((l) => {
+        const span = document.createElement('span');
+        span.textContent = l.title;
+        set.appendChild(span);
+      });
+    });
+  }
+}
+
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-build({ intro: !reducedMotion }).then(() => {
-  if (reducedMotion) skipIntro();
+loadCMSContent().finally(() => {
+  build({ intro: !reducedMotion }).then(() => {
+    if (reducedMotion) skipIntro();
+  });
 });
 
 window.addEventListener('resize', () => {
