@@ -28,23 +28,23 @@ const JIREI = '../works/jirei/';
 
 /* work: クリック時のポップアップに出す実績情報 */
 const STICKERS = [
-  { file: JIREI + 'smeedy-pose04.png', alt: 'スミーディ',
+  { file: JIREI + 'smeedy-pose04.png', alt: 'スミーディ', client: '住友電気工業',
     work: { kind: 'キャラクターデザイン', title: 'スミーディ', desc: '掲載事例 No.01。紹介文はWORKSシート反映待ち（仮）。' } },
   { file: JIREI + 'ai-interviewer-logo.jpg', alt: 'AI面接官',
     work: { kind: '事業開発・サービスロゴ', title: 'AI面接官', desc: '掲載事例 No.07。紹介文はWORKSシート反映待ち（仮）。' } },
   { file: JIREI + 'aburi-kikou.png', alt: '炙り紀行',
     work: { kind: 'グラフィック', title: '炙り紀行', desc: '掲載事例 No.08。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: JIREI + 'kdc-logo.jpg', alt: 'K,D,C,,,',
+  { file: JIREI + 'kdc-logo.jpg', alt: 'K,D,C,,,', client: 'STUDIO HOLIDAY',
     work: { kind: 'ロゴ・場の運営', title: 'K,D,C,,,', desc: '掲載事例 No.16。紹介文はWORKSシート反映待ち（仮）。' } },
   { file: JIREI + 'seiryu-okoshi-logo.png', alt: '清流おこし',
     work: { kind: 'ロゴ・ブランディング', title: '清流おこし', desc: '掲載事例 No.21。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: JIREI + 'holiday-cola-logo.png', alt: '休日COLA',
+  { file: JIREI + 'holiday-cola-logo.png', alt: '休日COLA', client: 'STUDIO HOLIDAY',
     work: { kind: 'フード・ブランド開発', title: '休日COLA', desc: '掲載事例 No.27。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: JIREI + 'holidaykun-hirune.png', alt: 'ホリデイくん（ひるね）',
+  { file: JIREI + 'holidaykun-hirune.png', alt: 'ホリデイくん（ひるね）', client: 'STUDIO HOLIDAY',
     work: { kind: 'キャラクターデザイン', title: 'ホリデイくん', desc: '掲載事例 No.32。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: JIREI + 'holidaykun-tozan.png', alt: 'ホリデイくん（とざん）',
+  { file: JIREI + 'holidaykun-tozan.png', alt: 'ホリデイくん（とざん）', client: 'STUDIO HOLIDAY',
     work: { kind: 'キャラクターデザイン', title: 'ホリデイくん', desc: '掲載事例 No.32。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: JIREI + 'minna-gohankai-logo.png', alt: 'みんなでごはん会',
+  { file: JIREI + 'minna-gohankai-logo.png', alt: 'みんなでごはん会', client: 'STUDIO HOLIDAY',
     work: { kind: 'ロゴ・イベント', title: 'みんなでごはん会', desc: '掲載事例 No.31。紹介文はWORKSシート反映待ち（仮）。' } },
   { file: JIREI + 'juzan-asset1.png', alt: '十山ブランディング',
     work: { kind: 'ブランディング', title: '十山', desc: '掲載事例 No.06。紹介文はWORKSシート反映待ち（仮）。' } },
@@ -60,7 +60,7 @@ const STICKERS = [
     work: { kind: 'イラストレーション', title: 'Monster Illustration', desc: '実際の制作実績から切り抜いたイラストレーションです。' } },
   { file: 'works/itomaki-ac-adapter.png', alt: 'itomaki AC Adapter',
     work: { kind: 'プロダクトデザイン', title: 'itomaki AC Adapter', desc: '実際の制作実績から切り抜いたプロダクトビジュアルです。' } },
-  { file: 'works/holiday-cola.png', alt: '休日コーラ GINGER APPLE',
+  { file: 'works/holiday-cola.png', alt: '休日コーラ GINGER APPLE', client: 'STUDIO HOLIDAY',
     work: { kind: 'フード・ブランド開発', title: '休日コーラ GINGER APPLE', desc: '実際の制作実績から切り抜いた商品ビジュアルです。' } },
   { file: 'yappy.png', alt: 'yappy',
     work: { kind: 'ロゴ・世界観', title: 'yappy', desc: 'スタジオホリデーの制作実績から生まれたロゴ・世界観です。' } },
@@ -247,7 +247,99 @@ function makeDiecutSprite(art, artSize) {
   ctx.drawImage(silhouette, 0, 0);
   ctx.shadowColor = 'transparent';
   ctx.drawImage(art, PAD, PAD, dw, dh);
-  return { url: out.toDataURL('image/png'), w: SW, h: SH };
+  // タグ表示用に、白フチ台紙（silhouette）の外周輪郭もパス化して持たせる
+  const outline = traceOutline(silhouette, SW, SH);
+  return { url: out.toDataURL('image/png'), w: SW, h: SH, pathD: outline && outlineToPathD(outline) };
+}
+
+/* --- 輪郭抽出: タグをステッカーの外周に沿わせるためのパスを作る ---
+ * 白フチ台紙のアルファを縮小してMoore境界追跡（radial sweep）し、
+ * 平滑化してから法線方向に少し外へオフセットする。人型のような
+ * 凹凸のある形でも輪郭をなぞれる */
+const TAG_OUTSET = 16; // 輪郭からの外側オフセット（スプライトpx）
+
+function traceOutline(mask, sw, sh) {
+  const MAXD = 120;
+  const sc = Math.min(1, MAXD / Math.max(sw, sh));
+  const w = Math.max(8, Math.round(sw * sc));
+  const h = Math.max(8, Math.round(sh * sc));
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const x2 = c.getContext('2d', { willReadFrequently: true });
+  x2.drawImage(mask, 0, 0, w, h);
+  const a = x2.getImageData(0, 0, w, h).data;
+  const solid = (x, y) => x >= 0 && y >= 0 && x < w && y < h && a[(y * w + x) * 4 + 3] > 40;
+
+  let sx = -1, sy = -1;
+  outer: for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (solid(x, y)) { sx = x; sy = y; break outer; }
+  }
+  if (sx < 0) return null;
+
+  // 8近傍（時計回り・左始まり）。直前の空白セルの方向から走査を始める
+  const N = [[-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1]];
+  const dirIndex = (dx, dy) => N.findIndex(([x, y]) => x === dx && y === dy);
+  let cx = sx, cy = sy;
+  let prevX = sx - 1, prevY = sy; // スキャン順の都合で左は必ず空白
+  const pts = [];
+  for (let step = 0; step < w * h * 3; step++) {
+    pts.push([cx, cy]);
+    const start = dirIndex(prevX - cx, prevY - cy);
+    let moved = false;
+    for (let k = 1; k <= 8; k++) {
+      const di = (start + k) % 8;
+      const nx = cx + N[di][0], ny = cy + N[di][1];
+      if (solid(nx, ny)) {
+        const pe = (start + k - 1 + 8) % 8; // 直前に調べた空白近傍
+        prevX = cx + N[pe][0]; prevY = cy + N[pe][1];
+        cx = nx; cy = ny;
+        moved = true;
+        break;
+      }
+    }
+    if (!moved) break; // 孤立ピクセル
+    if (cx === sx && cy === sy && pts.length > 8) break;
+  }
+  if (pts.length < 12) return null;
+
+  // 間引き → スプライト座標へ → 移動平均で平滑化（2回）
+  let p = pts.filter((_, i) => i % 2 === 0).map(([x, y]) => [x / sc, y / sc]);
+  for (let pass = 0; pass < 2; pass++) {
+    p = p.map((_, i) => {
+      const a1 = p[(i - 1 + p.length) % p.length];
+      const b1 = p[i];
+      const c1 = p[(i + 1) % p.length];
+      return [(a1[0] + b1[0] + c1[0]) / 3, (a1[1] + b1[1] + c1[1]) / 3];
+    });
+  }
+
+  // 時計回りに統一（y下向き座標では符号付き面積が正 = 時計回り）
+  let area = 0;
+  for (let i = 0; i < p.length; i++) {
+    const [x1, y1] = p[i], [x2b, y2b] = p[(i + 1) % p.length];
+    area += x1 * y2b - x2b * y1;
+  }
+  if (area < 0) p.reverse();
+
+  // 上端の点を先頭に（タグが上から読めるように）
+  let topI = 0;
+  p.forEach(([, y], i) => { if (y < p[topI][1]) topI = i; });
+  p = p.slice(topI).concat(p.slice(0, topI));
+
+  // 接線から外向き法線を出してオフセット（時計回りなら (ty, -tx) が外側）
+  return p.map((pt, i) => {
+    const [ax, ay] = p[(i - 1 + p.length) % p.length];
+    const [bx, by] = p[(i + 1) % p.length];
+    const tx = bx - ax, ty = by - ay;
+    const len = Math.hypot(tx, ty) || 1;
+    return [pt[0] + (ty / len) * TAG_OUTSET, pt[1] - (tx / len) * TAG_OUTSET];
+  });
+}
+
+function outlineToPathD(pts) {
+  return pts
+    .map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`)
+    .join('') + 'Z';
 }
 
 let spritesPromise = null;
@@ -255,7 +347,7 @@ function getSprites() {
   spritesPromise ??= Promise.all(
     STICKERS.map(async (item) => {
       const art = await loadArt(item);
-      return art && { alt: item.alt, work: item.work, ...makeDiecutSprite(art) };
+      return art && { alt: item.alt, work: item.work, client: item.client, ...makeDiecutSprite(art) };
     }),
   ).then((list) => list.filter(Boolean));
   return spritesPromise;
@@ -461,6 +553,20 @@ function buildSticker(sprite, opts) {
     el.classList.add('is-popping');
     el.addEventListener('animationend', () => el.classList.remove('is-popping'), { once: true });
   }
+
+  // 輪郭タグ: hover対応環境ではポインタで個別表示（スマホはランダム表示のみ）
+  el._sprite = sprite;
+  if (canHoverTags && sprite.pathD) {
+    el.addEventListener('pointerenter', () => {
+      if (mode !== 'explore') return;
+      tagHoverLock = el;
+      showTagsFor(el);
+    });
+    el.addEventListener('pointerleave', () => {
+      tagHoverLock = null;
+      hideActiveTag();
+    });
+  }
   return el;
 }
 
@@ -493,6 +599,104 @@ function buildPhoto(data, opts) {
   }
   return el;
 }
+
+/* ==========================================================
+   ▼ 輪郭タグ: ステッカーの実績情報（クライアント/ジャンル/アウトプット名）を
+   「#タグ」として外周に沿ってタイプライター表示する。
+   hover時はそのステッカー、非hover時は画面内からランダムに選んで表示。
+   hover概念のない環境（スマホ）はランダム表示のみ。
+   ========================================================== */
+
+const TAG_FONT_PX = 12;    // 画面上の文字サイズ
+const TAG_TYPE_MS = 55;    // タイプライターの1文字間隔
+const TAG_HOLD_MS = 3400;  // ランダム表示の維持時間
+const TAG_CYCLE_MS = 4800; // ランダム表示の選び直し間隔
+const canHoverTags = matchMedia('(hover: hover) and (pointer: fine)').matches;
+const tagsReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let tagSeq = 0;
+let activeTag = null;     // { svg, timer }
+let tagHoverLock = null;  // hover中のステッカー（ランダム表示を止める）
+let lastAmbientEl = null; // 直前にランダム表示したステッカー（連続選択を避ける）
+let ambientHoldTimer = 0;
+
+function tagTextOf(sprite) {
+  const w = sprite.work || {};
+  return [sprite.client, w.kind, w.title].filter(Boolean).map((t) => `#${t}`).join('　');
+}
+
+function showTagsFor(el) {
+  hideActiveTag();
+  const sprite = el._sprite;
+  if (!sprite || !sprite.pathD || !el.isConnected) return;
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('class', 'tag-svg');
+  svg.setAttribute('viewBox', `0 0 ${sprite.w} ${sprite.h}`);
+  const id = `tag-path-${++tagSeq}`;
+  const path = document.createElementNS(ns, 'path');
+  path.setAttribute('id', id);
+  path.setAttribute('d', sprite.pathD);
+  path.setAttribute('fill', 'none');
+  const text = document.createElementNS(ns, 'text');
+  // viewBox座標系で描かれるため、表示サイズ比でスケールして画面上12pxに揃える
+  const k = sprite.w / (el.offsetWidth || sprite.w);
+  text.setAttribute('font-size', (TAG_FONT_PX * k).toFixed(1));
+  text.setAttribute('stroke-width', (3 * k).toFixed(1));
+  const tp = document.createElementNS(ns, 'textPath');
+  tp.setAttribute('href', `#${id}`);
+  tp.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${id}`);
+  text.appendChild(tp);
+  svg.appendChild(path);
+  svg.appendChild(text);
+  el.appendChild(svg);
+
+  const full = tagTextOf(sprite);
+  activeTag = { svg, timer: 0 };
+  if (tagsReducedMotion) { tp.textContent = full; return; }
+  let i = 0;
+  activeTag.timer = setInterval(() => {
+    i++;
+    tp.textContent = full.slice(0, i);
+    if (i >= full.length) clearInterval(activeTag.timer);
+  }, TAG_TYPE_MS);
+}
+
+function hideActiveTag() {
+  if (!activeTag) return;
+  clearInterval(activeTag.timer);
+  const { svg } = activeTag;
+  svg.classList.add('is-hiding');
+  setTimeout(() => svg.remove(), 380);
+  activeTag = null;
+}
+
+/* 画面（=FVビューポート）に収まって見えているステッカーから1枚選んで表示 */
+function ambientTagTick() {
+  if (mode !== 'explore' || document.hidden || tagHoverLock) return;
+  const hr = hero.getBoundingClientRect();
+  if (hr.bottom < 60 || hr.top > innerHeight - 60) return; // FVがほぼ画面外
+  // FVビューポート内に6割以上見えているステッカーを候補にする
+  // （中央は文字エリアで空くため、端で見切れ気味のステッカーも拾う）
+  const vx1 = Math.max(hr.left, 0), vy1 = Math.max(hr.top, 0);
+  const vx2 = Math.min(hr.right, innerWidth), vy2 = Math.min(hr.bottom, innerHeight);
+  const candidates = [...world.querySelectorAll('.sticker')].filter((s) => {
+    if (!s._sprite || !s._sprite.pathD || s === lastAmbientEl) return false;
+    const r = s.getBoundingClientRect();
+    if (!r.width || !r.height) return false;
+    const ix = Math.max(0, Math.min(r.right, vx2) - Math.max(r.left, vx1));
+    const iy = Math.max(0, Math.min(r.bottom, vy2) - Math.max(r.top, vy1));
+    return (ix * iy) / (r.width * r.height) >= 0.6;
+  });
+  if (!candidates.length) return;
+  const pick = candidates[(Math.random() * candidates.length) | 0];
+  lastAmbientEl = pick;
+  showTagsFor(pick);
+  clearTimeout(ambientHoldTimer);
+  ambientHoldTimer = setTimeout(() => { if (!tagHoverLock) hideActiveTag(); }, TAG_HOLD_MS);
+}
+setInterval(ambientTagTick, TAG_CYCLE_MS);
 
 /* ==========================================================
    ▼ ポップアップ（ステッカー → アウトプット概要 + ストーリー）
@@ -703,6 +907,7 @@ function enableExplore() {
   mode = 'explore';
   hero.classList.remove('is-intro');
   hero.classList.add('can-pan');
+  setTimeout(ambientTagTick, 1600); // 回遊が始まったら輪郭タグのランダム表示も開始
 }
 
 async function skipIntro() {
@@ -723,6 +928,9 @@ async function skipIntro() {
 async function build({ intro }) {
   world.querySelectorAll('.sticker, .photo-card').forEach((el) => el.remove());
   logoPlaced = false;
+  hideActiveTag();
+  tagHoverLock = null;
+  lastAmbientEl = null;
   clearTimers();
 
   vw = hero.clientWidth || window.innerWidth;
@@ -824,6 +1032,91 @@ async function build({ intro }) {
   mode = 'intro';
   later(startZoom, 300 + PASTE_SEC * 1000); // 貼り終わりを見せてからズーム
 }
+
+/* ==========================================================
+   ▼ スクロールヒント: FVで回遊し続けて一定時間スクロールがない人に、
+   「ニュイ〜…スポン！」とページを少し覗かせて下にコンテンツが
+   あることを知らせる。ユーザーが自分でスクロールして下を見つけたら
+   （半画面以上）そのセッションでは二度と出さない。
+   ========================================================== */
+
+const PEEK_IDLE_MS = 12000; // 無スクロールでヒントを出すまでの時間
+const PEEK_DIST = 190;      // 覗かせる量(px)
+let peekTimer = 0;
+let peekRaf = 0;
+let peeking = false;
+let contentDiscovered = false;
+
+function armPeek() {
+  clearTimeout(peekTimer);
+  if (contentDiscovered) return;
+  peekTimer = setTimeout(tryPeek, PEEK_IDLE_MS);
+}
+
+function tryPeek() {
+  // 回遊モードで・ページ先頭にいて・ドラッグ中でない時だけ。条件が揃わなければ待ち直す
+  if (contentDiscovered || peeking || document.hidden || mode !== 'explore' ||
+      pdown || window.scrollY > 4 ||
+      matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    armPeek();
+    return;
+  }
+  peeking = true;
+
+  // ニュイ〜（ゆっくり伸びる）→ ため → スポン！（勢いよく戻って小さくバウンド）
+  const D1 = 900, HOLD = 140, D2 = 260, B = 240;
+  const total = D1 + HOLD + D2 + B;
+  const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const start = performance.now();
+
+  const frame = (now) => {
+    if (!peeking) return; // ユーザー操作でキャンセル済み
+    const t = now - start;
+    let y;
+    if (t < D1) {
+      y = PEEK_DIST * easeInOut(t / D1);
+    } else if (t < D1 + HOLD) {
+      y = PEEK_DIST;
+    } else if (t < D1 + HOLD + D2) {
+      const u = (t - D1 - HOLD) / D2;
+      y = PEEK_DIST * (1 - u * u); // 加速して戻る
+    } else if (t < total) {
+      const u = (t - D1 - HOLD - D2) / B;
+      y = 14 * Math.sin(u * Math.PI) * (1 - u); // 上端で小さくバウンド
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      peeking = false;
+      armPeek(); // まだ見つけてもらえなければ、また一定時間後に
+      return;
+    }
+    window.scrollTo({ top: Math.max(0, y), behavior: 'instant' });
+    peekRaf = requestAnimationFrame(frame);
+  };
+  peekRaf = requestAnimationFrame(frame);
+}
+
+function cancelPeek() {
+  if (!peeking) return;
+  peeking = false;
+  cancelAnimationFrame(peekRaf);
+  armPeek();
+}
+
+// ユーザー操作が入ったらヒントは即中断（スクロール位置はユーザーに委ねる）
+['wheel', 'touchstart', 'pointerdown', 'keydown'].forEach((ev) =>
+  addEventListener(ev, cancelPeek, { passive: true, capture: true }));
+
+addEventListener('scroll', () => {
+  if (peeking) return; // ヒント自身のスクロールは無視
+  if (window.scrollY > innerHeight * 0.5) {
+    contentDiscovered = true; // 下のコンテンツを自力で見つけた
+    clearTimeout(peekTimer);
+  } else {
+    armPeek(); // スクロールがあったらアイドル計測をやり直す
+  }
+}, { passive: true });
+
+armPeek();
 
 /* ==========================================================
    ▼ 調整デモ: URLに ?tune を付けるとスライダーが出る
