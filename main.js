@@ -814,9 +814,10 @@ const FV_TEXTURES = {
   none:  { label: 'なし', css: () => ({ image: 'none', size: 'auto' }) },
   halftone: { label: 'ハーフトーン（アナログ紙）', css: (c, s) => ({
     // 印刷の網点をスキャンしたようなノイズ画像タイル。色は画像に焼き込み済みでcは無効。
-    // s(px)はタイル表示幅の係数: デフォルト24 → 720px幅で敷き詰め
+    // s(px)はタイル表示幅の係数: デフォルト24 → PC 720px / スマホ 408px で敷き詰め
+    // （スマホで720pxのままだとドットが大きすぎるため画面幅に合わせて縮める）
     image: 'url("./assets/texture-halftone.png")',
-    size: `${Math.round(s * 30)}px auto` }) },
+    size: `${Math.round(s * (matchMedia('(max-width: 640px)').matches ? 17 : 30))}px auto` }) },
   grid:  { label: '方眼', css: (c, s) => ({
     image: `linear-gradient(${c} 1px, transparent 1px), linear-gradient(90deg, ${c} 1px, transparent 1px)`,
     size: `${s}px ${s}px` }) },
@@ -1239,5 +1240,8 @@ build({ intro: !reducedMotion }).then(() => {
 
 window.addEventListener('resize', () => {
   clearTimeout(window.__rz);
-  window.__rz = setTimeout(() => build({ intro: false }), 200);
+  window.__rz = setTimeout(() => {
+    applyFvParams(); // モバイル/PCでハーフトーンのタイル幅が変わるため再適用
+    build({ intro: false });
+  }, 200);
 });

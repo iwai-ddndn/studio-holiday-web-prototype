@@ -750,10 +750,8 @@ body {
     min-height: 620px;
   }
 
-  .home-page .world,
-  .home-page main {
-    background-size: 20px 20px;
-  }
+  /* （旧方眼テクスチャ用の background-size 上書きは、ハーフトーン画像を
+   *   潰してしまうため撤去。タイル幅は --fv-texture-size に任せる） */
 
   /* モバイルは左のニュースレター帯のぶんだけ中央を右に寄せる */
   .home-page .world-center {
