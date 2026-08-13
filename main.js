@@ -1059,16 +1059,18 @@ async function build({ intro }) {
    （半画面以上）そのセッションでは二度と出さない。
    ========================================================== */
 
-const PEEK_IDLE_MS = 12000; // 無スクロールでヒントを出すまでの時間
+const PEEK_IDLE_MS = 24000; // 無スクロールでヒントを出すまでの時間
 const PEEK_DIST = 190;      // 覗かせる量(px)
+const PEEK_MAX_PLAYS = 2;   // 1ページ表示あたりの最大再生回数
 let peekTimer = 0;
 let peekRaf = 0;
 let peeking = false;
+let peekPlays = 0;
 let contentDiscovered = false;
 
 function armPeek() {
   clearTimeout(peekTimer);
-  if (contentDiscovered) return;
+  if (contentDiscovered || peekPlays >= PEEK_MAX_PLAYS) return;
   peekTimer = setTimeout(tryPeek, PEEK_IDLE_MS);
 }
 
@@ -1105,7 +1107,8 @@ function tryPeek() {
     } else {
       window.scrollTo({ top: 0, behavior: 'instant' });
       peeking = false;
-      armPeek(); // まだ見つけてもらえなければ、また一定時間後に
+      peekPlays++;
+      armPeek(); // まだ見つけてもらえなければ、上限回数までもう一度だけ
       return;
     }
     window.scrollTo({ top: Math.max(0, y), behavior: 'instant' });
@@ -1127,11 +1130,11 @@ function cancelPeek() {
 
 addEventListener('scroll', () => {
   if (peeking) return; // ヒント自身のスクロールは無視
-  if (window.scrollY > innerHeight * 0.5) {
-    contentDiscovered = true; // 下のコンテンツを自力で見つけた
+  if (window.scrollY > 100) {
+    contentDiscovered = true; // 一度でもFVから下へスクロールしたら、以後は出さない
     clearTimeout(peekTimer);
   } else {
-    armPeek(); // スクロールがあったらアイドル計測をやり直す
+    armPeek(); // FV内の小さな揺れはアイドル計測をやり直すだけ
   }
 }, { passive: true });
 
