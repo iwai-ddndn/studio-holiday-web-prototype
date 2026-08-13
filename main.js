@@ -718,25 +718,40 @@ function ambientTagTick() {
 setInterval(ambientTagTick, TAG_CYCLE_MS);
 
 /* ==========================================================
-   ▼ ポップアップ（ステッカー → アウトプット概要 + ストーリー）
+   ▼ 詳細ドロワー（ステッカー → 記事プレビュー）
+   ページ遷移せず右からスライドインし、閉じればすぐFVに戻れる
    ========================================================== */
 
-const modal = document.getElementById('workModal');
+const drawer = document.getElementById('workDrawer');
+let drawerHideTimer = 0;
 
-function openModal(work, imgURL) {
-  document.getElementById('modalImg').src = imgURL;
-  document.getElementById('modalKind').textContent = work.kind;
-  document.getElementById('modalTitle').textContent = work.title;
-  document.getElementById('modalDesc').textContent = work.desc;
-  modal.hidden = false;
+function openModal(work, imgURL, client) {
+  clearTimeout(drawerHideTimer);
+  document.getElementById('drawerImg').src = imgURL;
+  document.getElementById('drawerKind').textContent = work.kind;
+  document.getElementById('drawerTitle').textContent = work.title;
+  document.getElementById('drawerDesc').textContent = work.desc;
+  const tags = document.getElementById('drawerTags');
+  tags.innerHTML = '';
+  [client, work.kind, work.title].filter(Boolean).forEach((t) => {
+    const li = document.createElement('li');
+    li.textContent = `#${t}`;
+    tags.appendChild(li);
+  });
+  drawer.hidden = false;
+  void drawer.offsetWidth; // hidden解除をこのフレームで確定させ、スライドインを効かせる
+  drawer.classList.add('is-open');
 }
-function closeModal() { modal.hidden = true; }
+function closeModal() {
+  drawer.classList.remove('is-open');
+  drawerHideTimer = setTimeout(() => { drawer.hidden = true; }, 420); // スライドアウトを待つ
+}
 
-modal.addEventListener('click', (e) => {
+drawer.addEventListener('click', (e) => {
   if (e.target.closest('[data-close]')) closeModal();
 });
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !modal.hidden) closeModal();
+  if (e.key === 'Escape' && !drawer.hidden) closeModal();
 });
 
 /* ==========================================================
@@ -1025,7 +1040,7 @@ async function build({ intro }) {
       z: zOrder[i] + 1,
       pop: intro,
       delay: delayOf(i),
-      onOpen: () => openModal(sprite.work || genericWork(sprite.alt), sprite.url),
+      onOpen: () => openModal(sprite.work || genericWork(sprite.alt), sprite.url, sprite.client),
     }));
   });
 

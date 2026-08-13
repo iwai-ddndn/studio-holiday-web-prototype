@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;family=Noto+Sans+JP:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=20260813-9" />
+  <link rel="stylesheet" href="./styles.css?v=20260813-10" />
 </head>
 <body class="home-page">
   <!-- ファーストビュー: ビューポートより広い「壁」にステッカーと写真を貼り重ね、
@@ -240,19 +240,21 @@
     </div>
   </footer>
 
-  <!-- ▼ ステッカークリック時のポップアップ（アウトプット概要 + ストーリーへの入口） -->
-  <div class="work-modal" id="workModal" hidden>
-    <div class="work-modal-backdrop" data-close></div>
-    <div class="work-modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <button class="work-modal-close" type="button" data-close aria-label="閉じる">×</button>
-      <img id="modalImg" alt="" />
-      <span class="work-kind" id="modalKind"></span>
-      <h3 id="modalTitle"></h3>
-      <p id="modalDesc"></p>
-      <a class="modal-story-link" href="./works.html">ストーリーを読む →</a>
-    </div>
-  </div>
+  <!-- ▼ ステッカークリック時の詳細ドロワー: 右からスライドインする記事プレビュー。
+       ページ遷移せず、閉じればそのままFV（壁の位置も保持）に戻れる -->
+  <aside class="work-drawer" id="workDrawer" hidden>
+    <div class="work-drawer-backdrop" data-close></div>
+    <article class="work-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+      <button class="work-drawer-close" type="button" data-close aria-label="閉じる">×</button>
+      <span class="work-kind" id="drawerKind"></span>
+      <h3 id="drawerTitle"></h3>
+      <ul class="drawer-tags" id="drawerTags"></ul>
+      <img id="drawerImg" alt="" />
+      <p id="drawerDesc"></p>
+      <p class="drawer-note">※ 詳細記事の本文はWORKSシート反映待ち。ここに事例記事がそのまま入る想定です。（仮）</p>
+    </article>
+  </aside>
 
-  <script src="./main.js?v=20260813-9"></script>
+  <script src="./main.js?v=20260813-10"></script>
 </body>
 </html>
