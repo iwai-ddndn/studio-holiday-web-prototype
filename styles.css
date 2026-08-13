@@ -206,15 +206,21 @@ body {
   z-index: 200; /* 通常ステッカー(〜数百)より手前・ロゴ(990)より奥 */
   pointer-events: none;
 }
-.ddp {
-  margin: 0;
-  font-family: "Roboto", "Zen Maru Gothic", sans-serif;
-  font-weight: 800;
-  font-size: clamp(36px, 5.8vw, 84px);
-  line-height: 1.08;
-  letter-spacing: 0.02em;
-  color: var(--ink);
-  white-space: nowrap;
+/* 中央のキャッチコピー（ライムの手書きレタリング）とロゴ（Figma 235:1066 / 235:1097） */
+.world-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+.fv-catch {
+  width: min(445px, 64vw);
+  height: auto;
+  animation: fadeIn 0.6s ease both;
+}
+.fv-logo {
+  width: min(316px, 46vw);
+  height: auto;
   animation: fadeIn 0.6s ease both;
 }
 @keyframes fadeIn { from { opacity: 0; } }
@@ -565,23 +571,8 @@ body {
 }
 
 .home-page .world-center {
-  top: calc(50% - 112px);
   width: max-content;
   z-index: 991;
-}
-
-.home-page .ddp {
-  display: inline-block;
-  padding: 6px 12px 8px;
-  color: var(--white);
-  background: var(--orange);
-  font-family: var(--font-en);
-  font-size: clamp(28px, 3.35vw, 48px);
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: -0.025em;
-  transform: rotate(2.38deg);
-  box-shadow: none;
 }
 
 .home-page .logo-plate,
@@ -701,9 +692,6 @@ body {
 }
 
 @media (max-width: 900px) {
-  .home-page .world-center {
-    top: calc(50% - 82px);
-  }
 
 }
 
@@ -721,17 +709,9 @@ body {
     background-size: 20px 20px;
   }
 
+  /* モバイルは左のニュースレター帯のぶんだけ中央を右に寄せる */
   .home-page .world-center {
-    top: calc(50% - 72px);
     left: calc(50% + 22px);
-    width: calc(100vw - 92px);
-    max-width: none;
-  }
-
-  .home-page .ddp {
-    width: 100%;
-    font-size: clamp(18px, 5.2vw, 22px);
-    white-space: nowrap;
   }
 
   .home-page .drag-hint {

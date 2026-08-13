@@ -528,7 +528,7 @@ let vw = 0, vh = 0, worldW = 0, worldH = 0;
 const DEFAULT_PARAMS = {
   world: 3.9,     // 壁の広さ = ビューポートの何倍四方を探索できるか
   size: 1.2,      // ステッカーの大きさ倍率
-  gap: 1.25,      // ステッカー間隔（1でほぼ密着）
+  gap: 1.05,      // ステッカー間隔（1でほぼ密着・1未満で重なる）
   introView: 1.6, // 引きのカメラで見える範囲（ビューポート比）。壁全体は見せなくてよい
   fvBg: '#ececec',          // FVの背景色（本番デフォルト: ライトグレー）
   fvTexture: 'halftone',    // FVのテクスチャ（本番デフォルト: アナログハーフトーン）
@@ -537,6 +537,18 @@ const DEFAULT_PARAMS = {
 };
 let PARAMS = { ...DEFAULT_PARAMS };
 try { Object.assign(PARAMS, JSON.parse(localStorage.getItem('sh-tune')) || {}); } catch { /* 保存なし */ }
+// 2026-08: FV中央の差し替えに合わせてステッカー密度を一段上げる。
+// チューニング済みの保存値がある場合のみ、一度だけ相対的に詰める
+try {
+  const raw = localStorage.getItem('sh-tune');
+  const stored = raw ? JSON.parse(raw) : null;
+  if (stored && !stored.dense1Migrated) {
+    if (stored.gap != null) stored.gap = Math.max(0.85, Math.round(stored.gap * 0.85 * 100) / 100);
+    stored.dense1Migrated = 1;
+    localStorage.setItem('sh-tune', JSON.stringify(stored));
+    Object.assign(PARAMS, stored);
+  }
+} catch { /* 保存なし */ }
 // 2026-08: FVデフォルトをアナログハーフトーンに変更。
 // 保存済みの旧テクスチャ設定を一度だけ新デフォルトへ移行する（他のチューニング値は維持）
 try {
@@ -662,33 +674,11 @@ const clearTimers = () => { timers.forEach(clearTimeout); timers.length = 0; };
 let logoPlaced = false;
 
 function placeLogo(pop) {
+  // 2026-08: 中央のロゴは world-center 内の固定表示（fv-catchcopy.png + fv-logo.svg）に
+  // 置き換えたため、白台紙ステッカーは貼らない。イントロ進行からの呼び出し互換のため
+  // 関数だけ残している（LOGO 定数も同様に未使用）。
   if (logoPlaced) return;
   logoPlaced = true;
-  // Figmaの白い台紙比率を保ちつつ、画面中央に収まるサイズへ。
-  // 貼られる順番・クリック挙動・カメラ制御は従来どおり。
-  const w = Math.min(vw < 560 ? 260 : 374, vw * 0.72);
-  const h = w * 0.55;
-
-  const el = document.createElement('a');
-  el.href = LOGO.href;
-  el.className = 'sticker sticker-logo logo-plate';
-  el.style.setProperty('--tf', `rotate(${rand(-3, 3)}deg)`);
-  el.style.width = w + 'px';
-  el.style.height = h + 'px';
-  el.style.left = (worldW / 2 - w / 2) + 'px';
-  el.style.top = (worldH / 2 - h / 2) + 'px';
-  el.style.zIndex = 1090;
-  el.style.borderRadius = (h * 0.12) + 'px';
-  const img = document.createElement('img');
-  img.src = STICKER_DIR + LOGO.file;
-  img.alt = LOGO.alt;
-  img.draggable = false;
-  el.appendChild(img);
-  if (pop) {
-    el.classList.add('is-popping');
-    el.addEventListener('animationend', () => el.classList.remove('is-popping'), { once: true });
-  }
-  world.appendChild(el);
 }
 
 function startZoom() {
@@ -845,7 +835,7 @@ function initTunePanel() {
   const DEFS = [
     ['world', '壁の広さ（探索範囲）', 1.5, 6, 0.1],
     ['size', 'ステッカーの大きさ', 0.95, 2.5, 0.05],
-    ['gap', 'ステッカーの間隔', 1.0, 2.5, 0.05],
+    ['gap', 'ステッカーの間隔', 0.8, 2.5, 0.05],
     ['introView', '引きで見える範囲', 1.2, 6, 0.1],
   ];
   const panel = document.createElement('div');
