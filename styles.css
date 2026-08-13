@@ -119,6 +119,32 @@ body {
 }
 .header-contact:hover { background-color: var(--ink); color: var(--fig-lime); }
 
+/* ハンバーガーボタン / メニュー内のお問い合わせ: スマホでのみ使う */
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  margin: 0 auto;
+  background: var(--ink);
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+.nav-toggle.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle.is-open span:nth-child(2) { opacity: 0; }
+.nav-toggle.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.nav-contact { display: none; }
+
 /* ---------- hero: 回遊できる「壁」 ---------- */
 .hero {
   position: relative;
@@ -546,15 +572,53 @@ body {
 .ticker-cta:hover { background: #ffd94e; }
 
 @media (max-width: 640px) {
-  body { padding-left: 40px; }
-  .site-header { top: 10px; right: 10px; left: 58px; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
-  .header-pill { gap: 14px; padding: 9px 16px 9px 14px; }
-  .brand span:not(.brand-logo) { display: none; } /* モバイルはロゴマークのみ */
+  /* スマホはハンバーガー: バーにはロゴと三本線だけを出し、
+   * ナビとお問い合わせはバーの下に開くパネルにまとめる */
+  .site-header { top: 12px; right: 12px; left: 12px; gap: 0; }
+  .header-pill {
+    position: relative;
+    flex: 1;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 8px 8px 14px;
+  }
+  .brand { font-size: 11px; }
   .brand-logo { width: 42px; height: 22px; }
   .brand-logo img { width: 166px; height: 36px; top: -1.5px; }
-  .site-nav { gap: 14px; }
-  .site-nav a { font-size: 12px; }
-  .header-contact { padding: 10px 16px; font-size: 12px; }
+  .nav-toggle { display: flex; }
+  .site-nav {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: -1px;
+    right: -1px;
+    z-index: 2;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 8px;
+    background: var(--white);
+    border: 1px solid var(--ink);
+  }
+  .site-nav.is-open { display: flex; }
+  .site-nav a {
+    padding: 15px 10px;
+    font-size: 14px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(26, 26, 26, 0.12);
+  }
+  .site-nav a:last-child { border-bottom: none; }
+  .nav-contact {
+    display: block;
+    margin-top: 8px;
+    padding: 15px 10px !important;
+    text-align: center;
+    background-color: var(--fig-lime);
+    background-image: url("./assets/texture-halftone-btn.png");
+    background-size: 280px auto;
+    border: 1px solid var(--ink) !important;
+  }
+  .header-contact { display: none; } /* パネル内の .nav-contact に集約 */
   .news-ticker { width: 40px; }
   .ticker-label { display: none; }
   .ticker-cta { padding: 12px 0; font-size: 11px; }
@@ -785,22 +849,30 @@ body {
     font-size: 12px;
   }
 
+  /* FV内のドラッグは壁のパンでページが動かないため、本編への入口を常設する */
   .home-page .scroll-cta {
-    right: 12px;
-    bottom: 12px;
-    left: auto;
+    left: 50%;
+    bottom: 16px;
     display: inline-flex;
-    width: 42px;
-    height: 42px;
-    justify-content: center;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
-    transform: none;
+    gap: 8px;
+    padding: 14px 22px;
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    background-color: var(--fig-lime);
+    background-image: url("./assets/texture-halftone-btn.png");
+    background-size: 280px auto;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+    font-family: var(--font-en);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    transform: translateX(-50%);
   }
 
-  .home-page .scroll-cta span { display: none; }
+  .home-page .scroll-cta:hover {
+    transform: translateX(-50%);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+  }
 
   /* スマホ版は左端に密着したフル高の帯にする（添付Figmaのモバイル版準拠） */
   .home-page .news-ticker {

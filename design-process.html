@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;family=Noto+Sans+JP:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=20260813-16" />
+  <link rel="stylesheet" href="./styles.css?v=20260813-17" />
 </head>
 <body class="dp-page">
   <!-- Figma node 204:532「About Design Process」準拠。ヘッダーはTOPと共通コンポーネント -->
@@ -18,12 +18,16 @@
         <span class="brand-logo"><img src="./assets/header-logo.png" alt="" aria-hidden="true" /></span>
         <span>STUDIO&nbsp;HOLIDAY</span>
       </a>
-      <nav class="site-nav">
+      <button class="nav-toggle" type="button" aria-label="メニューを開く" aria-expanded="false" aria-controls="siteNav">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav" id="siteNav">
         <a href="./index.html">TOP</a>
         <a href="./index.html#about">ABOUT</a>
         <a href="./index.html#business">BUSINESS</a>
         <a href="#" onclick="return false">WORKs</a><!-- 下層ページは一旦ナシのため仮リンク -->
         <a href="./design-process.html">DESIGN PROCESS</a>
+        <a class="nav-contact" href="#contact">お問い合わせ</a><!-- スマホのメニュー内のみ表示 -->
       </nav>
     </div>
     <a class="header-contact" href="#contact">お問い合わせ</a>
@@ -158,7 +162,7 @@
         </div>
         <div class="fnav-col">
           <span class="fnav-head">WORKs</span>
-          <div class="fnav-sub"><!-- 下層ページは一旦ナシのためテキストのみ -->
+          <div class="fnav-sub" data-footer-works><!-- microCMSのworksで差し替え（下層ページは一旦ナシのためテキストのみ） -->
             <span>ポンデライオン</span>
             <span>スシロー</span>
             <span>うねり</span>
@@ -178,5 +182,7 @@
       <a href="#" onclick="return false">Security Policy</a>
     </div>
   </footer>
+  <script src="./cms-config.js?v=20260813-17"></script>
+  <script src="./site.js?v=20260813-17"></script>
 </body>
 </html>

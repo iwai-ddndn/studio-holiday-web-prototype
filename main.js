@@ -1256,33 +1256,14 @@ function initTunePanel() {
 initTunePanel();
 
 /* ==========================================================
-   ▼ microCMS連携: 事例（works）とニュースレター（newsletter）を取得。
-   cms-config.js が未設定・取得失敗時はフォールバックデータのまま動く。
+   ▼ microCMS連携: 事例（works）をFVステッカーに反映。
+   取得は site.js の window.fetchWorks()（フッターと共用・1回だけ）。
+   未設定・取得失敗時はフォールバックデータのまま動く。
    APIスキーマと設定手順は CMS-SETUP.md を参照。
    ========================================================== */
 
-async function fetchCMS(endpoint) {
-  const cfg = window.MICROCMS_CONFIG || {};
-  if (!cfg.serviceDomain || !cfg.apiKey) return null; // 未設定なら静かにフォールバック
-  const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), 4000); // CMS障害時もFVを待たせない
-  try {
-    const res = await fetch(
-      `https://${cfg.serviceDomain}.microcms.io/api/v1/${endpoint}?limit=100`,
-      { headers: { 'X-MICROCMS-API-KEY': cfg.apiKey }, signal: ctl.signal },
-    );
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()).contents;
-  } catch (e) {
-    console.warn(`[microCMS] ${endpoint} の取得に失敗。フォールバックで表示します:`, e);
-    return null;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 async function loadCMSContent() {
-  const works = await fetchCMS('works');
+  const works = await window.fetchWorks();
 
   // works → FVステッカー（タグ・ドロワーの中身もここから）。
   // CMSに画像が添付されていればそれを使い、未添付ならタイトル一致で

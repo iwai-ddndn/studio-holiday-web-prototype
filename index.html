@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;family=Noto+Sans+JP:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=20260813-16" />
+  <link rel="stylesheet" href="./styles.css?v=20260813-17" />
 </head>
 <body class="home-page">
   <!-- ファーストビュー: ビューポートより広い「壁」にステッカーと写真を貼り重ね、
@@ -20,12 +20,16 @@
         <span class="brand-logo"><img src="./assets/header-logo.png" alt="" aria-hidden="true" /></span>
         <span>STUDIO&nbsp;HOLIDAY</span>
       </a>
-      <nav class="site-nav">
+      <button class="nav-toggle" type="button" aria-label="メニューを開く" aria-expanded="false" aria-controls="siteNav">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav" id="siteNav">
         <a href="#">TOP</a>
         <a href="#about">ABOUT</a>
         <a href="#business">BUSINESS</a>
         <a href="#" onclick="return false">WORKs</a><!-- 下層ページは一旦ナシのため仮リンク -->
         <a href="./design-process.html">DESIGN PROCESS</a>
+        <a class="nav-contact" href="#contact">お問い合わせ</a><!-- スマホのメニュー内のみ表示 -->
       </nav>
     </div>
     <a class="header-contact" href="#contact">お問い合わせ</a>
@@ -66,7 +70,9 @@
         <!-- ステッカー・写真・ロゴは main.js がここに貼っていく -->
       </div>
       <p class="drag-hint" aria-hidden="true">Drag &amp; Explore!</p>
-      <a class="scroll-cta" href="#about"><span>Scroll down</span><em aria-hidden="true">↓</em></a>
+      <!-- スマホはFV内のドラッグが壁のパンになりページをスクロールできないため、
+           本編へ入るボタンを常設する（PCはホイールで進めるので非表示） -->
+      <a class="scroll-cta" href="#about"><span>Go to CONTENTS</span><em aria-hidden="true">↓</em></a>
     </section>
 
     <!-- ===== ここからFigma node 204:250（TOP _scrolled）準拠のセクション ===== -->
@@ -221,7 +227,7 @@
         </div>
         <div class="fnav-col">
           <span class="fnav-head">WORKs</span>
-          <div class="fnav-sub"><!-- 下層ページは一旦ナシのためテキストのみ -->
+          <div class="fnav-sub" data-footer-works><!-- microCMSのworksで差し替え（下層ページは一旦ナシのためテキストのみ） -->
             <span>ポンデライオン</span>
             <span>スシロー</span>
             <span>うねり</span>
@@ -258,7 +264,8 @@
     </article>
   </aside>
 
-  <script src="./cms-config.js?v=20260813-16"></script>
-  <script src="./main.js?v=20260813-16"></script>
+  <script src="./cms-config.js?v=20260813-17"></script>
+  <script src="./site.js?v=20260813-17"></script>
+  <script src="./main.js?v=20260813-17"></script>
 </body>
 </html>
