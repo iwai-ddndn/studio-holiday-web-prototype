@@ -725,13 +725,16 @@ body {
   color: #1a1a1a;
   font-size: 14px;
   letter-spacing: 0.14em;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
+/* hoverは他のライムボタンと同じ黒反転 */
 .home-page .ticker-cta:hover {
-  background: var(--green);
+  background: var(--ink);
+  color: var(--fig-lime);
 }
 
-.home-page .ticker-cta img {
+.home-page .ticker-cta svg {
   width: 20px;
   height: 20px;
   display: block;
