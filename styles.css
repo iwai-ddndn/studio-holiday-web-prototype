@@ -40,16 +40,16 @@ body {
 }
 
 /* ---------- header ----------
- * Figmaモック準拠: 白いピル（ロゴマーク+社名+ナビ）と、独立した
- * オレンジの「お問い合わせ」ボタン。position:fixed でスクロールに追従。 */
+ * Figma node 225:851 準拠: 白い矩形（1px黒枠。ロゴ画像+社名+ナビ）と、
+ * 独立したライムの「お問い合わせ」ボタン。position:fixed でスクロールに追従。 */
 .site-header {
   position: fixed;
-  top: 24px;
-  right: 28px;
+  top: 20px;
+  right: 20px;
   z-index: 1150; /* ticker(1100)より手前・モーダル(1200)より奥 */
   display: flex;
   align-items: stretch;
-  gap: 16px; /* Figma: ピル↔ボタン間 16 */
+  gap: 16px; /* Figma: ボックス↔ボタン間 16 */
   pointer-events: none;
 }
 .header-pill {
@@ -57,9 +57,8 @@ body {
   align-items: center;
   gap: 40px; /* Figma: ロゴ→ナビ間 40 */
   background: var(--white);
-  border-radius: 999px;
   padding: 16px 24px 16px 16px; /* Figma: 上下16 / 左16 / 右24 */
-  border: 1px solid rgba(26, 26, 26, 0.2); /* bk-20。シャドウではなく枠線 */
+  border: 1px solid var(--ink);
   pointer-events: auto;
 }
 .brand {
@@ -68,30 +67,38 @@ body {
   gap: 12px;
   text-decoration: none;
   color: var(--ink);
-  font-family: var(--font-en);
   font-weight: 700;
-  letter-spacing: 0.04em;
-  font-size: 16px;
+  font-size: 12px;
 }
-.brand-mark {
-  width: 44px;
-  height: auto;
-  display: block;
+/* ロゴ画像はFigmaと同じく 56x30 の窓でアーチ部分だけを見せる */
+.brand-logo {
+  position: relative;
+  width: 56px;
+  height: 30px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.brand-logo img {
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  width: 221px;
+  height: 48px;
+  max-width: none;
+  transform: translateX(-50%);
 }
 .site-nav {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 24px;
 }
 .site-nav a {
   color: var(--ink);
-  font-family: var(--font-en);
-  font-weight: 500;
-  font-size: 15px;
+  font-weight: 700;
+  font-size: 14px;
   text-decoration: underline;
-  text-underline-offset: 5px;
+  text-underline-offset: 4px;
   text-decoration-thickness: 1px;
-  opacity: 0.9;
   transition: opacity 0.15s ease;
 }
 .site-nav a:hover { opacity: 0.55; }
@@ -99,18 +106,18 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 30px;
-  background: var(--orange);
-  color: var(--white);
-  border-radius: 999px;
+  padding: 16px 24px;
+  background: var(--fig-lime);
+  color: var(--ink);
+  border: 1px solid var(--ink);
   font-family: var(--font-ja);
   font-weight: 700;
-  font-size: 15px;
+  font-size: 14px;
   text-decoration: none;
   pointer-events: auto;
-  transition: transform 0.15s ease, background 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.header-contact:hover { background: #ff8a3d; transform: translateY(-1px); }
+.header-contact:hover { background: var(--ink); color: var(--fig-lime); }
 
 /* ---------- hero: 回遊できる「壁」 ---------- */
 .hero {
@@ -471,8 +478,9 @@ body {
   body { padding-left: 40px; }
   .site-header { top: 10px; right: 10px; left: 58px; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
   .header-pill { gap: 14px; padding: 9px 16px 9px 14px; }
-  .brand span { display: none; } /* モバイルはロゴマークのみ */
-  .brand-mark { width: 32px; }
+  .brand span:not(.brand-logo) { display: none; } /* モバイルはロゴマークのみ */
+  .brand-logo { width: 42px; height: 22px; }
+  .brand-logo img { width: 166px; height: 36px; top: -1.5px; }
   .site-nav { gap: 14px; }
   .site-nav a { font-size: 12px; }
   .header-contact { padding: 10px 16px; font-size: 12px; }

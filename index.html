@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;family=Noto+Sans+JP:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=20260813-1" />
+  <link rel="stylesheet" href="./styles.css?v=20260813-2" />
 </head>
 <body class="home-page">
   <!-- ファーストビュー: ビューポートより広い「壁」にステッカーと写真を貼り重ね、
@@ -17,14 +17,15 @@
   <header class="site-header">
     <div class="header-pill">
       <a class="brand" href="#">
-        <svg class="brand-mark" viewBox="0 0 44 22" aria-hidden="true"><path d="M7 21 A15 15 0 0 1 37 21" fill="none" stroke="currentColor" stroke-width="8" /></svg>
+        <span class="brand-logo"><img src="./assets/header-logo.png" alt="" aria-hidden="true" /></span>
         <span>STUDIO&nbsp;HOLIDAY</span>
       </a>
       <nav class="site-nav">
         <a href="#">TOP</a>
-        <a href="#about">About us</a>
-        <a href="#business">Business</a>
-        <a href="./design-process.html">Design Process</a>
+        <a href="#about">ABOUT</a>
+        <a href="#business">BUSINESS</a>
+        <a href="#" onclick="return false">WORKs</a><!-- 下層ページは一旦ナシのため仮リンク -->
+        <a href="./design-process.html">DESIGN PROCESS</a>
       </nav>
     </div>
     <a class="header-contact" href="#contact">お問い合わせ</a>
@@ -101,7 +102,7 @@
         <div>
           <!-- コメント#7: https://lab.studioholiday.jp/ へ遷移 -->
           <a class="biz-card" href="https://lab.studioholiday.jp/" target="_blank" rel="noopener">
-            <span class="biz-visual"><img src="./assets/business-food.png" alt="休日コーラ ジンジャーアップル" /></span>
+            <span class="biz-visual"><img src="./assets/business-food-cola.png" alt="休日コーラ ジンジャーアップル" /></span>
             <span class="biz-card-body">
               <span class="biz-copy">
                 <strong>FOOD DESIGN</strong>
@@ -114,7 +115,7 @@
         <div>
           <!-- コメント#8: https://kdc-foodlab.com/ へ遷移 -->
           <a class="biz-card" href="https://kdc-foodlab.com/" target="_blank" rel="noopener">
-            <span class="biz-visual"><img src="./assets/business-community.png" alt="コワーキングスペース K,D,C,,, でのイベント" /></span>
+            <span class="biz-visual"><img src="./assets/business-space.png" alt="コワーキングスペース K,D,C,,, でのイベント" /></span>
             <span class="biz-card-body">
               <span class="biz-copy">
                 <strong>COMMUNITY＆SPACE</strong>
@@ -228,6 +229,6 @@
     </div>
   </div>
 
-  <script src="./main.js?v=20260813-1"></script>
+  <script src="./main.js?v=20260813-2"></script>
 </body>
 </html>

@@ -8,21 +8,22 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;family=Noto+Sans+JP:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=20260813-1" />
+  <link rel="stylesheet" href="./styles.css?v=20260813-2" />
 </head>
 <body class="dp-page">
   <!-- Figma node 204:532「About Design Process」準拠。ヘッダーはTOPと共通コンポーネント -->
   <header class="site-header">
     <div class="header-pill">
       <a class="brand" href="./index.html">
-        <svg class="brand-mark" viewBox="0 0 44 22" aria-hidden="true"><path d="M7 21 A15 15 0 0 1 37 21" fill="none" stroke="currentColor" stroke-width="8" /></svg>
+        <span class="brand-logo"><img src="./assets/header-logo.png" alt="" aria-hidden="true" /></span>
         <span>STUDIO&nbsp;HOLIDAY</span>
       </a>
       <nav class="site-nav">
         <a href="./index.html">TOP</a>
-        <a href="./index.html#about">About us</a>
-        <a href="./index.html#business">Business</a>
-        <a href="./design-process.html">Design Process</a>
+        <a href="./index.html#about">ABOUT</a>
+        <a href="./index.html#business">BUSINESS</a>
+        <a href="#" onclick="return false">WORKs</a><!-- 下層ページは一旦ナシのため仮リンク -->
+        <a href="./design-process.html">DESIGN PROCESS</a>
       </nav>
     </div>
     <a class="header-contact" href="#contact">お問い合わせ</a>
