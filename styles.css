@@ -11,13 +11,11 @@
   --green: #36f718;
   --grid-line: #dff5f7;
   /* FV（ファーストビュー）の背景。?tune パネルからJSで上書きできる。
-   * テクスチャ（方眼・ドット等）は main.js の applyFvParams() が
+   * テクスチャ（ハーフトーン・方眼等）は main.js の applyFvParams() が
    * --fv-texture / --fv-texture-size に合成してセットする */
-  --fv-bg: #ffffff;        /* 本番デフォルト: 白地 */
-  --fv-texture:            /* 本番デフォルト: 方眼（JSが上書きするがno-JS時の保険） */
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  --fv-texture-size: 24px 24px;
+  --fv-bg: #ececec;        /* 本番デフォルト: ライトグレー */
+  --fv-texture: url("./assets/texture-halftone.png"); /* 本番デフォルト: アナログハーフトーン（no-JS時の保険） */
+  --fv-texture-size: 720px auto;
   --font-en: "Roboto", "Helvetica Neue", Arial, sans-serif;
   --font-ja: "Noto Sans CJK JP", "Noto Sans JP", system-ui, sans-serif;
 }
@@ -107,7 +105,9 @@ body {
   align-items: center;
   justify-content: center;
   padding: 16px 24px;
-  background: var(--fig-lime);
+  background-color: var(--fig-lime);
+  background-image: url("./assets/texture-halftone-btn.png"); /* ハーフトーン重ね */
+  background-size: 280px auto;
   color: var(--ink);
   border: 1px solid var(--ink);
   font-family: var(--font-ja);
@@ -117,7 +117,7 @@ body {
   pointer-events: auto;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.header-contact:hover { background: var(--ink); color: var(--fig-lime); }
+.header-contact:hover { background-color: var(--ink); color: var(--fig-lime); }
 
 /* ---------- hero: 回遊できる「壁」 ---------- */
 .hero {
@@ -827,16 +827,19 @@ body {
   gap: 8px;
   height: 62px;
   padding: 16px 24px;
-  background: var(--fig-lime);
+  /* 単色ライムに控えめなハーフトーンを重ねる（購読するボタンには載せない） */
+  background-color: var(--fig-lime);
+  background-image: url("./assets/texture-halftone-btn.png");
+  background-size: 280px auto;
   border: 1px solid var(--ink);
   color: var(--ink);
   font-weight: 700;
   font-size: 14px;
   text-decoration: none;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 .btn-lime svg { width: 24px; height: 24px; flex-shrink: 0; transition: transform 0.2s ease; }
-.btn-lime:hover { background: var(--ink); color: var(--fig-lime); }
+.btn-lime:hover { background-color: var(--ink); color: var(--fig-lime); }
 .btn-lime:hover svg { transform: translateX(4px); }
 .btn-lime--wide { width: min(445px, 100%); margin: 0 auto; }
 
@@ -867,9 +870,36 @@ body {
   line-height: 1.7;
 }
 
+/* --- 取引先ロゴ帯: ゆっくり横に流れるマーキー --- */
+.client-logos {
+  overflow: hidden;
+  background: #eeeeee;
+  padding: 48px 0;
+}
+.client-logos-track {
+  display: flex;
+  width: max-content;
+  animation: logosScroll 45s linear infinite;
+}
+.logo-set {
+  display: flex;
+  align-items: center;
+  gap: 96px;
+  padding-right: 96px;
+}
+.logo-set img { display: block; width: auto; }
+@keyframes logosScroll { to { transform: translateX(-50%); } }
+
 /* --- BUSINESS: 3枚のカード --- */
-.sec-business { padding-top: 134px; }
+.sec-business {
+  padding-top: 134px;
+  padding-bottom: 24px;
+  /* FVと同方式のハーフトーンノイズ（ライム焼き込み版）を白地に敷く */
+  background: var(--white) url("./assets/texture-halftone-lime.png");
+  background-size: 720px auto;
+}
 .sec-business .sec-label { margin: 0 20px; }
+.biz-feature, .biz-card { background: var(--white); }
 
 /* カード共通: 通常はモノクロ画像、hoverでカラー化+ズーム（Figmaコメント#4） */
 .biz-visual { display: block; overflow: hidden; }
@@ -887,7 +917,7 @@ body {
   transform: scale(1.04);
 }
 .biz-card:hover .btn-lime,
-.biz-feature:hover .btn-lime { background: var(--ink); color: var(--fig-lime); }
+.biz-feature:hover .btn-lime { background-color: var(--ink); color: var(--fig-lime); }
 .biz-card:hover .btn-lime svg,
 .biz-feature:hover .btn-lime svg { transform: translateX(4px); }
 
@@ -1004,11 +1034,13 @@ body {
 .fig-footer-contact {
   display: inline-block;
   padding: 12px 16px;
-  background: var(--fig-lime);
+  background-color: var(--fig-lime);
+  background-image: url("./assets/texture-halftone-btn.png"); /* ハーフトーン重ね */
+  background-size: 280px auto;
   color: var(--bk-80) !important;
   font-weight: 700;
 }
-.fig-footer-contact:hover { opacity: 1 !important; background: var(--white); }
+.fig-footer-contact:hover { opacity: 1 !important; background-color: var(--white); }
 .fig-footer-nav { display: flex; gap: 24px; }
 .fnav-col { display: flex; flex-direction: column; gap: 16px; min-width: 60px; }
 .fnav-col .fnav-head { font-weight: 700; }

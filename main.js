@@ -530,13 +530,26 @@ const DEFAULT_PARAMS = {
   size: 1.2,      // ステッカーの大きさ倍率
   gap: 1.25,      // ステッカー間隔（1でほぼ密着）
   introView: 1.6, // 引きのカメラで見える範囲（ビューポート比）。壁全体は見せなくてよい
-  fvBg: '#ffffff',        // FVの背景色（本番デフォルト: 白）
-  fvTexture: 'grid',      // FVのテクスチャ（本番デフォルト: 方眼）
-  fvTexColor: '#dff5f7',  // テクスチャの色（方眼の線・ドット等）
-  fvTexSize: 24,          // テクスチャの細かさ（px）
+  fvBg: '#ececec',          // FVの背景色（本番デフォルト: ライトグレー）
+  fvTexture: 'halftone',    // FVのテクスチャ（本番デフォルト: アナログハーフトーン）
+  fvTexColor: '#dff5f7',    // テクスチャの色（方眼の線・ドット等。halftoneでは無効）
+  fvTexSize: 24,            // テクスチャの細かさ（px。halftoneではタイル幅の倍率）
 };
 let PARAMS = { ...DEFAULT_PARAMS };
 try { Object.assign(PARAMS, JSON.parse(localStorage.getItem('sh-tune')) || {}); } catch { /* 保存なし */ }
+// 2026-08: FVデフォルトをアナログハーフトーンに変更。
+// 保存済みの旧テクスチャ設定を一度だけ新デフォルトへ移行する（他のチューニング値は維持）
+try {
+  const stored = JSON.parse(localStorage.getItem('sh-tune')) || {};
+  if (!stored.htMigrated) {
+    stored.fvTexture = DEFAULT_PARAMS.fvTexture;
+    stored.fvBg = DEFAULT_PARAMS.fvBg;
+    stored.fvTexSize = DEFAULT_PARAMS.fvTexSize;
+    stored.htMigrated = 1;
+    localStorage.setItem('sh-tune', JSON.stringify(stored));
+    Object.assign(PARAMS, stored);
+  }
+} catch { /* 保存なし */ }
 PARAMS.size = Math.max(0.95, PARAMS.size);
 // 旧パラメータ（fvGrid: 0/1）からの引き継ぎ
 if (PARAMS.fvGrid === 1 && !('fvTexture' in (JSON.parse(localStorage.getItem('sh-tune') || '{}')))) {
@@ -549,6 +562,11 @@ delete PARAMS.fvGrid;
  * （＋SVGノイズ）で生成し、画像ファイルは使わない */
 const FV_TEXTURES = {
   none:  { label: 'なし', css: () => ({ image: 'none', size: 'auto' }) },
+  halftone: { label: 'ハーフトーン（アナログ紙）', css: (c, s) => ({
+    // 印刷の網点をスキャンしたようなノイズ画像タイル。色は画像に焼き込み済みでcは無効。
+    // s(px)はタイル表示幅の係数: デフォルト24 → 720px幅で敷き詰め
+    image: 'url("./assets/texture-halftone.png")',
+    size: `${Math.round(s * 30)}px auto` }) },
   grid:  { label: '方眼', css: (c, s) => ({
     image: `linear-gradient(${c} 1px, transparent 1px), linear-gradient(90deg, ${c} 1px, transparent 1px)`,
     size: `${s}px ${s}px` }) },
