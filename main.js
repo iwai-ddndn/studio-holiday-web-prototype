@@ -21,57 +21,19 @@
 
 const STICKER_DIR = './assets/stickers/';
 
-/* Drive「Webサイト:事例集」由来の素材は assets/works/jirei/ に置く。
- * STICKER_DIR 起点の相対パスで参照する（../works/jirei/...）。
- * 紹介文はスプレッドシート「WORKS_Webサイト 事例集」の反映待ち（仮文言）。 */
-const JIREI = '../works/jirei/';
+/* ステッカーの元データ（事例）は site.js の window.getWorks() が一元管理する。
+ * ここでは works → ステッカーの形（画像 + ドロワーに出す情報 + 詳細ページのURL）に変換して使う。
+ * CMS未設定・取得失敗時は site.js の WORKS_FALLBACK が返ってくる。 */
+const stickerOfWork = (w) => ({
+  src: w.image,
+  alt: w.title,
+  client: w.client || '',
+  // slug / body はドロワーで記事本文を出すために持ち回る（事例ページと同じ内容）
+  work: { kind: w.kind || '', title: w.title, desc: w.description || '', slug: w.slug, body: w.body || '' },
+});
 
-/* work: クリック時のドロワーに出す実績情報。
- * microCMS（works API）が設定されていればそちらで上書きされる。
- * 以下はCMS未設定・取得失敗時のフォールバックデータ */
-const FALLBACK_STICKERS = [
-  { file: JIREI + 'smeedy-pose04.png', alt: 'スミーディ', client: '住友電気工業',
-    work: { kind: 'キャラクターデザイン', title: 'スミーディ', desc: '掲載事例 No.01。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: JIREI + 'ai-interviewer-logo.jpg', alt: 'AI面接官',
-    work: { kind: '事業開発・サービスロゴ', title: 'AI面接官', desc: '掲載事例 No.07。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: JIREI + 'aburi-kikou.png', alt: '炙り紀行',
-    work: { kind: 'グラフィック', title: '炙り紀行', desc: '掲載事例 No.08。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: JIREI + 'kdc-logo.jpg', alt: 'K,D,C,,,', client: 'STUDIO HOLIDAY',
-    work: { kind: 'ロゴ・場の運営', title: 'K,D,C,,,', desc: '掲載事例 No.16。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: JIREI + 'seiryu-okoshi-logo.png', alt: '清流おこし',
-    work: { kind: 'ロゴ・ブランディング', title: '清流おこし', desc: '掲載事例 No.21。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: JIREI + 'holiday-cola-logo.png', alt: '休日COLA', client: 'STUDIO HOLIDAY',
-    work: { kind: 'フード・ブランド開発', title: '休日COLA', desc: '掲載事例 No.27。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: JIREI + 'holidaykun-hirune.png', alt: 'ホリデイくん（ひるね）', client: 'STUDIO HOLIDAY',
-    work: { kind: 'キャラクターデザイン', title: 'ホリデイくん', desc: '掲載事例 No.32。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: JIREI + 'holidaykun-tozan.png', alt: 'ホリデイくん（とざん）', client: 'STUDIO HOLIDAY',
-    work: { kind: 'キャラクターデザイン', title: 'ホリデイくん', desc: '掲載事例 No.32。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: JIREI + 'minna-gohankai-logo.png', alt: 'みんなでごはん会', client: 'STUDIO HOLIDAY',
-    work: { kind: 'ロゴ・イベント', title: 'みんなでごはん会', desc: '掲載事例 No.31。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: JIREI + 'juzan-asset1.png', alt: '十山ブランディング',
-    work: { kind: 'ブランディング', title: '十山', desc: '掲載事例 No.06。紹介文はWORKSシート反映待ち（仮）。' } },
-  { file: 'works/ebisun.png', alt: 'エビシー',
-    work: { kind: 'キャラクターデザイン', title: 'エビシー', desc: '実際の制作実績から切り抜いたキャラクタービジュアルです。' } },
-  { file: 'works/and-coffee-maison-kayser.png', alt: '&COFFEE MAISON KAYSER',
-    work: { kind: 'ロゴ・ブランディング', title: '&COFFEE MAISON KAYSER', desc: '実際の制作実績から切り抜いたブランドロゴです。' } },
-  { file: 'works/goichi-character.png', alt: 'GOICHI',
-    work: { kind: 'キャラクター・グラフィック', title: 'GOICHI', desc: '実際の制作実績から切り抜いたキャラクタービジュアルです。' } },
-  { file: 'works/ichiban-no-oshigoto.png', alt: 'いちばんのおしごと',
-    work: { kind: 'パッケージ・イラストレーション', title: 'いちばんのおしごと', desc: '実際の制作実績から切り抜いたパッケージビジュアルです。' } },
-  { file: 'works/monster-illustration.png', alt: 'モンスター・イラストレーション',
-    work: { kind: 'イラストレーション', title: 'Monster Illustration', desc: '実際の制作実績から切り抜いたイラストレーションです。' } },
-  { file: 'works/itomaki-ac-adapter.png', alt: 'itomaki AC Adapter',
-    work: { kind: 'プロダクトデザイン', title: 'itomaki AC Adapter', desc: '実際の制作実績から切り抜いたプロダクトビジュアルです。' } },
-  { file: 'works/holiday-cola.png', alt: '休日コーラ GINGER APPLE', client: 'STUDIO HOLIDAY',
-    work: { kind: 'フード・ブランド開発', title: '休日コーラ GINGER APPLE', desc: '実際の制作実績から切り抜いた商品ビジュアルです。' } },
-  { file: 'yappy.png', alt: 'yappy',
-    work: { kind: 'ロゴ・世界観', title: 'yappy', desc: 'スタジオホリデーの制作実績から生まれたロゴ・世界観です。' } },
-  { file: 'works-pondelion.png', alt: 'ポン・デ・ライオン',
-    work: { kind: 'キャラクターデザイン', title: 'ポン・デ・ライオン', desc: 'スタジオホリデーのキャラクターデザイン実績です。' } },
-  { file: 'works-sushiro.png', alt: 'スシロー',
-    work: { kind: 'ブランディング', title: 'スシロー', desc: 'スタジオホリデーのブランディング実績です。' } },
-];
-let STICKERS = FALLBACK_STICKERS;
+let STICKERS = [];
+
 
 /* 社名ロゴ: イントロの最後に「Design & Deploy Partner」の上へ貼られる特別なステッカー。
  * 常に最前面・クリックで About へ */
@@ -133,7 +95,7 @@ const loadImage = (src) => new Promise((resolve, reject) => {
 
 async function loadArt(item) {
   try {
-    const img = await loadImage(item.src || STICKER_DIR + item.file); // src=CMSの絶対URL / file=ローカル
+    const img = await loadImage(item.src); // CMSの絶対URL or ローカル素材のパス
     return trimTransparent(trimWhiteBackground(img));
   } catch {
     return null;
@@ -364,8 +326,8 @@ function getSprites() {
     const okList = list.filter(Boolean);
     if (okList.length) return okList;
     // CMS画像が1枚も読めなかった（CORS・リンク切れ等）→ ローカル素材で作り直す
-    STICKERS = FALLBACK_STICKERS;
-    return (await Promise.all(FALLBACK_STICKERS.map(spriteOf))).filter(Boolean);
+    STICKERS = window.WORKS_FALLBACK.map((w) => stickerOfWork({ ...w, id: w.slug }));
+    return (await Promise.all(STICKERS.map(spriteOf))).filter(Boolean);
   });
   return spritesPromise;
 }
@@ -735,24 +697,41 @@ setInterval(ambientTagTick, TAG_CYCLE_MS);
 const drawer = document.getElementById('workDrawer');
 let drawerHideTimer = 0;
 
+/* 本文の解決（CMSのbody / 仮原稿）は非同期なので、
+ * 連続クリックで前の記事が遅れて差し込まれないよう世代番号で弾く */
+let drawerGen = 0;
+
+async function showDrawerBody(work) {
+  const body = document.getElementById('drawerBody');
+  const note = document.getElementById('drawerNote');
+  const extras = document.getElementById('drawerExtras');
+  const gen = ++drawerGen;
+  body.innerHTML = '';
+  body.hidden = true;
+  note.hidden = true;
+  extras.innerHTML = '';
+
+  const [{ html, isDraft }, extrasHTML] = await Promise.all([
+    window.workBody(work),
+    window.workExtrasHTML(work), // クレジット + 関連する事例
+  ]);
+  if (gen !== drawerGen) return; // すでに別の事例が開かれている
+  if (html) {
+    body.innerHTML = window.workDraftNote(isDraft) + html; // 自社CMSの入稿HTMLをそのまま流し込む
+    body.hidden = false;
+  } else {
+    note.hidden = false;
+  }
+  extras.innerHTML = extrasHTML;
+}
+
 function openModal(work, imgURL, client) {
   clearTimeout(drawerHideTimer);
   document.getElementById('drawerImg').src = imgURL;
   document.getElementById('drawerKind').textContent = work.kind;
   document.getElementById('drawerTitle').textContent = work.title;
   document.getElementById('drawerDesc').textContent = work.desc;
-  // microCMSのリッチエディタ本文があれば記事として表示し、仮の注記は隠す
-  const body = document.getElementById('drawerBody');
-  const note = document.querySelector('.drawer-note');
-  if (work.body) {
-    body.innerHTML = work.body; // 自社CMSの入稿HTMLをそのまま流し込む
-    body.hidden = false;
-    if (note) note.hidden = true;
-  } else {
-    body.innerHTML = '';
-    body.hidden = true;
-    if (note) note.hidden = false;
-  }
+  showDrawerBody(work); // 記事本文（事例ページと同じ内容）
   const tags = document.getElementById('drawerTags');
   tags.innerHTML = '';
   [client, work.kind, work.title].filter(Boolean).forEach((t) => {
@@ -761,16 +740,44 @@ function openModal(work, imgURL, client) {
     tags.appendChild(li);
   });
   drawer.hidden = false;
+  drawer.querySelector('.work-drawer-panel').scrollTop = 0; // 前に開いた記事の位置を持ち越さない
+  // 記事を読んでいる間はページを動かさない（スクロールヒントも背面スクロールも止める）
+  cancelPeek();
+  document.body.classList.add('drawer-open');
   void drawer.offsetWidth; // hidden解除をこのフレームで確定させ、スライドインを効かせる
   drawer.classList.add('is-open');
 }
 function closeModal() {
+  document.body.classList.remove('drawer-open');
   drawer.classList.remove('is-open');
   drawerHideTimer = setTimeout(() => { drawer.hidden = true; }, 420); // スライドアウトを待つ
 }
 
 drawer.addEventListener('click', (e) => {
   if (e.target.closest('[data-close]')) closeModal();
+});
+
+/* 関連する事例は、事例ページへ飛ばずにドロワーの中身を差し替える
+ * （FVの壁の位置を保ったまま次の事例へ移れる）。
+ * 中クリック・⌘/Ctrl+クリックは通常どおり別タブで事例ページを開かせる */
+drawer.addEventListener('click', async (e) => {
+  const a = e.target.closest('.work-related a');
+  if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+  e.preventDefault();
+  // 恒久URL（/works/<slug>/）から slug を取る。旧URL（?id=…）も後方互換で読む
+  const url = new URL(a.href, location.href);
+  const m = url.pathname.match(/\/works\/([^/]+)\/?$/);
+  const id = m ? decodeURIComponent(m[1]) : url.searchParams.get('id');
+  const works = await window.getWorks();
+  const w = works.find((x) => x.id === id || x.slug === id);
+  if (!w) { location.href = a.href; return; } // 見つからなければ素直に遷移
+  // 壁に貼ってあるステッカー（白フチ入りの加工済み画像）があればそれを使う
+  const sprite = (await getSprites()).find((s) => s.work && s.work.slug === w.slug);
+  openModal(
+    { kind: w.kind, title: w.title, desc: w.description, slug: w.slug, body: w.body },
+    sprite ? sprite.url : w.image,
+    w.client,
+  );
 });
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !drawer.hidden) closeModal();
@@ -1114,8 +1121,9 @@ function armPeek() {
 
 function tryPeek() {
   // 回遊モードで・ページ先頭にいて・ドラッグ中でない時だけ。条件が揃わなければ待ち直す
+  // （ドロワーで記事を読んでいる間は絶対に動かさない）
   if (contentDiscovered || peeking || document.hidden || mode !== 'explore' ||
-      pdown || window.scrollY > 4 ||
+      pdown || window.scrollY > 4 || !drawer.hidden ||
       matchMedia('(prefers-reduced-motion: reduce)').matches) {
     armPeek();
     return;
@@ -1257,36 +1265,26 @@ initTunePanel();
 
 /* ==========================================================
    ▼ microCMS連携: 事例（works）をFVステッカーに反映。
-   取得は site.js の window.fetchWorks()（フッターと共用・1回だけ）。
+   取得は site.js の window.getWorks()（カード一覧・フッターと共用・1回だけ）。
    未設定・取得失敗時はフォールバックデータのまま動く。
    APIスキーマと設定手順は CMS-SETUP.md を参照。
    ========================================================== */
 
 async function loadCMSContent() {
-  const works = await window.fetchWorks();
+  // works → FVステッカー（タグ・ドロワーの中身・詳細ページへのリンクもここから）。
+  // 画像の当てが無い事例（CMSに画像が無く、ローカル素材とも紐付かない）は
+  // ステッカーにできないので壁には出さない（カード一覧には出る）
+  const works = await window.getWorks();
+  STICKERS = works.filter((w) => w.image).map(stickerOfWork);
 
-  // works → FVステッカー（タグ・ドロワーの中身もここから）。
-  // CMSに画像が添付されていればそれを使い、未添付ならタイトル一致で
-  // リポジトリ内のローカル素材を使う（メディアアップロードAPIが使えない環境向け）
-  if (works && works.length) {
-    const localByTitle = new Map(FALLBACK_STICKERS.map((s) => [s.alt, s.file]));
-    const mapped = works
-      .map((w) => {
-        // imgix変換で幅を抑えつつPNG化（切り抜きの透過を保持）
-        const src = w.sticker && w.sticker.url ? `${w.sticker.url}?w=1000&fm=png` : null;
-        const file = src ? null : localByTitle.get(w.title);
-        if (!src && !file) return null; // 画像の当てが無い事例はスキップ
-        return {
-          src,
-          file,
-          alt: w.title,
-          client: w.client || '',
-          work: { kind: w.kind || '', title: w.title, desc: w.description || '', body: w.body || '' },
-        };
-      })
-      .filter(Boolean);
-    if (mapped.length) STICKERS = mapped;
-  }
+  // 壁の写真のうち自社事例のもの（href: './works.html'）は、
+  // キャプションと同名の事例ページへ送る。該当が無ければWORKs一覧へ
+  const byTitle = new Map(works.map((w) => [w.title, w]));
+  PHOTOS.forEach((p) => {
+    if (p.href !== './works.html') return;
+    const w = byTitle.get(p.cap);
+    p.href = w ? window.workURL(w) : './index.html#works';
+  });
 }
 
 /* ==========================================================

@@ -400,11 +400,13 @@ body {
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(520px, 92vw);
+  /* 記事を読む幅として画面の40%。狭い画面では従来どおり画面いっぱいに寄せる */
+  width: min(92vw, max(420px, 40vw));
   background: var(--white);
   border-left: 1px solid var(--ink);
   padding: 68px 40px 40px;
   overflow-y: auto;
+  overscroll-behavior: contain; /* 記事の端まで来ても背面ページに送らない */
   transform: translateX(102%); /* border込みで完全に隠す */
   transition: transform 0.38s cubic-bezier(0.25, 0.9, 0.3, 1);
 }
@@ -451,40 +453,81 @@ body {
   font-size: 12px;
   font-weight: 700;
 }
-.work-drawer img {
+/* 事例のメインビジュアル（記事本文中の画像は .work-body 側で整える） */
+#drawerImg {
   display: block;
   width: 100%;
   max-height: 320px;
   object-fit: contain;
   margin: 0 0 24px;
 }
-.work-drawer p {
+#drawerDesc {
   margin: 0 0 20px;
   font-size: 14px;
   font-weight: 700;
   line-height: 1.9;
 }
-.drawer-note {
-  font-size: 12px !important;
-  font-weight: 400 !important;
-  color: var(--bk-80);
-}
-/* microCMSリッチエディタ本文（入稿HTMLをそのまま表示） */
-.drawer-body {
+/* ドロワーでも事例ページと同じ記事を表示する（幅だけ合わせる） */
+.work-drawer .work-body,
+.work-drawer .work-note {
+  max-width: none;
+  margin: 24px 0 0;
   font-size: 14px;
-  font-weight: 400;
-  line-height: 1.9;
 }
-.drawer-body h2,
-.drawer-body h3 {
-  margin: 28px 0 12px;
-  font-size: 18px;
+.work-drawer .work-body figure { margin: 28px 0; }
+.work-drawer .work-body h2,
+.work-drawer .work-body h3 { margin: 32px 0 12px; font-size: 18px; }
+/* ドロワーを開いている間は背面（ページ本体）を動かさない */
+body.drawer-open { overflow: hidden; }
+
+/* --- クレジット（本文の一番下） --- */
+.work-credit {
+  max-width: 760px;
+  margin: 64px auto 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--ink);
+}
+.work-credit h2 {
+  margin: 0 0 16px;
+  font-family: var(--font-en);
+  font-size: 12px;
   font-weight: 700;
-  line-height: 1.5;
+  letter-spacing: 0.08em;
 }
-.drawer-body p { margin: 0 0 1.4em; font-weight: 400; }
-.drawer-body img { max-width: 100%; height: auto; margin: 8px 0 16px; }
-.drawer-body a { color: var(--ink); }
+.work-credit dl { margin: 0; font-size: 13px; line-height: 1.8; }
+.work-credit dl > div { display: flex; gap: 16px; padding: 6px 0; }
+.work-credit dt { width: 180px; flex-shrink: 0; margin: 0; font-weight: 700; color: var(--bk-80); }
+.work-credit dd { flex: 1; margin: 0; }
+.work-drawer .work-credit { max-width: none; margin-top: 40px; }
+.work-drawer .work-credit dt { width: 128px; font-size: 12px; }
+
+/* --- 関連する事例（ドロワー内。ページ側は RELATED WORKs のカード一覧） --- */
+.work-related { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--ink); }
+.work-related h2 { margin: 0 0 16px; font-size: 13px; font-weight: 700; }
+.work-related ul { list-style: none; margin: 0; padding: 0; }
+.work-related li + li { margin-top: 8px; }
+.work-related a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+.work-related a:hover { background-color: var(--fig-lime); }
+.work-related img,
+.work-related-noimg {
+  width: 64px;
+  height: 48px;
+  flex-shrink: 0;
+  object-fit: contain;
+  background-color: var(--surface-2);
+}
+.work-related a > span { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.work-related-kind { font-size: 11px; font-weight: 700; color: var(--bk-80); }
+.work-related-title { font-size: 14px; font-weight: 800; line-height: 1.4; }
 
 /* ---------- ニュースレター（Substack）動線: 左端の縦型電光掲示板 ---------- */
 .news-ticker {
@@ -1253,8 +1296,223 @@ body {
   line-height: 1.7;
 }
 
+/* ==========================================================
+   ▼ WORKs: TOPのカード一覧（#works）と事例ページ（work.html）
+   カードはsite.jsがmicroCMSの内容で描画する
+   ========================================================== */
+
+.sec-works { margin: 134px 20px 0; }
+.works-lead {
+  max-width: 640px;
+  margin: 20px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+.works-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 40px;
+}
+/* 「すべての事例を見る」を押すまでは初期表示ぶんだけ見せる */
+.works-grid.is-collapsed .work-card.is-extra { display: none; }
+
+.work-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.work-card:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
+.work-card-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  padding: 24px;
+  border-bottom: 1px solid var(--ink);
+  background-color: var(--surface-2);
+  background-image: url("./assets/texture-halftone.png");
+  background-size: 420px auto;
+  overflow: hidden;
+}
+.work-card-visual img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+.work-card:hover .work-card-visual img { transform: scale(1.06) rotate(-2deg); }
+.work-card-noimg {
+  font-family: var(--font-en);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--bk-50);
+}
+.work-card-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  padding: 20px 20px 24px;
+}
+.work-card-kind,
+.work-card-client { font-size: 11px; font-weight: 700; color: var(--bk-80); }
+.work-card-title {
+  padding-right: 44px;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.work-card-arrow {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  background-color: var(--fig-lime);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.work-card-arrow svg { width: 18px; height: 18px; }
+.work-card:hover .work-card-arrow { background-color: var(--ink); color: var(--fig-lime); }
+
+.works-more {
+  width: min(445px, 100%);
+  margin: 40px auto 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* --- 事例ページ本体 --- */
+.work-page { padding-left: 0 !important; } /* FV用のグローバル余白を打ち消す */
+.work-detail { margin: 140px 20px 0; }
+.work-back {
+  display: inline-block;
+  margin-bottom: 24px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+}
+.work-back:hover { text-decoration: underline; text-underline-offset: 4px; }
+.work-hero { display: flex; gap: 40px; align-items: flex-start; }
+.work-hero-visual {
+  flex: 0 0 46%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  padding: 40px;
+  border: 1px solid var(--ink);
+  background-color: var(--surface-2);
+  background-image: url("./assets/texture-halftone.png");
+  background-size: 520px auto;
+}
+.work-hero-visual img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.work-hero-body { flex: 1; min-width: 0; }
+.work-hero-body .work-kind { display: block; font-size: 12px; font-weight: 700; color: var(--bk-80); }
+.work-hero-body h1 {
+  margin: 12px 0 20px;
+  font-size: clamp(28px, 3.4vw, 44px);
+  font-weight: 800;
+  line-height: 1.3;
+}
+.work-tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 24px;
+  padding: 0;
+}
+.work-tags li { padding: 4px 10px; background: var(--fig-lime); font-size: 12px; font-weight: 700; }
+.work-lead { margin: 0; font-size: 14px; font-weight: 700; line-height: 1.9; }
+
+/* microCMSリッチエディタ本文（入稿HTMLをそのまま表示） */
+.work-body {
+  max-width: 760px;
+  margin: 64px auto 0;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.95;
+}
+.work-body h2,
+.work-body h3 {
+  margin: 40px 0 16px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.work-body p { margin: 0 0 1.6em; }
+.work-body img { display: block; max-width: 100%; height: auto; margin: 12px 0 20px; }
+.work-body a { color: var(--ink); }
+.work-body ul,
+.work-body ol { margin: 0 0 1.6em; padding-left: 1.4em; }
+.work-body li { margin-bottom: 0.5em; }
+.work-body blockquote {
+  margin: 0 0 1.6em;
+  padding: 4px 0 4px 20px;
+  border-left: 3px solid var(--fig-lime);
+  color: var(--bk-80);
+}
+/* 画像 + キャプション。本文幅より少し広げて見せる */
+.work-body figure { margin: 40px 0; }
+.work-body figure img { margin: 0; border: 1px solid var(--ink); }
+.work-body figcaption {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--bk-80);
+}
+/* 仮原稿であることの注記 */
+.work-draft-note {
+  margin: 0 0 32px !important;
+  padding: 10px 14px;
+  background: var(--fig-lime);
+  font-size: 12px;
+  font-weight: 700;
+}
+.work-note,
+.work-missing {
+  max-width: 760px;
+  margin: 64px auto 0;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.9;
+  color: var(--bk-80);
+}
+.work-missing { text-align: center; }
+.work-detail .btn-lime { width: min(445px, 100%); margin: 24px auto 0; }
+
+/* 他の事例 */
+.sec-works-other { margin: 120px 20px 0; }
+.sec-works-other .works-grid { margin-top: 20px; }
+
 /* --- レスポンシブ（900px以下で縦積みに） --- */
 @media (max-width: 900px) {
+  .sec-works { margin-top: 80px; }
+  .works-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .work-card-body { padding: 16px 16px 20px; }
+  .work-card-title { padding-right: 0; font-size: 15px; }
+  .work-card-arrow { position: static; margin-top: 8px; }
+  .work-detail { margin-top: 110px; }
+  .work-hero { flex-direction: column; gap: 24px; }
+  .work-hero-visual { flex: none; width: 100%; padding: 24px; }
+  .work-body,
+  .work-note { margin-top: 40px; }
+  .sec-works-other { margin-top: 80px; }
+
   .about-hero { min-height: 0; padding: 100px 24px 70px; border-radius: 0 0 48px 48px; }
   .sec-business { padding-top: 80px; }
   .biz-feature { flex-direction: column; height: auto; padding: 0 24px 24px; gap: 0; }

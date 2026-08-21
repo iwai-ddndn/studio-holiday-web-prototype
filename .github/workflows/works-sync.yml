@@ -1,0 +1,28 @@
+# microCMSの事例（works）から works/<slug>/index.html を毎日再生成するワークフロー。
+# 変更があったときだけコミットされ、GitHub Pagesが自動で再デプロイされる。
+# 手動実行: Actionsタブ → Build works pages from microCMS → Run workflow
+name: Build works pages from microCMS
+
+on:
+  schedule:
+    - cron: "30 21 * * *" # 毎日 JST 6:30（newsletter-syncの30分後）
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build works pages
+        run: python3 scripts/build_works.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A works
+          git diff --cached --quiet || { git commit -m "chore: 事例ページ（works/）を自動生成"; git push; }

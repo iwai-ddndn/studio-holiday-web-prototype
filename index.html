@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;family=Noto+Sans+JP:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=20260813-17" />
+  <link rel="stylesheet" href="./styles.css?v=20260816-4" />
 </head>
 <body class="home-page">
   <!-- ファーストビュー: ビューポートより広い「壁」にステッカーと写真を貼り重ね、
@@ -27,7 +27,7 @@
         <a href="#">TOP</a>
         <a href="#about">ABOUT</a>
         <a href="#business">BUSINESS</a>
-        <a href="#" onclick="return false">WORKs</a><!-- 下層ページは一旦ナシのため仮リンク -->
+        <a href="#works">WORKs</a>
         <a href="./design-process.html">DESIGN PROCESS</a>
         <a class="nav-contact" href="#contact">お問い合わせ</a><!-- スマホのメニュー内のみ表示 -->
       </nav>
@@ -160,9 +160,21 @@
       </div>
     </section>
 
-    <!-- COMPANY 03 -->
+    <!-- WORKs 03: 事例カード一覧。カードは site.js が microCMS（works）から描画し、
+         クリックで各事例の詳細ページ（works/<slug>/）へ遷移する -->
+    <section class="sec-works" id="works">
+      <div class="sec-label"><span>WORKs</span><i></i><span>03</span></div>
+      <p class="works-lead">キャラクター開発からブランディング、フード、場づくりまで。STUDIO HOLIDAYが手がけたアウトプットの一部をご紹介します。</p>
+      <div class="works-grid" data-works-grid data-works-more="#worksMore" data-works-initial="8">
+        <!-- site.js が事例カードを差し込む（JS無効時は下のリンクのみ） -->
+      </div>
+      <noscript><p class="works-lead">事例一覧の表示にはJavaScriptが必要です。</p></noscript>
+      <button class="btn-lime works-more" type="button" id="worksMore" hidden><span>すべての事例を見る</span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg></button>
+    </section>
+
+    <!-- COMPANY 04 -->
     <section class="sec-company" id="company">
-      <div class="sec-label"><span>COMPANY</span><i></i><span>03</span></div>
+      <div class="sec-label"><span>COMPANY</span><i></i><span>04</span></div>
       <div class="company-grid">
         <dl class="company-list">
           <div><dt>社名</dt><dd>株式会社スタジオホリデイ</dd></div>
@@ -195,9 +207,9 @@
       </div>
     </section>
 
-    <!-- CONTACT 04 -->
+    <!-- CONTACT 05 -->
     <section class="sec-contact" id="contact">
-      <div class="sec-label"><span>CONTACT</span><i></i><span>04</span></div>
+      <div class="sec-label"><span>CONTACT</span><i></i><span>05</span></div>
       <p class="contact-lead">STUDIO HOLIDAY デザインコンサルティングチームへのお問い合わせ、協業・パートナー連携のご相談は下記フォームからご連絡ください。</p>
       <a class="btn-lime btn-lime--wide" href="#" onclick="return false"><span>フォームを開く</span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg></a><!-- フォームURL未定（仮） -->
     </section>
@@ -226,8 +238,8 @@
           <a class="fnav-head" href="./design-process.html">DESIGN PROCESS</a>
         </div>
         <div class="fnav-col">
-          <span class="fnav-head">WORKs</span>
-          <div class="fnav-sub" data-footer-works><!-- microCMSのworksで差し替え（下層ページは一旦ナシのためテキストのみ） -->
+          <a class="fnav-head" href="#works">WORKs</a>
+          <div class="fnav-sub" data-footer-works><!-- microCMSのworksで差し替え（各事例ページへのリンクになる） -->
             <span>ポンデライオン</span>
             <span>スシロー</span>
             <span>うねり</span>
@@ -248,8 +260,9 @@
     </div>
   </footer>
 
-  <!-- ▼ ステッカークリック時の詳細ドロワー: 右からスライドインする記事プレビュー。
-       ページ遷移せず、閉じればそのままFV（壁の位置も保持）に戻れる -->
+  <!-- ▼ ステッカークリック時の詳細ドロワー: 右からスライドインする記事。
+       事例ページ（work.html）と同じ内容（概要 + microCMSの本文）をここで読める。
+       ページ遷移しないので、閉じればそのままFV（壁の位置も保持）に戻れる -->
   <aside class="work-drawer" id="workDrawer" hidden>
     <div class="work-drawer-backdrop" data-close></div>
     <article class="work-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
@@ -259,13 +272,14 @@
       <ul class="drawer-tags" id="drawerTags"></ul>
       <img id="drawerImg" alt="" />
       <p id="drawerDesc"></p>
-      <div class="drawer-body" id="drawerBody" hidden></div><!-- microCMSのリッチエディタ本文 -->
-      <p class="drawer-note">※ 詳細記事の本文はWORKSシート反映待ち。ここに事例記事がそのまま入る想定です。（仮）</p>
+      <div class="work-body" id="drawerBody" hidden></div><!-- microCMSのリッチエディタ本文（事例ページと同じもの） -->
+      <p class="work-note" id="drawerNote" hidden>※ 詳細記事の本文はmicroCMSの「本文」入稿待ちです。ここに事例記事がそのまま入ります。（仮）</p>
+      <div id="drawerExtras"></div><!-- クレジット + 関連する事例（site.js が生成） -->
     </article>
   </aside>
 
-  <script src="./cms-config.js?v=20260813-17"></script>
-  <script src="./site.js?v=20260813-17"></script>
-  <script src="./main.js?v=20260813-17"></script>
+  <script src="./cms-config.js?v=20260816-4"></script>
+  <script src="./site.js?v=20260816-4"></script>
+  <script src="./main.js?v=20260816-4"></script>
 </body>
 </html>
