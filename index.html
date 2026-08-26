@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;family=Noto+Sans+JP:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=20260816-4" />
+  <link rel="stylesheet" href="./styles.css?v=20260826-1" />
 </head>
 <body class="home-page">
   <!-- ファーストビュー: ビューポートより広い「壁」にステッカーと写真を貼り重ね、
@@ -160,6 +160,13 @@
       </div>
     </section>
 
+    <!-- BUSINESS直後の問い合わせCTA帯: 事業紹介を見た直後に問い合わせ導線を挟む。
+         内容はCONTACT 05と同じ（通し番号は振らずCTAとして扱う） -->
+    <section class="sec-cta" aria-label="お問い合わせ">
+      <p class="contact-lead">STUDIO HOLIDAY デザインコンサルティングチームへのお問い合わせ、協業・パートナー連携のご相談は下記フォームからご連絡ください。</p>
+      <a class="btn-lime btn-lime--wide" href="#" onclick="return false"><span>フォームを開く</span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg></a><!-- フォームURL未定（仮） -->
+    </section>
+
     <!-- WORKs 03: 事例カード一覧。カードは site.js が microCMS（works）から描画し、
          クリックで各事例の詳細ページ（works/<slug>/）へ遷移する -->
     <section class="sec-works" id="works">
@@ -280,6 +287,6 @@
 
   <script src="./cms-config.js?v=20260816-4"></script>
   <script src="./site.js?v=20260816-4"></script>
-  <script src="./main.js?v=20260816-4"></script>
+  <script src="./main.js?v=20260826-1"></script>
 </body>
 </html>

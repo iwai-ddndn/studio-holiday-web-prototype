@@ -305,8 +305,8 @@ body {
 .tag-svg path {
   stroke: var(--fig-lime);
   fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  stroke-linecap: butt; /* 帯の端は角丸にしない */
+  stroke-linejoin: miter;
 }
 .tag-svg text {
   font-family: var(--font-ja);
@@ -875,6 +875,12 @@ body.drawer-open { overflow: hidden; }
     padding-left: 0;
   }
 
+  /* 左端のニュースレター帯（幅48px）とヘッダーが重ならないよう、
+   * ヘッダーの左端を帯の右側から始める */
+  .home-page .site-header {
+    left: 56px;
+  }
+
   .home-page .hero {
     min-height: 620px;
   }
@@ -1150,6 +1156,10 @@ body.drawer-open { overflow: hidden; }
   margin: 0;
   padding: 0;
 }
+
+/* --- BUSINESS直後の問い合わせCTA帯（CONTACT 05と同内容の中間導線） --- */
+.sec-cta { margin: 140px 20px 0; }
+.sec-cta .contact-lead { margin-top: 0; }
 
 /* --- CONTACT --- */
 .sec-contact { margin: 120px 20px 0; padding-bottom: 220px; }

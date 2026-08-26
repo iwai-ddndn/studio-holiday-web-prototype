@@ -629,20 +629,29 @@ function showTagsFor(el) {
   tp.setAttribute('href', `#${id}`);
   tp.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${id}`);
   const pad = 10 * k; // 帯の前後の余白
-  tp.setAttribute('startOffset', pad.toFixed(1));
   text.appendChild(tp);
   svg.appendChild(path);
   svg.appendChild(text);
   el.appendChild(svg);
 
   const total = path.getTotalLength();
+  const full = tagTextOf(sprite);
+
+  // 開始位置をステッカーごとにランダムにする。全文がパス末尾で
+  // 見切れない範囲（全文長+前後余白ぶんの残りがある位置）に限定する
+  tp.textContent = full;
+  const fullLen = text.getComputedTextLength();
+  tp.textContent = '';
+  const maxStart = total - fullLen - pad * 2;
+  const bandStart = maxStart > 0 ? Math.random() * maxStart : 0;
+  tp.setAttribute('startOffset', (bandStart + pad).toFixed(1));
+  path.setAttribute('stroke-dashoffset', (-bandStart).toFixed(1));
+
   path.setAttribute('stroke-dasharray', `0 ${total}`);
   const fitBand = () => {
     const len = Math.min(total, text.getComputedTextLength() + pad * 2);
     path.setAttribute('stroke-dasharray', `${len.toFixed(1)} ${total.toFixed(1)}`);
   };
-
-  const full = tagTextOf(sprite);
   activeTag = { svg, timer: 0 };
   if (tagsReducedMotion) { tp.textContent = full; fitBand(); return; }
   let i = 0;
