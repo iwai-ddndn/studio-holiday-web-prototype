@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;family=Noto+Sans+JP:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=20260925-9" />
+  <link rel="stylesheet" href="./styles.css?v=20260926-1" />
 </head>
 <body class="home-page">
   <!-- ファーストビュー: ビューポートより広い「壁」にステッカーと写真を貼り重ね、
@@ -268,25 +268,38 @@
   </footer>
 
   <!-- ▼ ステッカークリック時の詳細ドロワー: 右からスライドインする記事。
-       事例ページ（work.html）と同じ内容（概要 + microCMSの本文）をここで読める。
+       中身は作品詳細ページ（works/<slug>/）と同じ部品（ライムの帯に作品画像 → タイトル・タグ → Related Works → 本文）。
        ページ遷移しないので、閉じればそのままFV（壁の位置も保持）に戻れる -->
   <aside class="work-drawer" id="workDrawer" hidden>
     <div class="work-drawer-backdrop" data-close></div>
     <article class="work-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
       <button class="work-drawer-close" type="button" data-close aria-label="閉じる">×</button>
-      <span class="work-kind" id="drawerKind"></span>
-      <h3 id="drawerTitle"></h3>
-      <ul class="drawer-tags" id="drawerTags"></ul>
-      <img id="drawerImg" alt="" />
-      <p id="drawerDesc"></p>
-      <div class="work-body" id="drawerBody" hidden></div><!-- microCMSのリッチエディタ本文（事例ページと同じもの） -->
-      <p class="work-note" id="drawerNote" hidden>※ 詳細記事の本文はmicroCMSの「本文」入稿待ちです。ここに事例記事がそのまま入ります。（仮）</p>
-      <div id="drawerExtras"></div><!-- クレジット + 関連する事例（site.js が生成） -->
+      <div class="wd-hero">
+        <div class="wd-visual"><img id="drawerImg" alt="" /></div>
+      </div>
+      <div class="wd-main wd-main--head">
+        <h1 id="drawerTitle"></h1>
+        <ul class="wd-tags" id="drawerTags"></ul>
+        <p class="wd-lead" id="drawerDesc"></p>
+      </div>
+      <!-- 本文が長くても関連作品にすぐ辿れるよう、Related Works は本文より上に置く -->
+      <section class="wd-related wd-related--compact" id="drawerRelated" hidden>
+        <h2>Related Works</h2>
+        <div class="works-board">
+          <div class="works-grid" id="drawerRelatedGrid"></div><!-- 関連する事例（押すとドロワーの中身を差し替え） -->
+        </div>
+        <a class="btn-lime works-all" id="drawerPageLink" href="./works/"><span>この事例のページを開く</span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg></a>
+      </section>
+      <div class="wd-main wd-main--body">
+        <div class="work-body" id="drawerBody" hidden></div><!-- microCMSのリッチエディタ本文（事例ページと同じもの） -->
+        <p class="work-note" id="drawerNote" hidden>※ 詳細記事の本文はmicroCMSの「本文」入稿待ちです。ここに事例記事がそのまま入ります。（仮）</p>
+        <div id="drawerCredit"></div><!-- クレジット（site.js が生成） -->
+      </div>
     </article>
   </aside>
 
   <script src="./cms-config.js?v=20260816-4"></script>
-  <script src="./site.js?v=20260925-8"></script>
-  <script src="./main.js?v=20260925-7"></script>
+  <script src="./site.js?v=20260926-1"></script>
+  <script src="./main.js?v=20260926-1"></script>
 </body>
 </html>

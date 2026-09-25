@@ -200,24 +200,13 @@ window.relatedWorks = (work, all, n = 3) => all
   .slice(0, n)
   .map((o) => o.w);
 
-function workRelatedHTML(list) {
-  if (!list.length) return '';
-  const items = list.map((w) => (
-    `<li><a href="${window.workURL(w)}">` +
-      (w.image ? `<img src="${esc(w.image)}" alt="" loading="lazy" />` : '<span class="work-related-noimg"></span>') +
-      `<span><span class="work-related-kind">${esc(w.kind)}</span>` +
-      `<span class="work-related-title">${esc(w.title)}</span></span>` +
-    '</a></li>'
-  ));
-  return `<nav class="work-related"><h2>関連する事例</h2><ul>${items.join('')}</ul></nav>`;
-}
-
-/* ドロワー（main.js）から使う。本文の下に置くクレジットと関連事例をまとめて返す */
-window.workExtrasHTML = async (work) => {
-  if (!work || !work.slug) return '';
+/* ドロワー（main.js）から使う。作品詳細ページと同じく、本文の下に置くクレジットと
+ * 「Related Works」のカード（TOP・一覧と同じ Figma workcard）を返す */
+window.workDrawerExtras = async (work) => {
+  if (!work || !work.slug) return { credit: '', cards: [] };
   const all = await window.getWorks();
   const self = all.find((w) => w.slug === work.slug) || work;
-  return workCreditHTML(self) + workRelatedHTML(window.relatedWorks(self, all, 3));
+  return { credit: workCreditHTML(self), cards: window.relatedWorks(self, all, 3).map(workCard) };
 };
 
 /* grid の data属性:

@@ -401,10 +401,9 @@ body {
   right: 0;
   bottom: 0;
   /* 記事を読む幅として画面の40%。狭い画面では従来どおり画面いっぱいに寄せる */
-  width: min(92vw, max(420px, 40vw));
+  width: min(100vw, max(560px, 50vw)); /* 作品詳細ページと同じ組みが入る幅 */
   background: var(--white);
-  border-left: 1px solid var(--ink);
-  padding: 68px 40px 40px;
+  padding: 0;
   overflow-y: auto;
   overscroll-behavior: contain; /* 記事の端まで来ても背面ページに送らない */
   transform: translateX(102%); /* border込みで完全に隠す */
@@ -426,57 +425,49 @@ body {
   opacity: 0.6;
 }
 .work-drawer-close:hover { opacity: 1; }
-.work-drawer .work-kind {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--bk-80);
-}
-.work-drawer h3 {
-  margin: 0 0 14px;
-  font-size: 26px;
-  font-weight: 700;
-  line-height: 1.4;
-}
-.drawer-tags {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 24px;
-  padding: 0;
-}
-.drawer-tags li {
-  padding: 4px 10px;
-  background: var(--fig-lime);
-  font-size: 12px;
-  font-weight: 700;
-}
-/* 事例のメインビジュアル（記事本文中の画像は .work-body 側で整える） */
-#drawerImg {
-  display: block;
-  width: 100%;
-  max-height: 320px;
-  object-fit: contain;
-  margin: 0 0 24px;
-}
-#drawerDesc {
-  margin: 0 0 20px;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.9;
-}
-/* ドロワーでも事例ページと同じ記事を表示する（幅だけ合わせる） */
+/* 中身は作品詳細ページ（.wd-*）と同じ部品。ドロワーの幅に合わせて寸法だけ詰める */
+.work-drawer .wd-hero { height: 260px; }
+.work-drawer .wd-visual { top: 72px; width: 260px; height: 260px; }
+.work-drawer .wd-visual.is-pasting img { animation: rvStickerPaste 0.75s cubic-bezier(0.2, 0.8, 0.25, 1) 0.25s both; }
+.work-drawer .wd-main { width: min(600px, calc(100% - 48px)); margin-top: 110px; padding-bottom: 0; }
+.work-drawer .wd-main--head { padding-bottom: 48px; }
+.work-drawer .wd-main--body { margin-top: 0; padding: 8px 0 88px; }
+.work-drawer .wd-main--body > .work-body,
+.work-drawer .wd-main--body > .work-note { margin-top: 40px; }
+.work-drawer .wd-main h1 { font-size: clamp(32px, 3.4vw, 52px); }
 .work-drawer .work-body,
-.work-drawer .work-note {
-  max-width: none;
-  margin: 24px 0 0;
-  font-size: 14px;
+.work-drawer .work-note { max-width: none; }
+.work-drawer .wd-main .work-body h2,
+.work-drawer .wd-main .work-body h3 { margin: 40px 0 16px; font-size: 22px; }
+.work-drawer .work-credit { max-width: none; margin-top: 48px; }
+.work-drawer .work-credit dt { width: 128px; font-size: 12px; }
+/* 本文の上に挟むコンパクトな帯（見出し・カードとも小さめ） */
+.work-drawer .wd-related { padding: 32px 24px 36px; }
+.work-drawer .wd-related[hidden] { display: none; }
+.work-drawer .wd-related h2 { margin-bottom: 24px; font-size: 20px; }
+.work-drawer .works-board .works-grid { grid-template-columns: repeat(3, minmax(0, 170px)); max-width: none; gap: 14px; }
+.work-drawer .works-board .work-card { height: auto; aspect-ratio: 5 / 6; }
+.work-drawer .works-board .work-card-visual { padding: 14px; }
+.work-drawer .works-board .work-card-body { gap: 6px; padding: 10px 12px 12px; }
+.work-drawer .works-board .work-card-title { font-size: 14px; }
+.work-drawer .work-card-tags span { font-size: 10px; }
+.work-drawer .wd-related .works-all { height: 48px; margin-top: 24px; }
+/* 閉じるボタンはライムの帯の上でも見えるよう白い丸に。記事をスクロールしても右上に残す
+ * （パネルは transform 付きなので fixed はパネル基準になり、中身と一緒に流れない） */
+.work-drawer-close {
+  position: fixed;
+  z-index: 2;
+  top: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+  font-size: 24px;
+  opacity: 1;
 }
-.work-drawer .work-body figure { margin: 28px 0; }
-.work-drawer .work-body h2,
-.work-drawer .work-body h3 { margin: 32px 0 12px; font-size: 18px; }
+.work-drawer-close:hover { background: var(--ink); color: var(--fig-lime); }
 /* ドロワーを開いている間は背面（ページ本体）を動かさない */
 body.drawer-open { overflow: hidden; }
 
@@ -500,34 +491,6 @@ body.drawer-open { overflow: hidden; }
 .work-credit dd { flex: 1; margin: 0; }
 .work-drawer .work-credit { max-width: none; margin-top: 40px; }
 .work-drawer .work-credit dt { width: 128px; font-size: 12px; }
-
-/* --- 関連する事例（ドロワー内。ページ側は RELATED WORKs のカード一覧） --- */
-.work-related { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--ink); }
-.work-related h2 { margin: 0 0 16px; font-size: 13px; font-weight: 700; }
-.work-related ul { list-style: none; margin: 0; padding: 0; }
-.work-related li + li { margin-top: 8px; }
-.work-related a {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 10px;
-  border: 1px solid var(--ink);
-  color: var(--ink);
-  text-decoration: none;
-  transition: background-color 0.2s ease;
-}
-.work-related a:hover { background-color: var(--fig-lime); }
-.work-related img,
-.work-related-noimg {
-  width: 64px;
-  height: 48px;
-  flex-shrink: 0;
-  object-fit: contain;
-  background-color: var(--surface-2);
-}
-.work-related a > span { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.work-related-kind { font-size: 11px; font-weight: 700; color: var(--bk-80); }
-.work-related-title { font-size: 14px; font-weight: 800; line-height: 1.4; }
 
 /* ---------- ニュースレター（Substack）動線: 左端の縦型電光掲示板 ---------- */
 .news-ticker {
@@ -1777,6 +1740,13 @@ body.drawer-open { overflow: hidden; }
 .wd-related .works-all { width: min(445px, 100%); margin: 80px auto 0; }
 
 @media (max-width: 900px) {
+  .work-drawer .wd-hero { height: 200px; }
+  .work-drawer .wd-visual { top: 64px; width: 200px; height: 200px; }
+  .work-drawer .wd-main { margin-top: 90px; width: calc(100% - 40px); }
+  .work-drawer .works-board .works-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .work-drawer .works-board .work-card-visual { padding: 8px; }
+  .work-drawer .works-board .work-card-title { font-size: 12px; }
+  .work-drawer .work-card-tags { display: none; } /* 3枚並びで狭いのでタグは省く */
   .page-hero { height: 320px; padding-top: 70px; }
   .page-intro { margin-top: 88px; gap: 24px; }
   .page-intro p br { display: none; }

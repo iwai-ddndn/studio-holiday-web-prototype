@@ -713,16 +713,20 @@ let drawerGen = 0;
 async function showDrawerBody(work) {
   const body = document.getElementById('drawerBody');
   const note = document.getElementById('drawerNote');
-  const extras = document.getElementById('drawerExtras');
+  const credit = document.getElementById('drawerCredit');
+  const related = document.getElementById('drawerRelated');
+  const grid = document.getElementById('drawerRelatedGrid');
   const gen = ++drawerGen;
   body.innerHTML = '';
   body.hidden = true;
   note.hidden = true;
-  extras.innerHTML = '';
+  credit.innerHTML = '';
+  grid.innerHTML = '';
+  related.hidden = true;
 
-  const [{ html, isDraft }, extrasHTML] = await Promise.all([
+  const [{ html, isDraft }, extras] = await Promise.all([
     window.workBody(work),
-    window.workExtrasHTML(work), // クレジット + 関連する事例
+    window.workDrawerExtras(work), // クレジット + Related Works のカード
   ]);
   if (gen !== drawerGen) return; // すでに別の事例が開かれている
   if (html) {
@@ -731,25 +735,39 @@ async function showDrawerBody(work) {
   } else {
     note.hidden = false;
   }
-  extras.innerHTML = extrasHTML;
+  credit.innerHTML = extras.credit;
+  extras.cards.forEach((card) => grid.appendChild(card));
+  related.hidden = false; // 事例ページへのボタンがあるので、関連が0件でも帯は出す
 }
 
 function openModal(work, imgURL, client) {
   clearTimeout(drawerHideTimer);
   document.getElementById('drawerImg').src = imgURL;
-  document.getElementById('drawerKind').textContent = work.kind;
+  document.getElementById('drawerImg').alt = work.title;
   document.getElementById('drawerTitle').textContent = work.title;
-  document.getElementById('drawerDesc').textContent = work.desc;
+  const desc = document.getElementById('drawerDesc');
+  desc.textContent = work.desc || '';
+  desc.hidden = !work.desc;
+  // 事例ページが無い仮のステッカー（genericWork）は WORKS一覧へ案内する
+  const pageLink = document.getElementById('drawerPageLink');
+  pageLink.href = work.slug ? window.workURL(work) : './works/';
+  pageLink.querySelector('span').textContent = work.slug ? 'この事例のページを開く' : 'WORKS一覧を見る';
   showDrawerBody(work); // 記事本文（事例ページと同じ内容）
+  // タグは作品詳細ページと同じ「#クライアント #ジャンル」
   const tags = document.getElementById('drawerTags');
   tags.innerHTML = '';
-  [client, work.kind, work.title].filter(Boolean).forEach((t) => {
+  [client, work.kind].filter(Boolean).forEach((t) => {
     const li = document.createElement('li');
     li.textContent = `#${t}`;
     tags.appendChild(li);
   });
   drawer.hidden = false;
   drawer.querySelector('.work-drawer-panel').scrollTop = 0; // 前に開いた記事の位置を持ち越さない
+  // 作品画像はステッカーを貼るモーションで出す（事例を切り替えるたびに再生）
+  const visual = drawer.querySelector('.wd-visual');
+  visual.classList.remove('is-pasting');
+  void visual.offsetWidth;
+  visual.classList.add('is-pasting');
   // 記事を読んでいる間はページを動かさない（スクロールヒントも背面スクロールも止める）
   cancelPeek();
   document.body.classList.add('drawer-open');
@@ -770,7 +788,7 @@ drawer.addEventListener('click', (e) => {
  * （FVの壁の位置を保ったまま次の事例へ移れる）。
  * 中クリック・⌘/Ctrl+クリックは通常どおり別タブで事例ページを開かせる */
 drawer.addEventListener('click', async (e) => {
-  const a = e.target.closest('.work-related a');
+  const a = e.target.closest('#drawerRelatedGrid .work-card');
   if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
   e.preventDefault();
   // 恒久URL（/works/<slug>/）から slug を取る。旧URL（?id=…）も後方互換で読む
