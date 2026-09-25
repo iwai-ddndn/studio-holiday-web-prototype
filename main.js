@@ -923,11 +923,14 @@ window.addEventListener('pointermove', (e) => {
     applyCam();
   }
 });
-window.addEventListener('pointerup', (e) => {
+const endPan = (e) => {
   if (!pdown || e.pointerId !== pdown.id) return;
   pdown = null;
   hero.classList.remove('is-panning');
-});
+};
+window.addEventListener('pointerup', endPan);
+// 縦スワイプをブラウザがページスクロールに引き取った時（下の is-scrolled 参照）
+window.addEventListener('pointercancel', endPan);
 // ドラッグ直後の click は「クリック」として扱わない（リンク遷移・ポップアップを抑止）
 window.addEventListener('click', (e) => {
   if (didDrag) {
@@ -1183,6 +1186,13 @@ function cancelPeek() {
 ['wheel', 'touchstart', 'pointerdown', 'keydown'].forEach((ev) =>
   addEventListener(ev, cancelPeek, { passive: true, capture: true }));
 
+// FVは指のドラッグ＝壁のパン（touch-action: none）。ただしページ先頭から離れている間は
+// 縦スワイプをページスクロールに回す。本編から上に戻ってFVが画面に入った時に、
+// FVに触れた指でスクロールが止まって「そこから動けない」状態になるのを防ぐ
+const syncHeroTouch = () => hero.classList.toggle('is-scrolled', window.scrollY > 0);
+addEventListener('scroll', syncHeroTouch, { passive: true });
+syncHeroTouch();
+
 addEventListener('scroll', () => {
   if (peeking) return; // ヒント自身のスクロールは無視
   if (window.scrollY > 100) {
@@ -1366,9 +1376,17 @@ loadCMSContent().finally(() => {
 });
 applySubstackTicker(); // 壁の構築とは独立に、取得でき次第差し替える
 
+// 壁の作り直しは「FVの実寸が変わった時」だけ（回転・ウィンドウ幅の変更など）。
+// スマホはスクロールでアドレスバーが伸縮するたびに resize が飛ぶが、FVは 100svh で
+// 高さが変わらないので作り直さない（毎回作り直すと、本編をスクロール中に70枚の
+// ステッカーを消して貼り直す重い処理が走り、スクロールが引っかかっていた）
+let builtSize = `${hero.clientWidth}x${hero.clientHeight}`;
 window.addEventListener('resize', () => {
   clearTimeout(window.__rz);
   window.__rz = setTimeout(() => {
+    const size = `${hero.clientWidth}x${hero.clientHeight}`;
+    if (size === builtSize) return;
+    builtSize = size;
     applyFvParams(); // モバイル/PCでハーフトーンのタイル幅が変わるため再適用
     build({ intro: false });
   }, 200);

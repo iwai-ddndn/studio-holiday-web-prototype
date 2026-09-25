@@ -427,8 +427,127 @@ function initHScroll() {
   });
 }
 
+/* ==========================================================
+   ▼ 登場アニメーション: スクロールでそのエリアに入った時に1回だけ
+   見出しステッカー → 貼り付け / カード → 貼り付け / 文字 → タイプライター
+   （見た目の定義は styles.css の「登場アニメーション」）
+   ========================================================== */
+
+const RV_STICKERS = '.sticker-head, .wd-visual';
+const RV_CARDS = [
+  '.biz-card', '.work-card', '.works-more', '.member', '.service-card', '.biz-link',
+  '.approach-media', '.wd-tags li', '.dp-label',
+].join(', ');
+const RV_TEXTS = [
+  '.about-hero h1', '.about-hero p', '.contact-lead',
+  '.page-intro h1', '.page-intro p', '.approach-body h2', '.approach-body p',
+  '.wd-main h1', '.md-name-ja', '.wd-lead', '.wd-related h2', '.works-count',
+  '.company-list dt', '.company-list dd', '.company-clients dt', '.company-clients li',
+].join(', ');
+
+/* 文字を1文字ずつの span に分ける。読み上げ用に元の文は .sr-only で別に持つ */
+function prepareTypewriter(el) {
+  if (el.dataset.tw) return;
+  el.dataset.tw = '1';
+  const sr = document.createElement('span');
+  sr.className = 'sr-only';
+  sr.textContent = el.textContent.replace(/\s+/g, ' ').trim();
+  const visual = document.createElement('span');
+  visual.setAttribute('aria-hidden', 'true');
+  while (el.firstChild) visual.appendChild(el.firstChild);
+  const walker = document.createTreeWalker(visual, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach((node) => {
+    const frag = document.createDocumentFragment();
+    for (const ch of node.data) {
+      if (/\s/.test(ch)) { frag.appendChild(document.createTextNode(ch)); continue; } // 空白は数えない
+      const span = document.createElement('span');
+      span.className = 'tw-ch';
+      span.textContent = ch;
+      frag.appendChild(span);
+    }
+    node.replaceWith(frag);
+  });
+  el.append(sr, visual);
+}
+
+/* 見出しはゆっくり、長文は全体が約1.4秒に収まる速さで打つ */
+function typewrite(el, delayMs) {
+  const chars = [...el.querySelectorAll('.tw-ch')];
+  if (!chars.length) return;
+  const heading = /^H[1-6]$/.test(el.tagName) || el.matches('dt');
+  const step = heading ? Math.min(55, 1100 / chars.length) : Math.max(6, Math.min(24, 1400 / chars.length));
+  let start = 0;
+  let shown = 0;
+  let cur = null;
+  const tick = (now) => {
+    if (!start) start = now;
+    const n = Math.min(chars.length, Math.floor((now - start) / step) + 1);
+    while (shown < n) chars[shown++].classList.add('on');
+    if (cur) cur.classList.remove('tw-cur');
+    cur = chars[n - 1];
+    cur.classList.add('tw-cur');
+    if (n < chars.length) requestAnimationFrame(tick);
+    else setTimeout(() => cur.classList.remove('tw-cur'), 900); // 打ち終わりに少しだけカーソルを残す
+  };
+  setTimeout(() => requestAnimationFrame(tick), delayMs);
+}
+
+function initReveal() {
+  if (!('IntersectionObserver' in window)) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  // FV（壁）は独自のイントロがあるので対象外
+  const outsideFv = (el) => !el.closest('.hero, .work-drawer');
+
+  const io = new IntersectionObserver((entries) => {
+    // 同時に入ってきたものは画面上の並び順（上→下、左→右）に少しずつずらす
+    const hits = entries.filter((e) => e.isIntersecting)
+      .sort((a, b) => (a.boundingClientRect.top - b.boundingClientRect.top) || (a.boundingClientRect.left - b.boundingClientRect.left));
+    hits.forEach((e, i) => {
+      const el = e.target;
+      io.unobserve(el);
+      const delay = Math.min(i, 6) * (el.classList.contains('rv-type') ? 140 : 90);
+      if (el.classList.contains('rv-type')) {
+        typewrite(el, delay);
+      } else {
+        el.style.setProperty('--rv-delay', `${delay}ms`);
+        el.classList.add('rv-in');
+      }
+    });
+  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.15 });
+
+  let alt = 0;
+  const register = (root) => {
+    root.querySelectorAll(RV_STICKERS).forEach((el) => {
+      if (el.classList.contains('rv-sticker') || !outsideFv(el)) return;
+      el.classList.add('rv-sticker');
+      io.observe(el);
+    });
+    root.querySelectorAll(RV_CARDS).forEach((el) => {
+      if (el.classList.contains('rv-card') || !outsideFv(el)) return;
+      el.classList.add('rv-card');
+      if (alt++ % 2) el.classList.add('rv-alt'); // 傾きの向きを交互に
+      io.observe(el);
+    });
+    root.querySelectorAll(RV_TEXTS).forEach((el) => {
+      if (el.classList.contains('rv-type') || !outsideFv(el)) return;
+      prepareTypewriter(el);
+      el.classList.add('rv-type');
+      io.observe(el);
+    });
+  };
+  register(document);
+
+  // WORKsのカードは site.js があとから描画する（ローカル → microCMS で2回）ので、差し込まれたら登録する
+  document.querySelectorAll('[data-works-grid]').forEach((grid) => {
+    new MutationObserver(() => register(grid)).observe(grid, { childList: true });
+  });
+}
+
 // 詳細ページは自分自身を除外してからカードを描きたいので、順番に実行する
 initWorkDetail().then(initWorksGrids);
 initFooterWorks();
 initMobileNav();
 initHScroll();
+initReveal();
