@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""事例（works）の恒久URLページ works/<slug>/index.html を静的生成する。
+"""事例（works）の恒久URLページ works/<slug>/index.html と一覧 works/index.html を静的生成する。
 
 microCMS の works を取得し（失敗時は data/works-fallback.json）、
 work.html?id=… と同じ内容の事例ページを1件ずつHTMLとして書き出す。
@@ -17,7 +17,11 @@ import pathlib
 import re
 import shutil
 import subprocess
+import sys
 from html.parser import HTMLParser
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from site_chrome import header_html, footer_html  # noqa: E402  ヘッダー・フッターの唯一の定義
 
 # 生成ページのOGP用の絶対URLの基点。本番ドメイン確定時に変更すること。
 BASE_URL = 'https://iwai-ddndn.github.io/studio-holiday-web-prototype'
@@ -27,7 +31,7 @@ FALLBACK_JSON = ROOT / 'data' / 'works-fallback.json'   # site.js の WORKS_FALL
 SAMPLE_DIR = ROOT / 'data' / 'works-sample'             # body未入稿時の仮原稿（slug.html）
 CMS_CONFIG = ROOT / 'cms-config.js'                     # serviceDomain / apiKey をここから読む
 WORKS_DIR = ROOT / 'works'
-RELATED_COUNT = 4
+RELATED_COUNT = 3  # Figma Work詳細: Related Works は3枚
 
 # ==========================================================
 # ▼ データ取得（site.js の fetchCMS / normalizeWorks と同じ規則）
@@ -107,10 +111,10 @@ def esc(s):
             .replace('>', '&gt;').replace('"', '&quot;'))
 
 
-def page_path(src):
-    """サイトルート起点の相対パス（./assets/…）を works/<slug>/ から見た相対パスに直す。
-    CMS画像などの絶対URLはそのまま"""
-    return '../../' + src[2:] if src.startswith('./') else src
+def page_path(src, root='../../'):
+    """サイトルート起点の相対パス（./assets/…）を生成ページから見た相対パスに直す。
+    root は works/<slug>/ なら '../../'、works/ なら '../'。CMS画像などの絶対URLはそのまま"""
+    return root + src[2:] if src.startswith('./') else src
 
 
 def abs_url(src):
@@ -130,10 +134,6 @@ def rewrite_body_paths(html):
 ARROW_SVG = ('<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'
              '<path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg>')
 
-EXT_SVG = ('<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'
-           '<path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7z'
-           'M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>')
-
 
 def related_works(work, all_works, n=RELATED_COUNT):
     """関連事例: 同じジャンル > 同じクライアント > 元の並び順（site.js relatedWorks と同じ）"""
@@ -148,17 +148,19 @@ def related_works(work, all_works, n=RELATED_COUNT):
     return [w for _, _, w in scored[:n]]
 
 
-def work_card_html(w):
-    """TOPのカードと同じDOM（site.js workCard）。リンクは兄弟ディレクトリの恒久URL"""
-    visual = (f'<img src="{esc(page_path(w["image"]))}" alt="" loading="lazy" />' if w['image']
+def work_card_html(w, root='../../', href=None):
+    """TOPのカードと同じDOM（site.js workCard）。root はサイトルートまでの相対パス"""
+    visual = (f'<img src="{esc(page_path(w["image"], root))}" alt="" loading="lazy" />' if w['image']
               else '<span class="work-card-noimg" aria-hidden="true">STUDIO HOLIDAY</span>')
+    tags = ''.join(f'<span>#{esc(t)}</span>' for t in (w['client'], w['kind']) if t)
     return (
-        f'<a class="work-card" href="../{esc(w["slug"])}/">'
+        f'<a class="work-card" href="{href or "../" + esc(w["slug"]) + "/"}">'
         f'<span class="work-card-visual">{visual}</span>'
         '<span class="work-card-body">'
         + (f'<span class="work-card-kind">{esc(w["kind"])}</span>' if w['kind'] else '')
         + f'<span class="work-card-title">{esc(w["title"])}</span>'
         + (f'<span class="work-card-client">{esc(w["client"])}</span>' if w['client'] else '')
+        + (f'<span class="work-card-tags">{tags}</span>' if tags else '')
         + f'<span class="work-card-arrow" aria-hidden="true">{ARROW_SVG}</span>'
         '</span></a>'
     )
@@ -193,25 +195,16 @@ def body_html(work):
             'ここに事例記事がそのまま入ります。（仮）</p>')
 
 # ==========================================================
-# ▼ ページテンプレート（work.html と同じDOM構造・クラス名。リンクは2階層上がる）
+# ▼ ページテンプレート（ヘッダー・フッターはTOPと同じDOM。root はサイトルートまでの相対パス）
 # ==========================================================
 
-def render_page(work, all_works):
-    title = f'{work["title"]} — WORKs | STUDIO HOLIDAY'
-    og_url = f'{BASE_URL}/works/{work["slug"]}/'
-    og_image = abs_url(work['image'])
-    tags = [t for t in (work['client'], work['kind']) if t]
+FONTS_URL = ('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900'
+             '&amp;family=Roboto+Condensed:wght@300;600'
+             '&amp;family=Noto+Sans+JP:wght@100;400;600;700;800;900&amp;display=swap')
+ASSET_VER = '20260925-5'
 
-    hero_img = (f'<img src="{esc(page_path(work["image"]))}" alt="{esc(work["title"])}" />'
-                if work['image'] else '')
-    tags_html = (f'<ul class="work-tags">{"".join(f"<li>#{esc(t)}</li>" for t in tags)}</ul>'
-                 if tags else '')
-    lead_html = f'<p class="work-lead">{esc(work["description"])}</p>' if work['description'] else ''
-    kind_html = f'<span class="work-kind">{esc(work["kind"])}</span>' if work['kind'] else ''
-    cards = '\n      '.join(work_card_html(w) for w in related_works(work, all_works))
-    footer_works = '\n            '.join(
-        f'<a href="../{esc(w["slug"])}/">{esc(w["title"])}</a>' for w in all_works[:6])
 
+def head_html(title, description, og_url, og_image, og_type, root):
     return f'''<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -219,117 +212,106 @@ def render_page(work, all_works):
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex" /><!-- 確認用サイトのため検索除け（本番公開時に外す） -->
   <title>{esc(title)}</title>
-  <meta name="description" content="{esc(work["description"])}" />
+  <meta name="description" content="{esc(description)}" />
   <meta property="og:title" content="{esc(title)}" />
-  <meta property="og:type" content="article" />
-  <meta property="og:description" content="{esc(work["description"])}" />
+  <meta property="og:type" content="{og_type}" />
+  <meta property="og:description" content="{esc(description)}" />
   <meta property="og:url" content="{esc(og_url)}" />
   {f'<meta property="og:image" content="{esc(og_image)}" />' if og_image else ''}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;family=Noto+Sans+JP:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../../styles.css?v=20260816-4" />
-</head>
+  <link href="{FONTS_URL}" rel="stylesheet" />
+  <link rel="stylesheet" href="{root}styles.css?v={ASSET_VER}" />
+</head>'''
+
+
+def scripts_html(root):
+    # 本文・カードは静的に埋め込み済み（data-work-detail / data-works-grid は付けない）。
+    # site.js はハンバーガーメニューのためだけに読む。
+    return (f'  <script src="{root}cms-config.js?v={ASSET_VER}"></script>\n'
+            f'  <script src="{root}site.js?v={ASSET_VER}"></script>')
+
+
+def render_page(work, all_works):
+    '''事例詳細（Figma 326:1330）: ライムの帯に事例ビジュアル → タイトル・タグ・本文 → Related Works'''
+    root = '../../'
+    title = f'{work["title"]} — WORKs | STUDIO HOLIDAY'
+    tags = [t for t in (work['client'], work['kind']) if t]
+
+    hero_img = (f'<img src="{esc(page_path(work["image"]))}" alt="{esc(work["title"])}" />'
+                if work['image'] else '<span class="wd-noimg" aria-hidden="true">STUDIO HOLIDAY</span>')
+    tags_html = (f'<ul class="wd-tags">{"".join(f"<li>#{esc(t)}</li>" for t in tags)}</ul>'
+                 if tags else '')
+    lead_html = f'<p class="wd-lead">{esc(work["description"])}</p>' if work['description'] else ''
+    cards = '\n          '.join(work_card_html(w) for w in related_works(work, all_works))
+
+    return f'''{head_html(title, work["description"], f"{BASE_URL}/works/{work['slug']}/", abs_url(work["image"]), "article", root)}
 <body class="work-page">
-  <!-- scripts/build_works.py が生成した事例の恒久ページ（work.html?id=… と同内容の静的版）。
-       手で編集しないこと。microCMSを更新すると works-sync.yml が再生成する。 -->
-  <header class="site-header">
-    <div class="header-pill">
-      <a class="brand" href="../../index.html">
-        <span class="brand-logo"><img src="../../assets/header-logo.png" alt="" aria-hidden="true" /></span>
-        <span>STUDIO&nbsp;HOLIDAY</span>
-      </a>
-      <button class="nav-toggle" type="button" aria-label="メニューを開く" aria-expanded="false" aria-controls="siteNav">
-        <span></span><span></span><span></span>
-      </button>
-      <nav class="site-nav" id="siteNav">
-        <a href="../../index.html">TOP</a>
-        <a href="../../index.html#about">ABOUT</a>
-        <a href="../../index.html#business">BUSINESS</a>
-        <a href="../../index.html#works">WORKs</a>
-        <a href="../../design-process.html">DESIGN PROCESS</a>
-        <a class="nav-contact" href="#contact">お問い合わせ</a><!-- スマホのメニュー内のみ表示 -->
-      </nav>
-    </div>
-    <a class="header-contact" href="#contact">お問い合わせ</a>
-  </header>
+  <!-- scripts/build_works.py が生成した事例の恒久ページ。手で編集しないこと。
+       microCMSを更新すると works-sync.yml が再生成する。 -->
+{header_html(root)}
 
   <main>
-    <article class="work-detail">
-      <a class="work-back" href="../../index.html#works">← WORKs一覧</a>
-      <div class="work-hero">
-        <div class="work-hero-visual">{hero_img}</div>
-        <div class="work-hero-body">
-          {kind_html}
-          <h1>{esc(work["title"])}</h1>
-          {tags_html}
-          {lead_html}
-        </div>
+    <article class="wd">
+      <div class="wd-hero">
+        <div class="wd-visual">{hero_img}</div>
       </div>
-      {body_html(work)}
-      {credit_html(work)}
+      <div class="wd-main">
+        <h1>{esc(work["title"])}</h1>
+        {tags_html}
+        {lead_html}
+        {body_html(work)}
+        {credit_html(work)}
+      </div>
     </article>
 
-    <!-- 関連する事例（同じジャンル > 同じクライアント > 元順で4件・ビルド時に確定） -->
-    <section class="sec-works-other">
-      <div class="sec-label"><span>RELATED WORKs</span><i></i><span></span></div>
-      <div class="works-grid">
-      {cards}
+    <!-- 関連する事例（同じジャンル > 同じクライアント > 元順・ビルド時に確定） -->
+    <section class="wd-related">
+      <h2>Related Works</h2>
+      <div class="works-board">
+        <div class="works-grid">
+          {cards}
+        </div>
       </div>
-    </section>
-
-    <section class="sec-contact" id="contact">
-      <div class="sec-label"><span>CONTACT</span><i></i><span></span></div>
-      <p class="contact-lead">STUDIO HOLIDAY デザインコンサルティングチームへのお問い合わせ、協業・パートナー連携のご相談は下記フォームからご連絡ください。</p>
-      <a class="btn-lime btn-lime--wide" href="#" onclick="return false"><span>フォームを開く</span>{ARROW_SVG}</a><!-- フォームURL未定（仮） -->
+      <a class="btn-lime works-all" href="../"><span>全ての事例を見る</span>{ARROW_SVG}</a>
     </section>
   </main>
 
-  <footer class="fig-footer">
-    <div class="fig-footer-main">
-      <div class="fig-footer-left">
-        <img class="fig-footer-logo" src="../../assets/footer-logo.png" alt="STUDIO HOLIDAY" />
-        <div class="fig-footer-addr">
-          <p>株式会社スタジオホリデイ</p>
-          <p>〒169-0073 東京都新宿区百人町1丁目10−15　JR新大久保駅ビル4F K,D,C,,,</p>
-          <a class="fig-footer-contact" href="#contact">CONTACT</a>
-        </div>
-      </div>
-      <nav class="fig-footer-nav">
-        <div class="fnav-col">
-          <a class="fnav-head" href="../../index.html">TOP</a>
-          <div class="fnav-sub">
-            <a href="../../index.html#about">ABOUT</a>
-            <a href="../../index.html#business">BUSINESS</a>
-            <a href="../../index.html#company">COMPANY</a>
-          </div>
-        </div>
-        <div class="fnav-col">
-          <a class="fnav-head" href="../../design-process.html">DESIGN PROCESS</a>
-        </div>
-        <div class="fnav-col">
-          <a class="fnav-head" href="../../index.html#works">WORKs</a>
-          <div class="fnav-sub"><!-- ビルド時に確定した各事例ページへのリンク（先頭6件） -->
-            {footer_works}
-          </div>
-        </div>
-        <div class="fnav-col">
-          <a class="fnav-ext" href="https://kdc-foodlab.com/" target="_blank" rel="noopener">K,D,C,,,{EXT_SVG}</a>
-          <a class="fnav-ext" href="https://lab.studioholiday.jp/" target="_blank" rel="noopener">休日コーラ{EXT_SVG}</a>
-        </div>
-      </nav>
-    </div>
-    <div class="fig-footer-bottom">
-      <p>© STUDIO HOLIDAY ALL RIGHT RESERVED</p>
-      <a href="#" onclick="return false">Privacy Policy</a>
-      <a href="#" onclick="return false">Security Policy</a>
-    </div>
-  </footer>
+{footer_html(root, all_works)}
 
-  <!-- 本文・関連事例は静的に埋め込み済み（data-work-detail / data-works-grid /
-       data-footer-works は付けない）。site.js はハンバーガーメニューのためだけに読む。 -->
-  <script src="../../cms-config.js?v=20260816-4"></script>
-  <script src="../../site.js?v=20260816-4"></script>
+{scripts_html(root)}
+</body>
+</html>
+'''
+
+
+def render_list_page(all_works):
+    '''WORKS一覧（Figma 326:1313）: ライムの帯にWORKSステッカー → 全事例のカード'''
+    root = '../'
+    title = 'WORKs | STUDIO HOLIDAY'
+    desc = 'キャラクター開発からブランディング、フード、場づくりまで。STUDIO HOLIDAYが手がけた事例の一覧です。'
+    cards = '\n          '.join(work_card_html(w, root, f'./{esc(w["slug"])}/') for w in all_works)
+    return f'''{head_html(title, desc, f"{BASE_URL}/works/", "", "website", root)}
+<body class="sub-page works-page">
+  <!-- scripts/build_works.py が生成した事例一覧。手で編集しないこと。 -->
+{header_html(root)}
+
+  <main>
+    <section class="page-hero">
+      <h1 class="sticker-head" style="--w:380px"><img src="{root}assets/headings/works.png" alt="WORKS" width="380" height="248" /></h1>
+    </section>
+
+    <section class="works-board">
+      <p class="works-count">{len(all_works)} WORKS</p>
+      <div class="works-grid">
+          {cards}
+      </div>
+    </section>
+  </main>
+
+{footer_html(root, all_works)}
+
+{scripts_html(root)}
 </body>
 </html>
 '''
@@ -391,6 +373,11 @@ def main():
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(html, encoding='utf-8')
         print(f'works/{w["slug"]}/index.html\t{w["title"]}')
+
+    html = render_list_page(works)
+    check_html('works/index.html', html)
+    (WORKS_DIR / 'index.html').write_text(html, encoding='utf-8')
+    print('works/index.html\tWORKS一覧')
 
     source = 'microCMS' if contents else 'works-fallback.json'
     print(f'generated {len(works)} pages from {source}')

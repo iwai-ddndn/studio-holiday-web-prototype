@@ -91,7 +91,9 @@ window.WORKS_FALLBACK = WORKS_FALLBACK;
 /* 事例ページの恒久URL: ./works/<slug>/（scripts/build_works.py が静的生成する）。
  * slug が無い場合のみ microCMS のコンテンツIDで補う。
  * 旧URL work.html?id=… は work.html 側で自動リダイレクトされる。 */
-window.workURL = (w) => `./works/${encodeURIComponent(w.slug || w.id)}/`;
+// どの階層のページから呼ばれても正しく飛べるよう、site.js の置き場所（=サイトルート）を基準に解決する
+const SITE_ROOT = new URL('./', document.currentScript ? document.currentScript.src : location.href);
+window.workURL = (w) => new URL(`works/${encodeURIComponent(w.slug || w.id)}/`, SITE_ROOT).href;
 
 async function fetchCMS(endpoint) {
   const cfg = window.MICROCMS_CONFIG || {};
@@ -169,6 +171,8 @@ function workCard(w) {
       (w.kind ? `<span class="work-card-kind">${esc(w.kind)}</span>` : '') +
       `<span class="work-card-title">${esc(w.title)}</span>` +
       (w.client ? `<span class="work-card-client">${esc(w.client)}</span>` : '') +
+      // TOPのカード（Figma workcard）は「#クライアント #ジャンル」のタグで見せる
+      ((w.client || w.kind) ? `<span class="work-card-tags">${[w.client, w.kind].filter(Boolean).map((t) => `<span>#${esc(t)}</span>`).join('')}</span>` : '') +
       `<span class="work-card-arrow" aria-hidden="true">${ARROW_SVG}</span>` +
     '</span>';
   return el;
@@ -218,7 +222,7 @@ window.workExtrasHTML = async (work) => {
 
 /* grid の data属性:
  *   data-works-limit    … 表示件数の上限（未指定なら全件）
- *   data-works-more     … 「もっと見る」ボタンで初期表示件数を超えて開く（TOP用）
+ *   data-works-more     … 先頭 data-works-initial 件のあとに置く「全て見る」リンク（TOP用・WORKS一覧へ）
  *   data-works-exclude  … 除外する事例のid（詳細ページで自分自身を出さない） */
 function renderWorksGrid(grid, works) {
   const exclude = grid.dataset.worksExclude || '';
@@ -231,23 +235,17 @@ function renderWorksGrid(grid, works) {
   const limit = Number(grid.dataset.worksLimit) || 0;
   if (limit) list = list.slice(0, limit);
 
+  // TOP: 先頭 initial 件だけ並べ、続きは WORKS一覧ページ（works/）への「全て見る」タイルで案内する
   const more = grid.dataset.worksMore ? document.querySelector(grid.dataset.worksMore) : null;
   const initial = Number(grid.dataset.worksInitial) || 8;
 
+  if (more && more.parentNode === grid) grid.after(more); // 再描画で消さないよう一旦グリッドの外へ戻す
   grid.innerHTML = '';
-  list.forEach((w, i) => {
-    const card = workCard(w);
-    if (more && i >= initial) card.classList.add('is-extra'); // 「すべて見る」まで隠す
-    grid.appendChild(card);
-  });
+  (more ? list.slice(0, initial) : list).forEach((w) => grid.appendChild(workCard(w)));
 
   if (!more) return;
-  const collapsed = list.length > initial;
-  grid.classList.toggle('is-collapsed', collapsed);
-  more.hidden = !collapsed;
-  const label = more.querySelector('span');
-  if (label) label.textContent = `すべての事例を見る（${list.length}件）`;
-  more.onclick = () => { grid.classList.remove('is-collapsed'); more.hidden = true; };
+  more.hidden = list.length <= initial;
+  if (!more.hidden) grid.appendChild(more); // カードと同じ並びの最後のタイルとして置く
 }
 
 async function initWorksGrids() {
@@ -360,7 +358,7 @@ async function initFooterWorks() {
   const works = await window.getWorks();
   if (!works.length) return; // 取得できなければHTMLの仮リストのまま
   box.innerHTML = '';
-  works.slice(0, 6).forEach((w) => {
+  works.slice(0, 5).forEach((w) => {
     const a = document.createElement('a');
     a.href = window.workURL(w);
     a.textContent = w.title;
@@ -393,7 +391,44 @@ function initMobileNav() {
   });
 }
 
+/* ==========================================================
+   ▼ 横スクロール帯（MEMBERS）: マウスはドラッグで送れるようにする
+   （タッチ・トラックパッドはネイティブの横スクロールのまま）
+   ========================================================== */
+
+function initHScroll() {
+  document.querySelectorAll('[data-hscroll]').forEach((el) => {
+    let startX = 0;
+    let startLeft = 0;
+    let dragging = false;
+    let moved = false;
+    el.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      e.preventDefault(); // リンク画像のネイティブドラッグを抑止
+      dragging = true;
+      moved = false;
+      startX = e.clientX;
+      startLeft = el.scrollLeft;
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 3) { moved = true; el.classList.add('is-dragging'); }
+      el.scrollLeft = startLeft - dx;
+    });
+    // ドラッグで送った直後のクリックでメンバーページへ飛ばないようにする
+    el.addEventListener('click', (e) => {
+      if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
+    }, true);
+    window.addEventListener('pointerup', () => {
+      dragging = false;
+      el.classList.remove('is-dragging');
+    });
+  });
+}
+
 // 詳細ページは自分自身を除外してからカードを描きたいので、順番に実行する
 initWorkDetail().then(initWorksGrids);
 initFooterWorks();
 initMobileNav();
+initHScroll();

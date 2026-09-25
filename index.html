@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&amp;family=Noto+Sans+JP:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=20260826-1" />
+  <link rel="stylesheet" href="./styles.css?v=20260925-5" />
 </head>
 <body class="home-page">
   <!-- ファーストビュー: ビューポートより広い「壁」にステッカーと写真を貼り重ね、
@@ -27,8 +27,9 @@
         <a href="#">TOP</a>
         <a href="#about">ABOUT</a>
         <a href="#business">BUSINESS</a>
-        <a href="#works">WORKs</a>
-        <a href="./design-process.html">DESIGN PROCESS</a>
+        <a href="./works/">WORKs</a>
+        <a href="./members/">MEMBERS</a>
+        <a href="#company">COMPANY</a>
         <a class="nav-contact" href="#contact">お問い合わせ</a><!-- スマホのメニュー内のみ表示 -->
       </nav>
     </div>
@@ -75,11 +76,12 @@
       <a class="scroll-cta" href="#about"><span>Go to CONTENTS</span><em aria-hidden="true">↓</em></a>
     </section>
 
-    <!-- ===== ここからFigma node 204:250（TOP _scrolled）準拠のセクション ===== -->
+    <!-- ===== ここからFigma node 326:920（TOP _scrolled）準拠のセクション =====
+         セクション見出しはステッカー画像（assets/headings/）。角度はFigmaの回転値 -->
 
-    <!-- ABOUT 01: ライムの角丸ヒーロー -->
+    <!-- ABOUT -->
     <section class="about-hero" id="about">
-      <div class="sec-label"><span>ABOUT</span><i></i><span>01</span></div>
+      <h2 class="sticker-head sticker-head--about"><img src="./assets/headings/about.png" alt="ABOUT" width="439" height="145" /></h2>
       <h1>なんかこんなんやりたい、をカタチに。</h1>
       <p>
         思いついたはいいものの、二の足を踏んでしまうアイデア。<br />
@@ -92,96 +94,91 @@
       </p>
     </section>
 
-    <!-- 取引先企業ロゴ（Figma node 249:193）: ゆっくり横スクロールするマーキー -->
-    <div class="client-logos" aria-label="主な取引先企業">
-      <div class="client-logos-track">
-        <div class="logo-set">
-          <img src="./assets/logos/obayashi.png" alt="大林組" style="height:44px" />
-          <img src="./assets/logos/suntory.png" alt="サントリー" style="height:36px" />
-          <img src="./assets/logos/sumitomo-electric.png" alt="住友電工" style="height:54px" />
-          <img src="./assets/logos/dentsu.png" alt="電通" style="height:36px" />
-          <img src="./assets/logos/ntt-east.png" alt="NTT東日本" style="height:51px" />
-          <img src="./assets/logos/maff.png" alt="農林水産省" style="height:80px" />
-        </div>
-        <div class="logo-set" aria-hidden="true">
-          <img src="./assets/logos/obayashi.png" alt="" style="height:44px" />
-          <img src="./assets/logos/suntory.png" alt="" style="height:36px" />
-          <img src="./assets/logos/sumitomo-electric.png" alt="" style="height:54px" />
-          <img src="./assets/logos/dentsu.png" alt="" style="height:36px" />
-          <img src="./assets/logos/ntt-east.png" alt="" style="height:51px" />
-          <img src="./assets/logos/maff.png" alt="" style="height:80px" />
-        </div>
-      </div>
-    </div>
-
-    <!-- BUSINESS 02: hoverで画像カラー化+ズーム、ボタン反転（Figmaコメント#4） -->
+    <!-- BUSINESS: 左にタグ型ステッカー（スクロール追従）、右に少し傾いたカードを縦に3枚。
+         hoverで画像ズーム、ボタン反転 -->
     <section class="sec-business" id="business">
-      <div class="sec-label"><span>BUSINESS</span><i></i><span>02</span></div>
-
-      <!-- コメント#6: DESIGN PROCESSページへ遷移 -->
-      <a class="biz-feature" href="./design-process.html">
-        <span class="biz-visual"><img src="./assets/business-consulting.png" alt="スタホリのアウトプットのコラージュ" /></span>
-        <span class="biz-feature-body">
-          <span class="biz-copy">
+      <div class="biz-layout">
+        <h2 class="sticker-head sticker-head--business"><img src="./assets/headings/business.png" alt="BUSINESS" width="208" height="362" /></h2>
+        <div class="biz-list">
+          <!-- コメント#6: DESIGN PROCESSページへ遷移 -->
+        <a class="biz-card" href="./design-process.html" style="--tilt:1deg">
+          <span class="biz-visual"><img src="./assets/business-consulting-collage.jpg" alt="スタホリのアウトプットのコラージュ" /></span>
+          <span class="biz-card-body">
             <strong>DESIGN CONSULTING</strong>
-            <span>キャラクターデザイン、アウターブランディングやインナーブランディング、組織開発支援まで。つくって終わりにせず、その先の実装と「効かせる」までをやり切ります。</span>
+            <span class="biz-card-foot">
+              <span>キャラクターデザイン、アウターブランディングやインナーブランディング、組織開発支援まで。つくって終わりにせず、その先の実装と「効かせる」までをやり切ります。</span>
+              <span class="btn-lime" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg></span>
+            </span>
           </span>
-          <span class="btn-lime" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg></span>
-        </span>
-      </a>
-
-      <div class="biz-row">
-        <div>
-          <!-- コメント#7: https://lab.studioholiday.jp/ へ遷移 -->
-          <a class="biz-card" href="https://lab.studioholiday.jp/" target="_blank" rel="noopener">
-            <span class="biz-visual"><img src="./assets/business-food-cola.png" alt="休日コーラ ジンジャーアップル" /></span>
-            <span class="biz-card-body">
-              <span class="biz-copy">
-                <strong>FOOD DESIGN</strong>
-                <span>フードレシピ開発から、フードや飲食事業のブランディングまで。STUDIO HOLIDAYオリジナルのクラフトコーラも製造・販売しています。</span>
-              </span>
+        </a>
+          <!-- FOOD DESIGN ページへ（休日コーラのサイトへはそのページから） -->
+        <a class="biz-card" href="./food-design.html" style="--tilt:-1deg">
+          <span class="biz-visual"><img src="./assets/business-food-cola.png" alt="休日コーラ ジンジャーアップル" /></span>
+          <span class="biz-card-body">
+            <strong>FOOD DESIGN</strong>
+            <span class="biz-card-foot">
+              <span>フードレシピ開発から、フードや飲食事業のブランディングまで。STUDIO HOLIDAYオリジナルのクラフトコーラも製造・販売しています。</span>
               <span class="btn-lime" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg></span>
             </span>
-          </a>
-        </div>
-        <div>
-          <!-- コメント#8: https://kdc-foodlab.com/ へ遷移 -->
-          <a class="biz-card" href="https://kdc-foodlab.com/" target="_blank" rel="noopener">
-            <span class="biz-visual"><img src="./assets/business-space.png" alt="コワーキングスペース K,D,C,,, でのイベント" /></span>
-            <span class="biz-card-body">
-              <span class="biz-copy">
-                <strong>COMMUNITY＆SPACE</strong>
-                <span>新大久保駅直結のコワーキングスペース「K,D,C,,,」を運営。STUDIO HOLIDAYが目指す多様な個性が集まる「学際メッシュネットワーク」の拠点になっています。</span>
-              </span>
+          </span>
+        </a>
+          <!-- COMMUNITY & SPACE ページへ（K,D,C,,, のサイトへはそのページから） -->
+        <a class="biz-card" href="./community-space.html" style="--tilt:1deg">
+          <span class="biz-visual"><img src="./assets/business-space.png" alt="コワーキングスペース K,D,C,,, でのイベント" /></span>
+          <span class="biz-card-body">
+            <strong>COMMUNITY＆SPACE</strong>
+            <span class="biz-card-foot">
+              <span>新大久保駅直結のコワーキングスペース「K,D,C,,,」を運営。STUDIO HOLIDAYが目指す多様な個性が集まる「学際メッシュネットワーク」の拠点になっています。</span>
               <span class="btn-lime" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg></span>
             </span>
-          </a>
+          </span>
+        </a>
         </div>
       </div>
     </section>
 
-    <!-- BUSINESS直後の問い合わせCTA帯: 事業紹介を見た直後に問い合わせ導線を挟む。
-         内容はCONTACT 05と同じ（通し番号は振らずCTAとして扱う） -->
-    <section class="sec-cta" aria-label="お問い合わせ">
+    <!-- CONTACT: BUSINESS直後の問い合わせ導線（ページ末尾のCONTACTはFigma改訂で削除） -->
+    <section class="sec-contact" id="contact">
+      <h2 class="sticker-head sticker-head--contact"><img src="./assets/headings/contact.png" alt="CONTACT" width="357" height="207" /></h2>
       <p class="contact-lead">STUDIO HOLIDAY デザインコンサルティングチームへのお問い合わせ、協業・パートナー連携のご相談は下記フォームからご連絡ください。</p>
       <a class="btn-lime btn-lime--wide" href="#" onclick="return false"><span>フォームを開く</span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg></a><!-- フォームURL未定（仮） -->
     </section>
 
-    <!-- WORKs 03: 事例カード一覧。カードは site.js が microCMS（works）から描画し、
-         クリックで各事例の詳細ページ（works/<slug>/）へ遷移する -->
+    <!-- WORKS: 事例カード一覧。カードは site.js が microCMS（works）から描画し、
+         クリックで各事例の詳細ページ（works/<slug>/）へ遷移する。
+         先頭5件 + 末尾の「全て見る」タイル（WORKS一覧ページ works/ へ） -->
     <section class="sec-works" id="works">
-      <div class="sec-label"><span>WORKs</span><i></i><span>03</span></div>
-      <p class="works-lead">キャラクター開発からブランディング、フード、場づくりまで。STUDIO HOLIDAYが手がけたアウトプットの一部をご紹介します。</p>
-      <div class="works-grid" data-works-grid data-works-more="#worksMore" data-works-initial="8">
-        <!-- site.js が事例カードを差し込む（JS無効時は下のリンクのみ） -->
+      <h2 class="sticker-head sticker-head--works"><img src="./assets/headings/works.png" alt="WORKS" width="270" height="176" /></h2>
+      <div class="works-board">
+        <div class="works-grid" data-works-grid data-works-more="#worksMore" data-works-initial="5">
+          <!-- site.js が事例カードを差し込む -->
+        </div>
+        <noscript><p class="works-lead">事例一覧の表示にはJavaScriptが必要です。</p></noscript>
       </div>
-      <noscript><p class="works-lead">事例一覧の表示にはJavaScriptが必要です。</p></noscript>
-      <button class="btn-lime works-more" type="button" id="worksMore" hidden><span>すべての事例を見る</span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg></button>
+      <a class="works-more" id="worksMore" href="./works/" hidden><span>全て見る</span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg></a>
     </section>
 
-    <!-- COMPANY 04 -->
+    <!-- MEMBERS: 横スクロール（ドラッグ/ホイール/スワイプ） -->
+    <section class="sec-members" id="members">
+      <div class="members-scroller" data-hscroll tabindex="0" aria-label="メンバー一覧（横にスクロールできます）">
+        <h2 class="sticker-head sticker-head--members"><img src="./assets/headings/members.png" alt="MEMBERS" width="458" height="265" /></h2>
+        <ul class="members-list">
+          <li class="member"><a class="member-link" href="./members/hirochika-horiuchi/"><span class="member-photo"><img src="./assets/members/horiuchi.jpg" alt="" loading="lazy" /></span><span class="member-name member-name--l" style="--tilt:-6.16deg">Hirochika Horiuchi</span></a></li>
+          <li class="member"><a class="member-link" href="./members/jun-ebata/"><span class="member-photo"><img src="./assets/members/ebata.jpg" alt="" loading="lazy" /></span><span class="member-name member-name--s" style="--tilt:3.76deg">Jun Ebata</span></a></li>
+          <li class="member"><a class="member-link" href="./members/yuta-yasutake/"><span class="member-photo"><img src="./assets/members/yasutake.jpg" alt="" loading="lazy" /></span><span class="member-name member-name--m" style="--tilt:-1.79deg">Yuta Yasutake</span></a></li>
+          <!-- ▼ sample:true はレイアウト確認用のサンプル（仮）。data/members.json で実メンバーに差し替える -->
+          <li class="member"><a class="member-link" href="./members/sample-hanako-yamada/"><span class="member-photo is-illust" style="--bg:#e9f5b8"><img src="./assets/stickers/holiday-kun-thinking.png" alt="" loading="lazy" /></span><span class="member-name member-name--r" style="--tilt:4.2deg">Hanako Yamada</span></a></li>
+          <li class="member"><a class="member-link" href="./members/sample-taro-suzuki/"><span class="member-photo is-illust" style="--bg:#cfe7ff"><img src="./assets/stickers/works/monster-illustration.png" alt="" loading="lazy" /></span><span class="member-name member-name--l" style="--tilt:-4.5deg">Taro Suzuki</span></a></li>
+          <li class="member"><a class="member-link" href="./members/sample-aoi-tanaka/"><span class="member-photo is-illust" style="--bg:#ffe1ec"><img src="./assets/stickers/works/holiday-cola.png" alt="" loading="lazy" /></span><span class="member-name member-name--m" style="--tilt:2.4deg">Aoi Tanaka</span></a></li>
+          <li class="member"><a class="member-link" href="./members/sample-ken-sato/"><span class="member-photo is-illust" style="--bg:#fff0c2"><img src="./assets/stickers/works/goichi-character.png" alt="" loading="lazy" /></span><span class="member-name member-name--s" style="--tilt:-2.8deg">Ken Sato</span></a></li>
+          <li class="member"><a class="member-link" href="./members/sample-mio-kobayashi/"><span class="member-photo is-illust" style="--bg:#e6e0ff"><img src="./assets/stickers/works/ebisun.png" alt="" loading="lazy" /></span><span class="member-name member-name--r" style="--tilt:5.1deg">Mio Kobayashi</span></a></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- COMPANY -->
     <section class="sec-company" id="company">
-      <div class="sec-label"><span>COMPANY</span><i></i><span>04</span></div>
+      <h2 class="sticker-head sticker-head--company"><img src="./assets/headings/company.png" alt="COMPANY" width="465" height="90" /></h2>
       <div class="company-grid">
         <dl class="company-list">
           <div><dt>社名</dt><dd>株式会社スタジオホリデイ</dd></div>
@@ -213,13 +210,6 @@
         </dl>
       </div>
     </section>
-
-    <!-- CONTACT 05 -->
-    <section class="sec-contact" id="contact">
-      <div class="sec-label"><span>CONTACT</span><i></i><span>05</span></div>
-      <p class="contact-lead">STUDIO HOLIDAY デザインコンサルティングチームへのお問い合わせ、協業・パートナー連携のご相談は下記フォームからご連絡ください。</p>
-      <a class="btn-lime btn-lime--wide" href="#" onclick="return false"><span>フォームを開く</span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg></a><!-- フォームURL未定（仮） -->
-    </section>
   </main>
 
   <footer class="fig-footer">
@@ -238,32 +228,42 @@
           <div class="fnav-sub">
             <a href="#about">ABOUT</a>
             <a href="#business">BUSINESS</a>
+            <a href="#works">WORKs</a>
+            <a href="#members">MEMBERS</a>
             <a href="#company">COMPANY</a>
+            <a href="#contact">CONTACT</a>
           </div>
         </div>
         <div class="fnav-col">
-          <a class="fnav-head" href="./design-process.html">DESIGN PROCESS</a>
+          <a class="fnav-head" href="#business">BUSINESS</a>
+          <div class="fnav-sub">
+            <a href="./design-process.html">DESIGN PROCESS</a>
+            <a href="./food-design.html">FOOD DESIGN</a>
+            <a href="./community-space.html">COMMUNITY &amp; SPACE</a>
+          </div>
         </div>
         <div class="fnav-col">
-          <a class="fnav-head" href="#works">WORKs</a>
-          <div class="fnav-sub" data-footer-works><!-- microCMSのworksで差し替え（各事例ページへのリンクになる） -->
-            <span>ポンデライオン</span>
-            <span>スシロー</span>
-            <span>うねり</span>
-            <span>yappy</span>
-            <span>スミーディ</span>
+          <a class="fnav-head" href="./works/">WORKs</a>
+          <div class="fnav-sub" data-footer-works><!-- 先頭5件の事例ページ -->
+            <a href="./works/sushiro/">スシロー</a>
+            <a href="./works/pondelion/">ポン・デ・ライオン</a>
+            <a href="./works/yappy/">yappy</a>
+            <a href="./works/holiday-cola-ginger-apple/">休日コーラ GINGER APPLE</a>
+            <a href="./works/itomaki-ac-adapter/">itomaki AC Adapter</a>
           </div>
+        </div>
+        <div class="fnav-col">
+          <a class="fnav-head" href="./members/">MEMBERS</a>
         </div>
         <div class="fnav-col">
           <a class="fnav-ext" href="https://kdc-foodlab.com/" target="_blank" rel="noopener">K,D,C,,,<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg></a>
           <a class="fnav-ext" href="https://lab.studioholiday.jp/" target="_blank" rel="noopener">休日コーラ<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg></a>
+          <a class="fnav-ext" href="https://substack.studioholiday.jp/" target="_blank" rel="noopener">Newsletter<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg></a>
         </div>
       </nav>
     </div>
     <div class="fig-footer-bottom">
       <p>© STUDIO HOLIDAY ALL RIGHT RESERVED</p>
-      <a href="#" onclick="return false">Privacy Policy</a>
-      <a href="#" onclick="return false">Security Policy</a>
     </div>
   </footer>
 
@@ -286,7 +286,7 @@
   </aside>
 
   <script src="./cms-config.js?v=20260816-4"></script>
-  <script src="./site.js?v=20260816-4"></script>
+  <script src="./site.js?v=20260925-5"></script>
   <script src="./main.js?v=20260826-1"></script>
 </body>
 </html>
