@@ -1450,11 +1450,13 @@ body.drawer-open { overflow: hidden; }
   background-size: 720px auto;
 }
 .works-board .works-grid {
-  grid-template-columns: repeat(3, 300px);
+  /* 最大3列。幅が足りなければ列を減らす（固定3列だと900〜1000px台ではみ出す） */
+  grid-template-columns: repeat(auto-fit, 300px);
   justify-content: center;
   align-items: center;
   gap: 24px;
-  margin: 0;
+  max-width: calc(300px * 3 + 24px * 2);
+  margin: 0 auto;
 }
 .works-board .work-card {
   height: 420px;
@@ -1810,15 +1812,16 @@ body.drawer-open { overflow: hidden; }
 .member-link:hover .member-name { background: var(--ink); color: var(--fig-lime); }
 .members-grid {
   display: grid;
-  grid-template-columns: repeat(3, 315px);
+  grid-template-columns: repeat(auto-fit, 315px); /* 最大3列・幅が足りなければ減らす */
   justify-content: center;
   gap: 72px 48px;
-  margin: 0;
+  max-width: calc(315px * 3 + 48px * 2);
+  margin: 0 auto;
   padding: 0;
   list-style: none;
 }
 .members-board { padding: 120px 20px 160px; }
-.wd-related .members-grid { grid-template-columns: repeat(4, 240px); gap: 48px 32px; }
+.wd-related .members-grid { grid-template-columns: repeat(auto-fit, 240px); gap: 48px 32px; max-width: calc(240px * 4 + 32px * 3); }
 .wd-related .member { width: 240px; height: 230px; }
 .wd-related .member-photo { width: 230px; height: 230px; }
 .wd-related .member-name { font-size: 18px; }
