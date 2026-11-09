@@ -14,6 +14,7 @@
 フッターの WORKs 欄は scripts/build_works.py と同じ取得規則（microCMS → フォールバック）で確定する。
 依存: python3 標準ライブラリのみ。
 """
+import html
 import json
 import pathlib
 import re
@@ -72,6 +73,15 @@ def _lines(v):
     return [s.strip() for s in str(v or '').splitlines() if s.strip()]
 
 
+def _bio_lines(v):
+    """プロフィール。テキストエリアでもリッチエディタ（HTML）でも段落のリストにする"""
+    s = str(v or '')
+    if '<' in s:
+        s = re.sub(r'<br\s*/?>|</p>|</h\d>|</li>', '\n', s)
+        s = html.unescape(re.sub(r'<[^>]+>', '', s))
+    return _lines(s)
+
+
 def fetch_cms_members():
     """microCMS members を取得。未設定・API未作成・失敗時は None（data/members.json へ）"""
     domain, key = build_works.read_cms_config()
@@ -95,7 +105,8 @@ def normalize_members(contents):
     必須項目（slug・name・photo）が欠けたものはページを作れないので飛ばす"""
     members, seen = [], set()
     for c in contents:
-        slug = (c.get('slug') or '').strip()
+        # slug が無ければ microCMS のコンテンツID（編集可能）をURLに使う
+        slug = (c.get('slug') or c.get('id') or '').strip()
         name = (c.get('name') or '').strip()
         photo = (c.get('photo') or {}).get('url')
         if not SLUG_RE.match(slug) or not name or not photo or slug in seen:
@@ -115,7 +126,7 @@ def normalize_members(contents):
             'image': f'{photo}?w=800',
             'tilt': tilt,
             'label': label,
-            'bio': _lines(c.get('bio')),
+            'bio': _bio_lines(c.get('bio')),
         }
         if bg:
             m['bg'] = bg

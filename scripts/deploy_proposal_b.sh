@@ -4,7 +4,7 @@
 #     sh scripts/deploy_proposal_b.sh
 #
 # 本番リポジトリ（studio-holiday-web-prototype）には何もpushしない。
-# 1. microCMS の最新で事例ページ（build_works.py）とメンバーページ（build_pages.py）を作り直し、
+# 1. Substackの最新記事（fetch_newsletter.py）と、microCMS の最新で事例ページ（build_works.py）とメンバーページ（build_pages.py）を作り直し、
 #    scripts/build_proposal_b.py で本番の下層ページから b/ と index-b.html のMEMBERS一覧を作り直す
 # 2. 案Bに必要なファイルだけを一時ディレクトリの公開用リポジトリに写してpushする
 #    （TOPは index-b.html。ルートの index.html はそこへ転送するだけのページ）
@@ -15,6 +15,8 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
+# 電光掲示板のSubstack記事一覧も公開時点の最新にする（取得できなければ手元のまま）
+python3 "$ROOT/scripts/fetch_newsletter.py" || echo "[newsletter] 取得できないため data/newsletter.json は前回のまま"
 python3 "$ROOT/scripts/build_works.py"
 python3 "$ROOT/scripts/build_pages.py"
 python3 "$ROOT/scripts/build_proposal_b.py"
@@ -44,6 +46,11 @@ cat > index.html <<'EOF'
 </html>
 EOF
 printf 'User-agent: *\nDisallow: /\n' > robots.txt
+
+# 公開後もSubstackの新着を毎日取り込む（公開用リポジトリのActionsで data/newsletter.json を更新）
+mkdir -p .github/workflows scripts
+cp "$ROOT/.github/workflows/newsletter-sync.yml" .github/workflows/
+cp "$ROOT/scripts/fetch_newsletter.py" scripts/
 
 git add -A
 if git diff --cached --quiet; then
