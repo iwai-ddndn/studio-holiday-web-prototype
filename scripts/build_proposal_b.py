@@ -207,10 +207,49 @@ def build_page(src_rel):
     return out
 
 
+A_MEMBERS_RE = re.compile(r'<ul class="members-list">\n(.*?)\n\s*</ul>', re.S)
+B_MEMBERS_RE = re.compile(r'(<ul class="pb-members-list">\n).*?(\n\s*</ul>)', re.S)
+
+
+def sync_index_b_members():
+    """案BのTOP（index-b.html）のMEMBERS一覧を、本番TOP（index.html）の一覧から作り直す。
+    本番側は scripts/build_pages.py が microCMS／data/members.json から生成している。
+    パスはどちらもルート直下なので、クラス名を pb- 付きに、リンク先を b/ 配下に替えるだけ"""
+    src = A_MEMBERS_RE.search((ROOT / 'index.html').read_text(encoding='utf-8'))
+    if not src:
+        raise SystemExit('index.html: MEMBERS の一覧が見つかりません')
+    items = src.group(1)
+    items = re.sub(  # class 属性の member / member-* を全部 pb- 付きに（member-name--l なども）
+        r'class="([^"]*)"',
+        lambda m: 'class="' + re.sub(r'(?<![\w-])(member[\w-]*)', r'pb-\1', m.group(1)) + '"',
+        items)
+    items = items.replace('href="./members/', 'href="./b/members/')
+    items = '\n'.join('    ' + line for line in items.split('\n'))  # index-b は4つ深い
+    path = ROOT / 'index-b.html'
+    html, n = B_MEMBERS_RE.subn(lambda m: m.group(1) + items + m.group(2), path.read_text(encoding='utf-8'), count=1)
+    if n != 1:
+        raise SystemExit('index-b.html: MEMBERS の一覧が見つかりません')
+    path.write_text(html, encoding='utf-8')
+
+
+def remove_stale_pages(pages):
+    """本番側で消えた事例・メンバーの詳細ページを b/ からも消す"""
+    keep = {posixpath.dirname(p) for p in pages}
+    for d in ('works', 'members'):
+        for child in sorted((OUT / d).glob('*/index.html')):
+            rel = child.parent.relative_to(OUT).as_posix()
+            if rel not in keep:
+                child.unlink()
+                child.parent.rmdir()
+                print(f'removed b/{rel}/')
+
+
 def main():
     pages = source_pages()
     for p in pages:
         build_page(p)
+    remove_stale_pages(pages)
+    sync_index_b_members()
     # b/ 直下に来た人は案BのTOPへ
     (OUT / 'index.html').write_text(
         '<!DOCTYPE html>\n<meta charset="UTF-8" />\n<meta name="robots" content="noindex" />\n'

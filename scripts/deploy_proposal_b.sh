@@ -4,7 +4,8 @@
 #     sh scripts/deploy_proposal_b.sh
 #
 # 本番リポジトリ（studio-holiday-web-prototype）には何もpushしない。
-# 1. scripts/build_proposal_b.py で本番の下層ページから b/ を作り直す（事例の追加・更新もここで反映）
+# 1. microCMS の最新で事例ページ（build_works.py）とメンバーページ（build_pages.py）を作り直し、
+#    scripts/build_proposal_b.py で本番の下層ページから b/ と index-b.html のMEMBERS一覧を作り直す
 # 2. 案Bに必要なファイルだけを一時ディレクトリの公開用リポジトリに写してpushする
 #    （TOPは index-b.html。ルートの index.html はそこへ転送するだけのページ）
 set -eu
@@ -14,6 +15,8 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
+python3 "$ROOT/scripts/build_works.py"
+python3 "$ROOT/scripts/build_pages.py"
 python3 "$ROOT/scripts/build_proposal_b.py"
 
 git clone --quiet --depth 1 "https://github.com/$REPO.git" "$WORK/site"
