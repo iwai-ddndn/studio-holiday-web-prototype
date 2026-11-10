@@ -2022,3 +2022,6 @@ body.drawer-open { overflow: hidden; }
   font: 14px/1.6 var(--font-ja);
   list-style: none;
 }
+
+/* ?cms=only: 手元データ（サンプル等）由来のメンバーは隠し、microCMSのメンバーだけにする */
+.is-cms-only [data-local] { display: none !important; }

@@ -24,7 +24,7 @@ import re
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / 'b'
-ASSET_VER = '20261109-2'
+ASSET_VER = '20261110-1'
 
 # 対象（ルートからの相対パス）。works/ と members/ の詳細ページは存在するものを全部拾う
 STATIC_PAGES = ['design-process.html', 'food-design.html', 'community-space.html', 'work.html',

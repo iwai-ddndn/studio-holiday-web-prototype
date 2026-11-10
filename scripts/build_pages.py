@@ -135,10 +135,14 @@ def normalize_members(contents):
 
 
 def load_members():
-    """microCMS → 取得できなければ data/members.json（サンプル入り）"""
+    """microCMS のメンバーを先に並べ、data/members.json（サンプル入り）で補う。
+    同じ slug の人はCMSを優先。手元データ由来の人には local: True を付け、
+    一覧の <li> に data-local を出す（?cms=only ではCSSで隠してCMSの人だけにする）"""
     contents = fetch_cms_members()
-    members = normalize_members(contents) if contents else []
-    return members or load_local_members()
+    cms = normalize_members(contents) if contents else []
+    slugs = {m['slug'] for m in cms}
+    local = [dict(m, local=True) for m in load_local_members() if m['slug'] not in slugs]
+    return cms + local
 
 # ==========================================================
 # ▼ 部品
@@ -153,7 +157,7 @@ def member_item_html(m, root, href):
     cls = 'member-photo is-illust' if m.get('sample') or m.get('bg') else 'member-photo'
     style = f' style="--bg:{m["bg"]}"' if m.get('bg') else ''
     return (
-        f'<li class="member"><a class="member-link" href="{href}">'
+        f'<li class="member"{" data-local" if m.get("local") else ""}><a class="member-link" href="{href}">'
         f'<span class="{cls}"{style}><img src="{esc(page_path(m["image"], root))}" alt="" loading="lazy" /></span>'
         f'<span class="member-name member-name--{m.get("label", "m")}" style="--tilt:{m.get("tilt", 0)}deg">{esc(m["name"])}</span>'
         '</a></li>'
