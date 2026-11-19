@@ -14,6 +14,7 @@
   - ヘッダーのナビを文字が回るホバー用の構造に、フッターを案Bのフッター（巨大ロゴ）に差し替える
   - 案Bの CSS / JS（proposal-b/）と GSAP・Lenis を読み込む
   - ページ上部のヒーローはスクロールで奥に沈む「ステージ」、以降の本文はその上に重なる「シート」で包む
+  - 事業ページ（HERO_IMAGES）のヒーローには写真を敷く
 
 依存: python3 標準ライブラリのみ。
 """
@@ -24,7 +25,14 @@ import re
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / 'b'
-ASSET_VER = '20261110-1'
+ASSET_VER = '20261119-1'
+
+# 事業ページのヒーロー（見出し画像）に敷く写真。きりちゃん作の3事業サムネイル（feedback #15）
+HERO_IMAGES = {
+    'design-process.html': 'assets/business-hero/design-consulting.jpg',
+    'food-design.html': 'assets/business-hero/food-design.jpg',
+    'community-space.html': 'assets/business-hero/community-space.jpg',
+}
 
 # 対象（ルートからの相対パス）。works/ と members/ の詳細ページは存在するものを全部拾う
 STATIC_PAGES = ['design-process.html', 'food-design.html', 'community-space.html', 'work.html',
@@ -160,6 +168,19 @@ def wrap_stage(html):
             + html[m.end():])
 
 
+def apply_hero_image(html, src_rel, rel):
+    """事業ページのヒーローに写真を敷く（HERO_IMAGES にあるページだけ）"""
+    img = HERO_IMAGES.get(src_rel)
+    if not img:
+        return html
+    html, n = re.subn(r'<section class="page-hero">',
+                      f'<section class="page-hero page-hero--photo" style="--hero-img:url({rel(img)})">',
+                      html, count=1)
+    if n != 1:
+        raise SystemExit(f'{src_rel}: .page-hero が見つかりません')
+    return html
+
+
 def transform_head(html, rel):
     css = (f'  <link rel="stylesheet" href="{rel("proposal-b/pb.css")}?v={ASSET_VER}" />\n'
            f'  <link rel="stylesheet" href="{rel("proposal-b/pb-sub.css")}?v={ASSET_VER}" />\n'
@@ -196,6 +217,7 @@ def build_page(src_rel):
     html = transform_header(html)
     html = transform_footer(html, rel)
     html = wrap_stage(html)
+    html = apply_hero_image(html, src_rel, rel)
     html = transform_head(html, rel)
     html = transform_body(html, rel)
     banner = ('<!-- ▼ デザイン案B: scripts/build_proposal_b.py が本番ページ（'
