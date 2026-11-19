@@ -1463,9 +1463,6 @@ body.drawer-open { overflow: hidden; }
 }
 .biz-card-foot { display: flex; align-items: flex-start; gap: 24px; }
 .biz-card-foot > span:first-child { flex: 1; font-size: 14px; font-weight: 700; line-height: 1.5; }
-.biz-card .btn-lime { flex-shrink: 0; width: 72px; }
-.biz-card:hover .btn-lime { background-color: var(--ink); color: var(--fig-lime); }
-.biz-card:hover .btn-lime svg { transform: translateX(4px); }
 
 /* --- CONTACT（BUSINESS直後）: ステッカー + リード + ボタン --- */
 .home-page .sec-contact {
@@ -1623,7 +1620,6 @@ body.drawer-open { overflow: hidden; }
   .biz-list { gap: 32px; }
   .biz-visual { height: auto; aspect-ratio: 4 / 3; }
   .biz-card-body { padding: 24px 12px 12px; }
-  .biz-card .btn-lime { width: 56px; height: 56px; padding: 0; }
 
   .home-page .sec-contact { padding: 64px 20px 88px; }
   .home-page .contact-lead { margin: 48px auto 40px; }
