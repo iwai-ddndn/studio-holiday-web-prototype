@@ -417,10 +417,10 @@ function outlineToPathD(pts) {
     .join('') + 'Z';
 }
 
-/* ?tune の「台紙/素材（プレビュー）」が選ばれていれば、CMSの指定より優先して全ステッカーに当てる */
+/* 台紙・素材は常にCMS（microCMSの stickerBase / stickerColor / stickerFinish）の指定どおり */
 const lookFor = (item) => ({
-  base: PARAMS.stickerBase || (item.look && item.look.base) || '#ffffff',
-  finish: PARAMS.stickerFinish || (item.look && item.look.finish) || 'normal',
+  base: (item.look && item.look.base) || '#ffffff',
+  finish: (item.look && item.look.finish) || 'normal',
 });
 
 const spriteOf = async (item) => {
@@ -984,11 +984,20 @@ const DEFAULT_PARAMS = {
   fvTexture: 'halftone',    // FVのテクスチャ（本番デフォルト: アナログハーフトーン）
   fvTexColor: '#dff5f7',    // テクスチャの色（方眼の線・ドット等。halftoneでは無効）
   fvTexSize: 24,            // テクスチャの細かさ（px。halftoneではタイル幅の倍率）
-  stickerBase: '',          // 台紙のプレビュー（''=CMS設定どおり / #hex / 'none'）
-  stickerFinish: '',        // 素材のプレビュー（''=CMS設定どおり / normal / holo / glitter / clear）
 };
 let PARAMS = { ...DEFAULT_PARAMS };
 try { Object.assign(PARAMS, JSON.parse(localStorage.getItem('sh-tune')) || {}); } catch { /* 保存なし */ }
+// 台紙・素材のプレビュー上書きは廃止（常にCMS設定どおり）。過去に保存された上書き値を捨てる
+try {
+  const stored = JSON.parse(localStorage.getItem('sh-tune'));
+  if (stored && ('stickerBase' in stored || 'stickerFinish' in stored)) {
+    delete stored.stickerBase;
+    delete stored.stickerFinish;
+    localStorage.setItem('sh-tune', JSON.stringify(stored));
+  }
+} catch { /* 保存なし */ }
+delete PARAMS.stickerBase;
+delete PARAMS.stickerFinish;
 // 2026-08: FV中央の差し替えに合わせてステッカー密度を一段上げる。
 // チューニング済みの保存値がある場合のみ、一度だけ相対的に詰める
 try {
@@ -1407,14 +1416,6 @@ function initTunePanel() {
     '</select></label>' +
     '<label>テクスチャの色<input type="color" data-key="fvTexColor" /></label>' +
     '<label>テクスチャの細かさ<output id="tune-fvTexSize"></output><input type="range" data-key="fvTexSize" min="8" max="64" step="1" /></label>' +
-    '<label>台紙（プレビュー）<select data-key="stickerBase">' +
-      '<option value="">CMS設定どおり</option><option value="#ffffff">白</option>' +
-      '<option value="#d5f409">ライム</option><option value="#1a1a1a">黒</option><option value="none">フチなし</option>' +
-    '</select></label>' +
-    '<label>素材（プレビュー）<select data-key="stickerFinish">' +
-      '<option value="">CMS設定どおり</option><option value="normal">通常</option>' +
-      '<option value="holo">ホログラム</option><option value="glitter">ラメ</option><option value="clear">クリア</option>' +
-    '</select></label>' +
     '<div class="tune-actions">' +
     '<button type="button" data-act="intro">イントロ再生</button>' +
     '<button type="button" data-act="reset">リセット</button></div>';
@@ -1433,8 +1434,6 @@ function initTunePanel() {
     panel.querySelector('[data-key="fvTexColor"]').value = PARAMS.fvTexColor;
     panel.querySelector('[data-key="fvTexSize"]').value = PARAMS.fvTexSize;
     panel.querySelector('#tune-fvTexSize').textContent = PARAMS.fvTexSize + 'px';
-    panel.querySelector('[data-key="stickerBase"]').value = PARAMS.stickerBase || '';
-    panel.querySelector('[data-key="stickerFinish"]').value = PARAMS.stickerFinish || '';
   };
   sync();
 
@@ -1442,7 +1441,7 @@ function initTunePanel() {
   panel.addEventListener('input', (e) => {
     const k = e.target.dataset.key;
     if (!k) return;
-    if (k === 'fvBg' || k === 'fvTexture' || k === 'fvTexColor' || k === 'stickerBase' || k === 'stickerFinish') {
+    if (k === 'fvBg' || k === 'fvTexture' || k === 'fvTexColor') {
       PARAMS[k] = e.target.value;
     } else {
       PARAMS[k] = +e.target.value;
@@ -1450,7 +1449,6 @@ function initTunePanel() {
     localStorage.setItem('sh-tune', JSON.stringify(PARAMS));
     sync();
     if (k.startsWith('fv')) { applyFvParams(); return; } // 背景系は再ビルド不要
-    if (k.startsWith('sticker')) spritesPromise = null; // 台紙・素材は焼き直し（画像の読み込みは再利用）
     clearTimeout(debounce);
     debounce = setTimeout(() => build({ intro: false }), 250);
   });
