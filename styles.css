@@ -1578,6 +1578,7 @@ body.drawer-open { overflow: hidden; }
 .members-scroller.is-dragging a,
 .members-scroller img { pointer-events: none; -webkit-user-drag: none; }
 .sticker-head--members { flex-shrink: 0; width: 458px; transform: rotate(-7.39deg); }
+.members-lead { flex-shrink: 0; width: 320px; margin: 0; font-size: 15px; font-weight: 700; line-height: 1.9; }
 .members-list { display: flex; gap: 41px; margin: 0; padding: 0 0 0 30px; list-style: none; }
 .member { position: relative; flex-shrink: 0; width: 315px; height: 300px; }
 .member-photo {
@@ -1642,6 +1643,7 @@ body.drawer-open { overflow: hidden; }
   .sec-members { padding-top: 40px; }
   .members-scroller { gap: 24px; padding: 32px 20px 40px; }
   .sticker-head--members { width: 240px; }
+  .members-lead { width: 250px; font-size: 14px; }
   .members-list { gap: 20px; padding-left: 8px; }
   .member { width: 200px; height: 190px; }
   .member-photo { width: 190px; height: 190px; }
