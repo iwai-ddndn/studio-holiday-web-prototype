@@ -20,6 +20,7 @@
   - OGPのURLを --base-url に替え、全ページに canonical を入れる
   - TOPに description・OGP・ファビコンを入れる
   - robots.txt / sitemap.xml / 404.html を作る
+  - まだ公開しないページ（HIDDEN_PAGES）を外し、そこへのリンクも外す
 
 案A（index.html ほかルート直下のページ、works/、members/）は _site/ に入れないので公開されない。
 先に build_works.py → build_pages.py → build_proposal_b.py を実行しておくこと。
@@ -45,6 +46,15 @@ DEFAULT_BASE = 'https://studioholiday.jp'
 COPY_FILES = ['styles.css', 'site.js', 'main.js', 'cms-config.js', '.nojekyll']
 COPY_DIRS = ['assets', 'data', 'proposal-b']
 
+# まだ公開しないページ（公開時のパス）。_site/ に書き出さず、フッターなどからのリンクも外す。
+# リポジトリと確認用サイト（index-b.html / b/）には残るので、そちらで直して確認できる。
+# 公開する時は、ここから消して作り直すだけでよい（リンクも元に戻る）。
+HIDDEN_PAGES = [
+    'design-process.html',    # 事業ページ: DESIGN CONSULTING
+    'food-design.html',       # 事業ページ: FOOD DESIGN
+    'community-space.html',   # 事業ページ: COMMUNITY & SPACE
+]
+
 # TOPの紹介文（検索結果・SNSのシェアに出る）。ABOUTの本文をもとにした仮の文面
 TOP_DESCRIPTION = ('「なんかこんなんやりたい」をカタチに。STUDIO HOLIDAYは、ブランド・組織・体験のデザインを'
                    '設計と実装の両輪で手がけるデザインチームです。')
@@ -65,8 +75,30 @@ def source_pages():
         rel = p.relative_to(B).as_posix()
         if rel == 'index.html':   # b/ 直下に来た人をTOPへ送るだけのページ。公開時は b/ が無いので不要
             continue
+        if rel in HIDDEN_PAGES:
+            continue
         pages.append((f'b/{rel}', rel))
     return pages
+
+
+def unlink_hidden(html, out_rel):
+    """まだ公開しないページ（HIDDEN_PAGES）へのリンクを外す。
+    リンクだけが並ぶ行（フッターのサイトマップ）は行ごと消し、空になった入れ物も消す。
+    文中のリンクは文字だけ残す"""
+    out_dir = posixpath.dirname(out_rel)
+
+    def hidden(href):
+        if SKIP_SCHEMES.match(href):
+            return False
+        path = re.match(r'[^?#]*', href).group(0)
+        return posixpath.normpath(posixpath.join(out_dir, path)) in HIDDEN_PAGES
+
+    html = re.sub(r'^[ \t]*<a href="([^"]*)">[^<]*</a>\n',
+                  lambda m: '' if hidden(m.group(1)) else m.group(0), html, flags=re.M)
+    html = re.sub(r'[ \t]*<div class="fnav-sub">\s*</div>\n', '', html)
+    html = re.sub(r'<a\b[^>]*\bhref="([^"]*)"[^>]*>(.*?)</a>',
+                  lambda m: m.group(2) if hidden(m.group(1)) else m.group(0), html, flags=re.S)
+    return html
 
 
 def map_path(path):
@@ -137,6 +169,7 @@ def esc(s):
 def build_page(src_rel, out_rel, base, noindex):
     html = (ROOT / src_rel).read_text(encoding='utf-8')
     html = rewrite_urls(html, make_rewriter(src_rel, out_rel))
+    html = unlink_hidden(html, out_rel)
     html = re.sub(r'<!-- ▼ デザイン案B: scripts/build_proposal_b\.py が[^\n]*-->\n', '', html, count=1)
     html = html.replace('（デザイン案B）</title>', '</title>')
     # 案BのTOPの冒頭にある、案A／案Bの関係を説明する開発用コメント
