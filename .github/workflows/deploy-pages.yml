@@ -1,0 +1,73 @@
+# 本番公開用のファイル一式（_site/）を作って GitHub Pages に公開するワークフロー。
+#
+# 使い始める時に、リポジトリの Settings → Pages → Source を「GitHub Actions」に切り替える。
+# （「Deploy from a branch」のままだと、このワークフローの deploy が失敗する）
+#
+# 公開先のURLと検索除けは、Settings → Secrets and variables → Actions → Variables で切り替える。
+#   SITE_BASE_URL … 公開先のURL。未設定なら https://iwai-ddndn.github.io/studio-holiday-web-prototype
+#   SITE_NOINDEX  … off にすると検索除けを外す。未設定なら検索除けを付けたまま（切り替え前のリハーサル用）
+# 本番（studioholiday.jp）に切り替える日に、SITE_BASE_URL=https://studioholiday.jp と SITE_NOINDEX=off を
+# 設定して、このワークフローを手動実行する。
+#
+# 毎回 microCMS と Substack の最新でページを作り直してから公開するので、
+# works-sync / newsletter-sync のコミットを待たずに最新の内容が出る。
+# 手動実行: Actionsタブ → Deploy site to GitHub Pages → Run workflow
+name: Deploy site to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "45 21 * * *" # 毎日 JST 6:45（works-sync の15分後）
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch newsletter
+        run: python3 scripts/fetch_newsletter.py || echo "Substackを取得できないため data/newsletter.json は前回のまま"
+
+      - name: Build pages from microCMS
+        run: |
+          python3 scripts/build_works.py
+          python3 scripts/build_pages.py
+          python3 scripts/build_proposal_b.py
+
+      - name: Build _site
+        env:
+          SITE_BASE_URL: ${{ vars.SITE_BASE_URL || 'https://iwai-ddndn.github.io/studio-holiday-web-prototype' }}
+          SITE_NOINDEX: ${{ vars.SITE_NOINDEX || 'on' }}
+        run: |
+          if [ "$SITE_NOINDEX" = "off" ]; then
+            python3 scripts/build_site.py --base-url "$SITE_BASE_URL"
+          else
+            python3 scripts/build_site.py --base-url "$SITE_BASE_URL" --noindex
+          fi
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
