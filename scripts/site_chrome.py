@@ -9,7 +9,7 @@
 
 root … そのページからサイトルートまでの相対パス（'./' '../' '../../'）
 home … TOPページ自身か（TOP内のセクションへは #about のようにページ内リンクにする）
-local_contact … ページ内にCONTACTセクション（#contact）があるか（あればお問い合わせはそこへ）
+local_contact … 互換のために残している引数（お問い合わせボタンは常に FORM_URL のフォームを開く）
 """
 
 
@@ -26,9 +26,12 @@ EXT_SVG = ('<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'
 TOP_SECTIONS = [('ABOUT', 'about'), ('BUSINESS', 'business'), ('WORKs', 'works'),
                 ('MEMBERS', 'members'), ('COMPANY', 'company'), ('CONTACT', 'contact')]
 # 事業ページ（TOPのBUSINESSカードの遷移先）
-BUSINESS_PAGES = [('DESIGN PROCESS', 'design-process.html'),
+BUSINESS_PAGES = [('DESIGN CONSULTING', 'design-process.html'),
                   ('FOOD DESIGN', 'food-design.html'),
                   ('COMMUNITY &amp; SPACE', 'community-space.html')]
+# お問い合わせフォーム（Googleフォーム）。ヘッダー・フッターのお問い合わせボタンと各ページのCONTACTの「フォームを開く」が開く
+FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfQqacpC72r6vnPzKaDqO1YykVR9tFByFLP3DEmhj-1xs5h5Q/viewform'
+FORM_ATTRS = f'href="{FORM_URL}" target="_blank" rel="noopener noreferrer"'
 EXTERNAL_LINKS = [('K,D,C,,,', 'https://kdc-foodlab.com/'),
                   ('休日コーラ', 'https://lab.studioholiday.jp/'),
                   ('Newsletter', 'https://substack.studioholiday.jp/')]
@@ -52,7 +55,6 @@ def header_html(root, home=False, local_contact=False):
         ('COMPANY', _top(root, home, 'company')),
     ]
     links = '\n'.join(f'        <a href="{href}">{label}</a>' for label, href in nav)
-    contact = '#contact' if local_contact else _top(root, home, 'contact')
     return f'''  <header class="site-header">
     <div class="header-pill">
       <a class="brand" href="{_top(root, home)}">
@@ -64,10 +66,10 @@ def header_html(root, home=False, local_contact=False):
       </button>
       <nav class="site-nav" id="siteNav">
 {links}
-        <a class="nav-contact" href="{contact}">お問い合わせ</a><!-- スマホのメニュー内のみ表示 -->
+        <a class="nav-contact" {FORM_ATTRS}>お問い合わせ</a><!-- スマホのメニュー内のみ表示 -->
       </nav>
     </div>
-    <a class="header-contact" href="{contact}">お問い合わせ</a>
+    <a class="header-contact" {FORM_ATTRS}>お問い合わせ</a>
   </header>'''
 
 
@@ -82,7 +84,6 @@ def footer_html(root, works, home=False, dynamic_works=False, local_contact=Fals
     ext_links = '\n'.join(f'          <a class="fnav-ext" href="{href}" target="_blank" rel="noopener">{label}{EXT_SVG}</a>'
                           for label, href in EXTERNAL_LINKS)
     works_attr = ' data-footer-works' if dynamic_works else ''
-    contact = '#contact' if local_contact else _top(root, home, 'contact')
     return f'''  <footer class="fig-footer">
     <div class="fig-footer-main">
       <div class="fig-footer-left">
@@ -90,7 +91,7 @@ def footer_html(root, works, home=False, dynamic_works=False, local_contact=Fals
         <div class="fig-footer-addr">
           <p>株式会社スタジオホリデイ</p>
           <p>〒169-0073 東京都新宿区百人町1丁目10−15　JR新大久保駅ビル4F K,D,C,,,</p>
-          <a class="fig-footer-contact" href="{contact}">CONTACT</a>
+          <a class="fig-footer-contact" {FORM_ATTRS}>CONTACT</a>
         </div>
       </div>
       <nav class="fig-footer-nav">
@@ -121,6 +122,6 @@ def footer_html(root, works, home=False, dynamic_works=False, local_contact=Fals
       </nav>
     </div>
     <div class="fig-footer-bottom">
-      <p>© STUDIO HOLIDAY ALL RIGHT RESERVED</p>
+      <p>© STUDIO HOLIDAY ALL RIGHTS RESERVED</p>
     </div>
   </footer>'''

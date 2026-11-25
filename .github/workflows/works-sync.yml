@@ -1,7 +1,9 @@
-# microCMSの事例（works）から works/<slug>/index.html を毎日再生成するワークフロー。
+# microCMS の事例（works）とメンバー（members）から、詳細ページと一覧を毎日作り直すワークフロー。
+#   works/ ・ members/（案A）と、それをもとにした b/ ・ index-b.html（案B）をまとめて更新する。
+#   microCMS に事例やメンバーを足しても、ここが動くまでは詳細ページが無い（リンク先が404になる）。
+#   すぐ反映したいときは手動実行: Actionsタブ → Build pages from microCMS → Run workflow
 # 変更があったときだけコミットされ、GitHub Pagesが自動で再デプロイされる。
-# 手動実行: Actionsタブ → Build works pages from microCMS → Run workflow
-name: Build works pages from microCMS
+name: Build pages from microCMS
 
 on:
   schedule:
@@ -20,9 +22,15 @@ jobs:
       - name: Build works pages
         run: python3 scripts/build_works.py
 
+      - name: Build members pages and shared header/footer
+        run: python3 scripts/build_pages.py
+
+      - name: Build proposal B pages
+        run: python3 scripts/build_proposal_b.py
+
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A works
-          git diff --cached --quiet || { git commit -m "chore: 事例ページ（works/）を自動生成"; git push; }
+          git add -A works members b index.html index-b.html design-process.html food-design.html community-space.html work.html
+          git diff --cached --quiet || { git commit -m "chore: 事例・メンバーのページを自動生成"; git push; }

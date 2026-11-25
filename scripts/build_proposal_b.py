@@ -254,6 +254,23 @@ def sync_index_b_members():
     path.write_text(html, encoding='utf-8')
 
 
+FOOTER_WORKS_RE = re.compile(r'(<div class="fnav-sub" data-footer-works>[^\n]*\n)(.*?)(\n\s*</div>)', re.S)
+
+
+def sync_index_b_footer_works():
+    """案BのTOPのフッターWORKs欄（JSが動く前の初期表示）を、本番TOPの先頭5件に合わせる。
+    手書きのままだと、microCMSから消えた事例へのリンクが残ってリンク切れになる"""
+    src = FOOTER_WORKS_RE.search((ROOT / 'index.html').read_text(encoding='utf-8'))
+    if not src:
+        raise SystemExit('index.html: フッターのWORKs欄が見つかりません')
+    links = src.group(2).replace('href="./works/', 'href="./b/works/')
+    path = ROOT / 'index-b.html'
+    html, n = FOOTER_WORKS_RE.subn(lambda m: m.group(1) + links + m.group(3), path.read_text(encoding='utf-8'), count=1)
+    if n != 1:
+        raise SystemExit('index-b.html: フッターのWORKs欄が見つかりません')
+    path.write_text(html, encoding='utf-8')
+
+
 def remove_stale_pages(pages):
     """本番側で消えた事例・メンバーの詳細ページを b/ からも消す"""
     keep = {posixpath.dirname(p) for p in pages}
@@ -272,6 +289,7 @@ def main():
         build_page(p)
     remove_stale_pages(pages)
     sync_index_b_members()
+    sync_index_b_footer_works()
     # b/ 直下に来た人は案BのTOPへ
     (OUT / 'index.html').write_text(
         '<!DOCTYPE html>\n<meta charset="UTF-8" />\n<meta name="robots" content="noindex" />\n'

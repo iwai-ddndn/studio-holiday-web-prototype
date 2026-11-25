@@ -56,7 +56,8 @@ MEMBER_BG = {
     'ライム': '#e9f5b8', 'ブルー': '#cfe7ff', 'ピンク': '#ffe1ec',
     'イエロー': '#fff0c2', 'パープル': '#e6e0ff',
 }
-SLUG_RE = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*$')
+# microCMS のコンテンツIDは英数字・ハイフン・アンダースコア（例: ois-rt3h_bc）
+SLUG_RE = re.compile(r'^[a-z0-9]+(?:[-_]+[a-z0-9]+)*$')
 
 
 def _first(v):
@@ -135,14 +136,14 @@ def normalize_members(contents):
 
 
 def load_members():
-    """microCMS のメンバーを先に並べ、data/members.json（サンプル入り）で補う。
-    同じ slug の人はCMSを優先。手元データ由来の人には local: True を付け、
-    一覧の <li> に data-local を出す（?cms=only ではCSSで隠してCMSの人だけにする）"""
+    """microCMS のメンバーだけでページを作る（TOPのMEMBERSも site.js がCMSの内容で描く）。
+    microCMS から取れなかった時だけ data/members.json（サンプル入り）で代用し、
+    その人には local: True を付けて一覧の <li> に data-local を出す"""
     contents = fetch_cms_members()
     cms = normalize_members(contents) if contents else []
-    slugs = {m['slug'] for m in cms}
-    local = [dict(m, local=True) for m in load_local_members() if m['slug'] not in slugs]
-    return cms + local
+    if cms:
+        return cms
+    return [dict(m, local=True) for m in load_local_members()]
 
 # ==========================================================
 # ▼ 部品
