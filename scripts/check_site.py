@@ -8,6 +8,7 @@
   - 事例・メンバーの詳細ページが、microCMS のコンテンツと過不足なく1対1で揃っている
   - 各詳細ページの見出し（名前・タイトル）と日本語名が microCMS と一致している
   - ページ内リンク・画像・CSS・JSのリンク切れが無い
+  - 事例のステッカー画像が microCMS に登録されている
   - ハッシュタグの「#」が重なっていない（「##」「#＃」）、空のタグが無い
   - microCMS 以外のデータ（サンプルのメンバー、仮原稿、入稿待ちの注記、手元データ由来の項目）が出ていない
 
@@ -110,6 +111,11 @@ def main():
                 want_unique = [c['role'].strip()]
             if got != want_unique:
                 bad(page, f'タグが microCMS と違う（ページ: {got} / CMS: {want_unique}）')
+
+    # ステッカー画像が未登録の事例は、TOPの壁に貼られず、一覧と詳細でも画像が出ない
+    for c in works:
+        if not (c.get('sticker') or {}).get('url'):
+            problems.append(f'works/{c.get("slug") or c["id"]}/: microCMS にステッカー画像が無い（{c.get("title")}）')
 
     # 一覧ページに並ぶ人数・件数
     for kind, cls in (('members', 'member'), ('works', 'work-card')):
