@@ -18,31 +18,31 @@ DNS を GitHub に向ける案は、メールの設定変更と39人ぶんの確
 
 | 項目 | 状態 |
 | --- | --- |
-| アップロードするファイル | `xserver-upload/studioholiday-site.zip`（約43MB、195ファイル）。2026-11-25 時点の microCMS の内容で作成 |
-| リハーサル | https://iwai-ddndn.github.io/studio-holiday-web-prototype/ （本番と同じURL構成。ヘッダー常時表示などの最新の修正5点は未反映） |
+| アップロードするファイル | 2-3 の素材（紹介文・シェア画像・ファビコン）がそろってから、Claude がまとめて作る。`xserver-upload/` にある zip は試作で、本番には使わない |
+| リハーサル | https://iwai-ddndn.github.io/studio-holiday-web-prototype/ （本番と同じURL構成。最新の修正を反映済み） |
 | 確認用サイト | https://iwai-ddndn.github.io/studio-holiday-web-proposal-b/index-b.html （最新の修正を反映済み。事業ページも見られる） |
 | 現行サイト | エックスサーバー（サーバー番号 sv72）上の WordPress |
 | サブドメイン | `lab`（ホリデイラボ）、`minnadegohan`、`substack` の3つ。今回は触らない |
 
-zip の中身は、最新の修正5点（ヘッダー常時表示、下層FVのステッカー、WORKSの並び順、SPの2列）を含む。確認用サイトで見た内容と同じ。
 
 ---
 
 ## 2. アップロードの前に済ませること
 
-### 2-1. public_html の中身を確かめる
+### 2-1. public_html の仕分け（2026-11-25 の一覧で確認済み）
 
-ファイルマネージャで `studioholiday.jp` → `public_html` を開き、一覧のスクリーンショットを撮る。次の3種類に仕分ける。
+`studioholiday.jp` → `public_html` にあるものを、次のとおり扱う。
 
-| 種類 | 例 | 扱い |
-| --- | --- | --- |
-| WordPress のファイル | `wp-admin`、`wp-content`、`wp-includes`、`index.php`、`wp-config.php` などの `wp-*.php`、`.htaccess`、`xmlrpc.php`、`license.txt`、`readme.html` | 退避する（3章 手順2） |
-| サブドメインのフォルダ | `lab`、`minnadegohan`、`substack` | **触らない** |
-| それ以外 | 手で置いたファイルやフォルダ、`.user.ini`、`.well-known` など | 1つずつ判断する。迷うものは残す |
+| 扱い | 対象 |
+| --- | --- |
+| **触らない**（サブドメインのフォルダ） | `lab`、`minnadegohan`、`minnadegohan_old`、`substack` |
+| **退避する**（WordPress） | フォルダ: `wp-admin`、`wp-content`、`wp-includes`。ファイル: `.htaccess`、`index.php`、`license.txt`、`readme.html`、`xmlrpc.php`、`wp-` で始まる `.php` 16個（`wp-activate.php` 〜 `wp-trackback.php`、`wp-config.php` を含む） |
+| **先方に確認してから決める** | `campdaisuki.php`（WordPress 標準のファイルではない。何に使っているか不明） |
+| そのままでよい | `default_page.png`（エックスサーバーの初期ファイル。害は無い） |
 
-新サイトのファイル名は次のとおり。同じ名前のものが public_html にすでにあれば、上書きされる前に退避する。
+新サイトのファイル名（`index.html`、`404.html`、`work.html`、`robots.txt`、`sitemap.xml`、`.htaccess`、`styles.css`、`site.js`、`main.js`、`cms-config.js`、`assets/`、`data/`、`members/`、`works/`、`proposal-b/`）と重なるのは `.htaccess` だけ。これは退避する。
 
-`index.html`、`404.html`、`work.html`、`robots.txt`、`sitemap.xml`、`.htaccess`、`styles.css`、`site.js`、`main.js`、`cms-config.js`、`assets/`、`data/`、`members/`、`works/`、`proposal-b/`
+**退避の前に、今の `.htaccess` の中身を Claude に見せる。** WordPress 以外の設定（特定のURLの転送や、アクセス制限など）が書かれていたら、新しい `.htaccess` に引き継ぐ必要があるため。ファイルマネージャで `.htaccess` を選び「編集」を押すと中身が見える（保存はしない）。
 
 ### 2-2. 先方に確認すること
 
@@ -50,6 +50,7 @@ zip の中身は、最新の修正5点（ヘッダー常時表示、下層FVの�
 | --- | --- | --- |
 | 1 | 切り替える日時と、先方の確認担当 | 作業は10〜20分。その間だけサイトが見えにくくなる |
 | 2 | `minnadegohan.studioholiday.jp` と `lab.studioholiday.jp` を今も使っているか | 今回は触らないが、切り替え後に表示が変わっていないかを見てもらう |
+| 2b | `public_html` にある `campdaisuki.php` を何に使っているか | 使っているなら残す。使っていなければ WordPress と一緒に退避する |
 | 3 | 現行サイトのお問い合わせフォームと `hello@studioholiday.jp` の扱い | 新サイトのお問い合わせは Google フォームになる。回答を誰が受け取るかを決める |
 | 4 | 現行サイトにしか無い情報や、外部から直接リンクされている画像・PDF | 切り替え後は開けなくなる。必要なものは先に移す |
 | 5 | アクセス解析（Googleアナリティクスなど）を使っているか | 使う場合は計測IDをもらい、zip を作り直す |
@@ -57,7 +58,7 @@ zip の中身は、最新の修正5点（ヘッダー常時表示、下層FVの�
 
 メールの設定は、確認しなくてよい。
 
-### 2-3. 中身の仕上げ（仮のままでも公開できる）
+### 2-3. 中身の仕上げ（そろったら zip を作る）
 
 | # | 内容 | 必要なもの |
 | --- | --- | --- |
@@ -65,7 +66,7 @@ zip の中身は、最新の修正5点（ヘッダー常時表示、下層FVの�
 | 2 | SNSシェア用の画像が仮（BUSINESSの写真） | 1200×630 の画像 |
 | 3 | ファビコンが仮（アーチのロゴ） | ファビコン用の画像 |
 
-差し替えたら zip を作り直す（5章）。
+3つがそろったら Claude に渡す。差し替えたうえで、アップロード用の zip をまとめて作る。
 
 ---
 
@@ -82,7 +83,7 @@ zip の中身は、最新の修正5点（ヘッダー常時表示、下層FVの�
 
 `public_html` の中で、2-1 で「WordPress のファイル」に仕分けたものを選び、`wp_backup_20261125` へ移動する。コピーではなく移動。
 
-- サブドメインのフォルダ（`lab`、`minnadegohan`、`substack`）は動かさない。
+- サブドメインのフォルダ（`lab`、`minnadegohan`、`minnadegohan_old`、`substack`）は動かさない。
 - `.htaccess` も忘れずに移す。残っていると、新サイトの転送設定とぶつかる。
 - データベースには触らない。
 
