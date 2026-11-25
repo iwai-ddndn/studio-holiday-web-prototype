@@ -93,8 +93,27 @@ def normalize_works(contents, fallback):
             'credit': c.get('credit') or '',
             # imgix変換で幅を抑えつつPNG化（切り抜きの透過を保持）
             'image': f"{sticker['url']}?w=1000&fm=png" if sticker.get('url') else '',
+            # TOPのWORKs一覧で先頭に表示するか（microCMS の真偽値 worksFirst）
+            'worksFirst': is_flag_on(c.get('worksFirst')),
         })
-    return works
+    return sort_works_first(works)
+
+
+def is_flag_on(v):
+    """真偽値フィールドの返し方の揺れを吸収する（site.js の isFlagOn と同じ）"""
+    if isinstance(v, list):
+        return any(is_flag_on(x) for x in v)
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, (int, float)):
+        return v != 0
+    return str(v or '').strip().lower() in ('true', '1', 'on', 'yes', 'y')
+
+
+def sort_works_first(works):
+    """worksFirst（TOPで優先表示）の事例を先頭へ。それ以外は microCMS の並びのまま（site.js の sortWorksFirst と同じ）。
+    WORKS一覧・フッターの先頭5件・関連事例の並びが、TOPのWORKsと同じ優先順になる"""
+    return [w for w in works if w.get('worksFirst')] + [w for w in works if not w.get('worksFirst')]
 
 
 def local_works(fallback):
@@ -214,7 +233,7 @@ def body_html(work):
 FONTS_URL = ('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900'
              '&amp;family=Roboto+Condensed:wght@300;600'
              '&amp;family=Noto+Sans+JP:wght@100;400;600;700;800;900&amp;display=swap')
-ASSET_VER = '20261125-1'
+ASSET_VER = '20261125-2'
 
 
 def head_html(title, description, og_url, og_image, og_type, root):
