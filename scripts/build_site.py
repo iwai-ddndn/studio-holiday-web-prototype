@@ -2,6 +2,7 @@
 """本番公開用のファイル一式を _site/ に作る（案Bを正式版のURLで並べ直す）。
 
     python3 scripts/build_site.py                      # 本番（https://studioholiday.jp）
+    python3 scripts/build_site.py --apache             # 同上＋エックスサーバーに置くための .htaccess
     python3 scripts/build_site.py --base-url https://iwai-ddndn.github.io/studio-holiday-web-prototype --noindex
                                                        # 切り替え前のリハーサル（検索除けを付けたまま）
 
@@ -273,6 +274,28 @@ def write_extras(pages, base, noindex):
 ''', encoding='utf-8')
 
 
+def write_htaccess(base):
+    """Apache（エックスサーバー）に置く時の .htaccess。
+    サブドメインのフォルダが同じ public_html の中にあり、この設定はそこにも効くので、
+    転送は「このサイトのホスト名で来た時だけ」に限っている"""
+    host = urlparse(base).netloc
+    bare = host[4:] if host.startswith('www.') else host
+    pattern = bare.replace('.', r'\.')
+    (OUT / '.htaccess').write_text(f'''# STUDIO HOLIDAY 新サイト用（scripts/build_site.py --apache が生成）
+DirectoryIndex index.html index.php
+ErrorDocument 404 /404.html
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+# http:// と www 付きを {base}/ へ寄せる（サブドメインには効かせない）
+RewriteCond %{{HTTP_HOST}} ^(www\.)?{pattern}$ [NC]
+RewriteCond %{{HTTPS}} !=on [OR]
+RewriteCond %{{HTTP_HOST}} !^{pattern}$ [NC]
+RewriteRule ^ {base}%{{REQUEST_URI}} [R=301,L]
+</IfModule>
+''', encoding='utf-8')
+
+
 def check_links(pages):
     """_site/ 内のリンク切れと、案B用の名前の残りを調べる"""
     problems = []
@@ -294,6 +317,7 @@ def check_links(pages):
 def main():
     ap = argparse.ArgumentParser(description='本番公開用のファイル一式を _site/ に作る')
     ap.add_argument('--base-url', default=DEFAULT_BASE, help=f'公開先のURL（既定: {DEFAULT_BASE}）')
+    ap.add_argument('--apache', action='store_true', help='Apache（エックスサーバー）用の .htaccess も書き出す')
     ap.add_argument('--noindex', action='store_true', help='検索除けを付けたままにする（切り替え前のリハーサル用）')
     args = ap.parse_args()
     base = args.base_url.rstrip('/')
@@ -307,6 +331,8 @@ def main():
     for src_rel, out_rel in pages:
         build_page(src_rel, out_rel, base, args.noindex)
     write_extras(pages, base, args.noindex)
+    if args.apache:
+        write_htaccess(base)
 
     problems = check_links(pages)
     if problems:
