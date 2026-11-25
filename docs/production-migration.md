@@ -13,6 +13,11 @@
 - ヘッダーとフッターのお問い合わせボタンを Google フォームへ向けた。
 - 毎朝の自動生成で、メンバーと案B（`b/`）も作り直すようにした。
 
+- リハーサルを開始した。Pages の Source を「GitHub Actions」に切り替え、`https://iwai-ddndn.github.io/studio-holiday-web-prototype/` を本番と同じURL構成（検索除けあり）で公開している。4章の「反映の手順」は実施済み。
+- 表示と生成を microCMS の内容だけにした。事例のURLは microCMS の slug（無ければコンテンツID）。
+- 事業ページ3つ（`design-process.html` `food-design.html` `community-space.html`）は本番出力から外した。`scripts/build_site.py` の `HIDDEN_PAGES` から消すと公開される。確認用サイトには残っている。
+- 全ページの検査は `python3 scripts/check_site.py _site`（確認用の構成は引数なし）。
+
 今後の修正は `studio-holiday-web-prototype` の `main` に入れる。確認用リポジトリに直接入れると、また二重管理になる。
 
 ---
