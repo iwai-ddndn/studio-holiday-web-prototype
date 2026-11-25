@@ -36,16 +36,24 @@
   /* ==========================================================
      ▼ 取引先の一覧からマーキー用の2段を組む（上下で逆向き・ずらした順番）
      ========================================================== */
-  const clients = $$('.pb-clients-list li').map((li) => li.textContent.trim());
-  const rows = $$('.pb-clients-row .pb-band-track');
-  if (clients.length && rows.length === 2) {
+  // まず静的なリストで組み、microCMS の clients で描き直されたら（site.js の window.clientsReady）
+  // 同じ手順で組み直す。マーキー組み立て後（PB.finish 後）は PB.marqueeRefill で中身だけ差し替える
+  const escHTML = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const buildClientsMarquee = () => {
+    const clients = $$('.pb-clients-list li').map((li) => li.textContent.trim()).filter(Boolean);
+    const rows = $$('.pb-clients-row');
+    if (!clients.length || rows.length !== 2) return;
     const half = Math.ceil(clients.length / 2);
     const orders = [clients, clients.slice(half).concat(clients.slice(0, half))];
     rows.forEach((row, i) => {
-      row.innerHTML = orders[i].map((c) => `<span>${c}</span>`).join('');
+      PB.marqueeRefill(row, orders[i].map((c) => `<span>${escHTML(c)}</span>`).join(''));
     });
     $('.pb-company').classList.add('pb-clients-ready');
-  }
+  };
+  buildClientsMarquee();
+  window.clientsReady?.then((updated) => {
+    if (updated) buildClientsMarquee();
+  });
 
   $$('[data-paste]').forEach((el) => PB.paste(el));
 
@@ -165,40 +173,57 @@
   /* ==========================================================
      ▼ MEMBERS: PCは縦スクロールで横へ流す（ピン留め）
      ========================================================== */
+  // 横送りの距離とメンバーごとの登場演出は .pb-members-list の中身に依存するので、
+  // microCMS members で描き直されたら（site.js の window.membersReady）作り直す
   const mm = gsap.matchMedia();
   const track = $('.pb-members-track');
   const meter = $('.pb-members-meter i');
+  const pin = $('.pb-members-pin');
+  let membersMM = null;
+  const buildMembersScroll = () => {
+    membersMM?.revert();
+    membersMM = gsap.matchMedia();
+    membersMM.add('(min-width: 901px)', () => {
+      const dist = () => Math.max(0, track.scrollWidth - pin.clientWidth);
+      const tween = gsap.to(track, {
+        x: () => -dist(),
+        ease: 'none',
+        scrollTrigger: {
+          trigger: pin,
+          start: 'top top',
+          end: () => `+=${dist()}`,
+          pin: true,
+          scrub: 0.8,
+          invalidateOnRefresh: true,
+          // 描き直しで後から作り直しても、下のセクションより先にピンの余白を計算させる
+          refreshPriority: 1,
+          onUpdate: (self) => { meter.style.transform = `scaleX(${self.progress})`; },
+        },
+      });
+      $$('.pb-member', track).forEach((m, i) => {
+        gsap.from($('.pb-member-photo', m), {
+          rotation: i % 2 ? 25 : -25,
+          scale: 0.55,
+          opacity: 0,
+          ease: 'none',
+          scrollTrigger: { trigger: m, containerAnimation: tween, start: 'left 100%', end: 'left 65%', scrub: true },
+        });
+        gsap.from($('.pb-member-name', m), {
+          y: 40,
+          opacity: 0,
+          ease: 'none',
+          scrollTrigger: { trigger: m, containerAnimation: tween, start: 'left 90%', end: 'left 60%', scrub: true },
+        });
+      });
+    });
+  };
+  buildMembersScroll();
+  window.membersReady?.then((updated) => {
+    if (!updated) return;
+    buildMembersScroll();
+    PB.softRefresh();
+  });
   mm.add('(min-width: 901px)', () => {
-    const pin = $('.pb-members-pin');
-    const dist = () => Math.max(0, track.scrollWidth - pin.clientWidth);
-    const tween = gsap.to(track, {
-      x: () => -dist(),
-      ease: 'none',
-      scrollTrigger: {
-        trigger: pin,
-        start: 'top top',
-        end: () => `+=${dist()}`,
-        pin: true,
-        scrub: 0.8,
-        invalidateOnRefresh: true,
-        onUpdate: (self) => { meter.style.transform = `scaleX(${self.progress})`; },
-      },
-    });
-    $$('.pb-member', track).forEach((m, i) => {
-      gsap.from($('.pb-member-photo', m), {
-        rotation: i % 2 ? 25 : -25,
-        scale: 0.55,
-        opacity: 0,
-        ease: 'none',
-        scrollTrigger: { trigger: m, containerAnimation: tween, start: 'left 100%', end: 'left 65%', scrub: true },
-      });
-      gsap.from($('.pb-member-name', m), {
-        y: 40,
-        opacity: 0,
-        ease: 'none',
-        scrollTrigger: { trigger: m, containerAnimation: tween, start: 'left 90%', end: 'left 60%', scrub: true },
-      });
-    });
     gsap.from('.pb-sticker--members', {
       scale: 1.8, rotation: -30, opacity: 0, duration: 0.9, ease: 'back.out(2.2)',
       scrollTrigger: { trigger: pin, start: 'top 70%' },
@@ -211,6 +236,7 @@
     };
     track.addEventListener('scroll', sync, { passive: true });
     sync();
+    window.membersReady?.then((updated) => { if (updated) sync(); });
     return () => track.removeEventListener('scroll', sync);
   });
 

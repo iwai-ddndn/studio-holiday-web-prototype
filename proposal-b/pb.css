@@ -334,7 +334,6 @@ a:hover > .pb-roll > span { transform: translateY(-1.3em); }
   background: var(--white);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   color: var(--ink);
-  text-decoration: none;
   overflow: hidden;
   transform-origin: 50% 0;
   will-change: transform;
@@ -374,20 +373,6 @@ a:hover > .pb-roll > span { transform: translateY(-1.3em); }
   letter-spacing: -0.01em;
 }
 .pb-biz-text { flex: 1; font-size: 14px; font-weight: 700; line-height: 1.9; }
-.pb-arrow {
-  display: grid;
-  place-items: center;
-  align-self: flex-end;
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  background: var(--fig-lime);
-  color: var(--ink);
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-.pb-arrow svg { width: 28px; height: 28px; transition: transform 0.45s var(--pb-ease); }
-.pb-biz-card:hover .pb-arrow { background: var(--ink); color: var(--fig-lime); }
-.pb-biz-card:hover .pb-arrow svg { transform: rotate(-45deg); }
 
 /* ---------- CONTACT ---------- */
 .pb-contact {
@@ -539,6 +524,14 @@ a:hover > .pb-roll > span { transform: translateY(-1.3em); }
   will-change: transform;
 }
 .pb-sticker--members { flex-shrink: 0; width: 458px; rotate: -7.39deg; }
+.pb-members-lead {
+  flex-shrink: 0;
+  width: 340px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 2;
+}
 .pb-members-list { display: flex; gap: 48px; margin: 0; padding: 0 0 0 20px; list-style: none; }
 .pb-member { position: relative; flex-shrink: 0; width: 315px; height: 320px; }
 .pb-member:nth-child(2n) { translate: 0 36px; }
@@ -735,7 +728,6 @@ a:hover > .pb-roll > span { transform: translateY(-1.3em); }
   .pb-biz-visual { height: 210px; }
   .pb-biz-body { gap: 12px; }
   .pb-biz-no { position: absolute; right: 24px; top: -44px; font-size: 64px; -webkit-text-stroke-color: var(--white); }
-  .pb-arrow { width: 60px; height: 60px; margin-top: 4px; }
   .pb-floater { width: calc(var(--w) * 0.6); opacity: 0.9; }
   .pb-floater:nth-child(n + 4) { display: none; }
   .pb-about-text span { display: inline; }
@@ -775,6 +767,7 @@ a:hover > .pb-roll > span { transform: translateY(-1.3em); }
   .pb-member-name--m { left: 24px; top: 212px; }
   .pb-member-name--r { right: -6px; top: 194px; }
   .pb-sticker--members { width: 240px; }
+  .pb-members-lead { width: min(280px, 78vw); font-size: 14px; }
   .pb-contact-lead { font-size: 14px; text-align: left; }
   .pb-footer-nav { gap: 28px; }
   .pb-footer-bottom p { font-size: 10px; }

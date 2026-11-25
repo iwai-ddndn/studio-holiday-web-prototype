@@ -139,6 +139,29 @@ window.getFvLinks = async () => {
     }));
 };
 
+/* 案BのTOP COMPANY「主な取引先」（microCMS clients: name / order）。
+ * 取得できた場合だけ .pb-clients-list を作り直す。order の昇順（未入力は後ろ・取得順を維持）。
+ * API未作成・取得失敗・0件なら、HTMLの静的リストのまま。
+ * 作り直したら true で解決する（pb.js がこれを待ってマーキーを組み直す） */
+window.clientsReady = (async () => {
+  const list = document.querySelector('.pb-clients-list');
+  if (!list) return false;
+  const contents = await fetchCMS('clients');
+  const orderOf = (c) => (typeof c.order === 'number' && Number.isFinite(c.order) ? c.order : Infinity);
+  const names = (contents || [])
+    .map((c, i) => ({ name: String(c.name || '').trim(), order: orderOf(c), i }))
+    .filter((c) => c.name)
+    .sort((a, b) => (a.order === b.order ? a.i - b.i : a.order - b.order))
+    .map((c) => c.name);
+  if (!names.length) return false;
+  list.replaceChildren(...names.map((name) => {
+    const li = document.createElement('li');
+    li.textContent = name;
+    return li;
+  }));
+  return true;
+})();
+
 /* CMSのコンテンツを、サイト内で使う共通の形に揃える。
  * CMSに画像が無ければ、タイトル一致でローカル素材を当てる
  * （メディアアップロードAPIが使えないプランでもテキストだけCMS管理できるようにするため）*/
@@ -161,9 +184,25 @@ function normalizeWorks(contents) {
       image: c.sticker && c.sticker.url ? `${c.sticker.url}?w=1000&fm=png` : (local ? local.image : ''),
       // TOP壁ステッカーの見た目（台紙の色・素材）。未入力なら白台紙・通常
       stickerLook: stickerLookOf(c),
+      // FVキャンバス（TOPの壁）で中央寄りに優先表示するか（microCMSの真偽値 fvCenter「中央に優先表示」）。
+      // CMSにフィールドが無ければローカルのタイトル一致 → 無ければ false（従来どおり）
+      fvCenter: isFlagOn(c.fvCenter != null ? c.fvCenter : (local ? local.fvCenter : false)),
+      // TOPのWORKs一覧で先頭に表示するか（microCMS の真偽値 worksFirst。未設定なら false）
+      worksFirst: isFlagOn(c.worksFirst),
     };
   });
 }
+
+/* 真偽値フィールドの返し方の揺れを吸収する（true / 'true' / 1 / '1' / 'on' / 'yes' / ['true'] など）。
+ * 未入力・false・'false' などは false */
+function isFlagOn(v) {
+  if (Array.isArray(v)) return v.some(isFlagOn);
+  if (typeof v === 'boolean') return v;
+  if (typeof v === 'number') return v !== 0;
+  const s = String(v == null ? '' : v).trim().toLowerCase();
+  return ['true', '1', 'on', 'yes', 'y', '中央に優先表示'].includes(s);
+}
+window.isFlagOn = isFlagOn;
 
 /* ステッカーの台紙・素材の指定を正規化する。
  * microCMSのセレクトは配列で返るので、配列・文字列のどちらでも受ける。
@@ -192,7 +231,27 @@ function stickerLookOf(c) {
 }
 window.stickerLookOf = stickerLookOf;
 
-const localWorks = () => WORKS_FALLBACK.map((w) => ({ ...w, id: w.slug, body: '' }));
+/* タグ文字列を個別のタグに分ける。区切りは改行と全角スペース。
+ * 「#My Project」のようにタグ内に半角スペースを含むことがあるので、半角スペースでは分けない。
+ * 先頭の「#」「＃」は付けても付けなくてもよい（表示側で付ける） */
+function splitTags(s) {
+  return String(s || '').split(/\r?\n|　/)
+    .map((t) => t.trim().replace(/^[#＃]+\s*/, ''))
+    .filter(Boolean);
+}
+
+/* 事例のタグ一覧: [クライアント, ...ジャンル（kind を改行・全角スペースで分割）] */
+function workTags(w) {
+  if (!w) return [];
+  return [String(w.client || '').trim(), ...splitTags(w.kind)].filter(Boolean);
+}
+window.workTags = workTags; // FVのステッカー帯・ドロワー（main.js）でも使う
+
+const localWorks = () => WORKS_FALLBACK.map((w) => ({
+  ...w, id: w.slug, body: '',
+  fvCenter: isFlagOn(w.fvCenter), // FVキャンバスで中央寄りに優先表示
+  worksFirst: isFlagOn(w.worksFirst), // TOPのWORKs一覧で先頭に表示
+}));
 
 /* works は FV・カード一覧・フッター・詳細ページで使うので、リクエストは1回だけにする */
 window.getWorks = () => (window.__worksPromise ??= (async () => {
@@ -227,7 +286,7 @@ function workCard(w) {
       `<span class="work-card-title">${esc(w.title)}</span>` +
       (w.client ? `<span class="work-card-client">${esc(w.client)}</span>` : '') +
       // TOPのカード（Figma workcard）は「#クライアント #ジャンル」のタグで見せる
-      ((w.client || w.kind) ? `<span class="work-card-tags">${[w.client, w.kind].filter(Boolean).map((t) => `<span>#${esc(t)}</span>`).join('')}</span>` : '') +
+      (workTags(w).length ? `<span class="work-card-tags">${workTags(w).map((t) => `<span>#${esc(t)}</span>`).join('')}</span>` : '') +
       `<span class="work-card-arrow" aria-hidden="true">${ARROW_SVG}</span>` +
     '</span>';
   return el;
@@ -264,9 +323,14 @@ window.workDrawerExtras = async (work) => {
   return { credit: workCreditHTML(self), cards: window.relatedWorks(self, all, 3).map(workCard) };
 };
 
+/* worksFirst（TOPのWORKs一覧で先頭に表示）の作品を先頭へ並べる。
+ * 安定ソート: 優先同士・それ以外同士は取得順のまま。TOPのWORKsグリッドとフッターで共通 */
+const sortWorksFirst = (list) => [...list.filter((w) => w.worksFirst), ...list.filter((w) => !w.worksFirst)];
+
 /* grid の data属性:
  *   data-works-limit    … 表示件数の上限（未指定なら全件）
  *   data-works-more     … 先頭 data-works-initial 件のあとに置く「全て見る」リンク（TOP用・WORKS一覧へ）
+ *                         このグリッドでは worksFirst（TOPのWORKs一覧で先頭に表示）の作品を先頭に並べる
  *   data-works-exclude  … 除外する事例のid（詳細ページで自分自身を出さない） */
 function renderWorksGrid(grid, works) {
   const exclude = grid.dataset.worksExclude || '';
@@ -275,6 +339,10 @@ function renderWorksGrid(grid, works) {
     // 事例ページの「関連する事例」: 同ジャンル・同クライアントを先頭へ（それ以外は元の順のまま）
     const ref = { kind: grid.dataset.worksKind, client: grid.dataset.worksClient };
     list = window.relatedWorks(ref, list, list.length);
+  }
+  if (grid.dataset.worksMore !== undefined) {
+    // TOPのみ: worksFirst の作品を先頭へ
+    list = sortWorksFirst(list);
   }
   const limit = Number(grid.dataset.worksLimit) || 0;
   if (limit) list = list.slice(0, limit);
@@ -364,7 +432,7 @@ async function initWorkDetail() {
   } catch { /* file:// 直開き等はそのままJS描画 */ }
 
   document.title = `${work.title} — WORKs | STUDIO HOLIDAY`;
-  const tags = [work.client, work.kind].filter(Boolean);
+  const tags = workTags(work);
   const { html: bodyHTML, isDraft } = await window.workBody(work);
   root.innerHTML =
     '<a class="work-back" href="./index.html#works">← WORKs一覧</a>' +
@@ -393,6 +461,51 @@ async function initWorkDetail() {
 }
 
 /* ==========================================================
+   ▼ 事例詳細の恒久ページ（b/works/<id>/、生成済みの静的HTML）のタグ再描画
+   生成時のタグは [client, kind] をそのまま入れているため、kind の改行・全角スペース区切りが
+   1つのピルに潰れている。CMSの事例データから workTags() で組み直す。
+   ========================================================== */
+
+/* パスから works の直後のセグメント（事例の id / slug）を取り出す */
+function workKeyFromPath(pathname) {
+  const segs = String(pathname || '').split('/').filter(Boolean);
+  const i = segs.lastIndexOf('works');
+  if (i < 0 || !segs[i + 1]) return '';
+  try { return decodeURIComponent(segs[i + 1]); } catch { return segs[i + 1]; }
+}
+
+async function initStaticWorkTags() {
+  const box = document.querySelector('.wd-tags');
+  if (!box) return;
+  try {
+    const works = await window.getWorks();
+    if (!works || !works.length) return;
+    const find = (key) => (key ? works.find((w) => w.id === key || w.slug === key) : null);
+
+    const work = find(workKeyFromPath(location.pathname));
+    const tags = work ? workTags(work) : [];
+    if (tags.length) box.innerHTML = tags.map((t) => `<li>#${esc(t)}</li>`).join('');
+
+    // 関連事例カード（href は ../<slug>/ 形式）
+    document.querySelectorAll('a.work-card').forEach((card) => {
+      const tagBox = card.querySelector('.work-card-tags');
+      const href = card.getAttribute('href');
+      if (!tagBox || !href) return;
+      const m = href.match(/^\.\.\/([^/?#]+)\/?/);
+      let key = '';
+      if (m) {
+        try { key = decodeURIComponent(m[1]); } catch { key = m[1]; }
+      }
+      const w = find(key);
+      const cardTags = w ? workTags(w) : [];
+      if (cardTags.length) tagBox.innerHTML = cardTags.map((t) => `<span>#${esc(t)}</span>`).join('');
+    });
+  } catch (e) {
+    console.warn('[works] 事例詳細ページのタグ再描画に失敗:', e);
+  }
+}
+
+/* ==========================================================
    ▼ フッターのWORKs一覧
    ========================================================== */
 
@@ -402,7 +515,8 @@ async function initFooterWorks() {
   const works = await window.getWorks();
   if (!works.length) return; // 取得できなければHTMLの仮リストのまま
   box.innerHTML = '';
-  works.slice(0, 5).forEach((w) => {
+  // TOPのWORKsグリッドと同じく worksFirst の作品を先頭にしてから5件（フォールバック時も同じ）
+  sortWorksFirst(works).slice(0, 5).forEach((w) => {
     const a = document.createElement('a');
     a.href = window.workURL(w);
     a.textContent = w.title;
@@ -595,15 +709,45 @@ function initReveal() {
 
 const MEMBER_NAME_CYCLE = [['l', -6.16], ['s', 3.76], ['m', -1.79], ['r', 4.2]];
 
+/* microCMS members の「並び順」（order）を数値に。未入力・数値にならない値は null */
+function memberOrder(m) {
+  const v = m.order;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (typeof v === 'string' && v.trim() !== '') {
+    const n = Number(v.trim());
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+/* order の昇順。order 未入力は後ろへ。同順位は取得順を維持（安定ソート） */
+function sortMembersByOrder(members) {
+  return members
+    .map((m, i) => ({ m, i, o: memberOrder(m) }))
+    .sort((a, b) => {
+      if (a.o !== null && b.o !== null && a.o !== b.o) return a.o - b.o;
+      if ((a.o === null) !== (b.o === null)) return a.o === null ? 1 : -1;
+      return a.i - b.i;
+    })
+    .map((x) => x.m);
+}
+
+/* 表示できるメンバー（slug（無ければコンテンツID）・名前・写真が揃ったもの）を order 順で */
+function validCmsMembers(members) {
+  return sortMembersByOrder(
+    (members || [])
+      .map((m) => ({ ...m, slug: m.slug || m.id }))
+      .filter((m) => m.slug && m.name && m.photo && m.photo.url),
+  );
+}
+
 /* 案BのTOPのMEMBERS（静的に生成済み・サンプル入り）を、microCMS members の中身で描き直す */
 function renderCmsMembers(members) {
   const list = document.querySelector('.pb-members-list');
   if (!list) return;
   const root = './'; // 案BのTOP（index-b.html）はサイトのルートにある
   list.innerHTML = '';
-  const valid = members
-    .map((m) => ({ ...m, slug: m.slug || m.id }))
-    .filter((m) => m.slug && m.name && m.photo && m.photo.url);
+  const valid = validCmsMembers(members);
   if (!valid.length) {
     const li = document.createElement('li');
     li.className = 'cms-only-empty';
@@ -641,9 +785,24 @@ async function initCmsOnly() {
   document.body.appendChild(badge);
 }
 
+/* 通常ページの案B TOP MEMBERS: microCMS members を取得できたら .pb-members-list を描き直す
+ * （order の昇順・未入力は後ろ・同順位は取得順）。API未作成・取得失敗・有効なメンバー0件なら、HTMLの静的リストのまま。
+ * 描き直したら true で解決する（pb.js がこれを待って横スクロールを組み直す。clientsReady と同じ方式） */
+async function initMembers() {
+  if (!document.querySelector('.pb-members-list')) return false;
+  const members = await fetchCMS('members');
+  if (!validCmsMembers(members).length) return false;
+  renderCmsMembers(members);
+  return true;
+}
+
 // 詳細ページは自分自身を除外してからカードを描きたいので、順番に実行する
 initWorkDetail().then(initWorksGrids);
-initCmsOnly();
+// ?cms=only は initCmsOnly が（0件メッセージも含めて）描き直すので、その完了を待つ
+window.membersReady = CMS_ONLY
+  ? initCmsOnly().then(() => !!document.querySelector('.pb-members-list'), () => false)
+  : initMembers();
+initStaticWorkTags();
 initFooterWorks();
 initMobileNav();
 initHScroll();

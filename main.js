@@ -29,9 +29,12 @@ const stickerOfWork = (w) => ({
   alt: w.title,
   client: w.client || '',
   // slug / body はドロワーで記事本文を出すために持ち回る（事例ページと同じ内容）
+  // FVの帯・ドロワーのタグ表示は kind と client から window.workTags で組み立てる
   work: { kind: w.kind || '', title: w.title, desc: w.description || '', slug: w.slug, body: w.body || '' },
   // 台紙の色・素材（microCMSの stickerBase / stickerColor / stickerFinish。フォールバックは白・通常）
   look: w.stickerLook || window.stickerLookOf(w),
+  // FVキャンバスで中央寄りに優先表示（microCMSの fvCenter / WORKS_FALLBACK の fvCenter）
+  fvCenter: window.isFlagOn ? window.isFlagOn(w.fvCenter) : w.fvCenter === true,
 });
 
 let STICKERS = [];
@@ -414,7 +417,11 @@ const spriteOf = async (item) => {
   item.artPromise ??= loadArt(item);
   const art = await item.artPromise;
   const look = lookFor(item);
-  return art && { alt: item.alt, work: item.work, client: item.client, look, ...makeDiecutSprite(art, undefined, look) };
+  return art && {
+    alt: item.alt, work: item.work, client: item.client, look,
+    fvCenter: !!item.fvCenter,
+    ...makeDiecutSprite(art, undefined, look),
+  };
 };
 
 let spritesPromise = null;
@@ -440,8 +447,9 @@ function getSprites() {
  * 反発の停止距離 GAP=0.88 は「隣とわずかに隙間」の下限保証。
  * excl: 中央の「Design & Deploy Partner」の文字を空けておく楕円。
  */
-function layoutStickers(W, H, unit, excl) {
-  const cell = unit * PARAMS.gap; // グリッド間隔（＝ステッカー間の距離感）
+function layoutStickers(W, H, unit, excl, density = 1) {
+  // グリッド間隔（＝ステッカー間の距離感）。density>1 はスポット不足時のみ使う
+  const cell = (unit * PARAMS.gap) / density;
   const cols = Math.max(3, Math.round(W / cell));
   const rows = Math.max(3, Math.round(H / cell));
   const cellW = W / cols;
@@ -510,20 +518,24 @@ function layoutStickers(W, H, unit, excl) {
   return items;
 }
 
-/* 各絵柄を必ず2枚、約半数だけ3枚にして、同一絵柄の出現を2〜3枚に制限する */
+/* 各絵柄を必ず2枚、約半数だけ3枚にして、同一絵柄の出現を2〜3枚に制限する。
+ * 並びは「全絵柄1枚ずつ（シャッフル）」を先頭に確保し、その後ろに余分のコピー
+ * （シャッフル）を続ける。スポットが足りず末尾が切られても、欠けるのは余分の
+ * コピーだけで、どの事例も最低1枚は必ず壁に出る（issue #17）。 */
 function artSequence(sprites) {
-  const seq = sprites.flatMap((sprite) => {
+  const extras = sprites.flatMap((sprite) => {
     const copies = Math.random() < 0.5 ? 2 : 3;
-    return Array.from({ length: copies }, () => sprite);
+    return Array.from({ length: copies - 1 }, () => sprite);
   });
-  return shuffle(seq);
+  return [...shuffle(sprites), ...shuffle(extras)];
 }
 
 /* 表示枚数が少ないほど中央寄りの狭い候補だけを残し、寂しい散らばりを防ぐ。
- * 枚数が増えれば候補数も増えるため、自然に外側へ広がる。 */
-function centralSpotPool(candidates, count, focus) {
+ * 枚数が増えれば候補数も増えるため、自然に外側へ広がる。
+ * minCount: 最低限残す候補数（全事例を1枚ずつ置ける数）。 */
+function centralSpotPool(candidates, count, focus, minCount = 0) {
   const extraSpots = Math.max(6, Math.ceil(Math.sqrt(count) * 1.5));
-  const poolSize = Math.min(candidates.length, count + extraSpots);
+  const poolSize = Math.min(candidates.length, Math.max(minCount, count + extraSpots));
   return candidates
     .map((p) => ({
       p,
@@ -565,12 +577,36 @@ function selectDistributedSpots(candidates, count, avoid = []) {
 
 /* 同じ絵柄のコピー同士ができるだけ離れるように、絵柄→スポットを割り当てる。
  * 各絵柄の1枚目はランダムなスポット、2枚目以降は「同じ絵柄の既配置」から
- * 最も遠い残りスポットを選ぶ（他の絵柄との距離は問わない）。 */
-function assignArtsToSpots(arts, spots) {
+ * 最も遠い残りスポットを選ぶ（他の絵柄との距離は問わない）。
+ * fvCenter（FVキャンバスで中央寄りに優先表示）の絵柄は、先に1枚目を「中央の文字エリア（focus＝除外楕円）の外側で
+ * 最も中央に近い残りスポット」へ割り当てる（スポット自体が楕円の外にあるので文字には被らない）。
+ * 優先指定が1件も無ければ、従来とまったく同じ処理になる。 */
+function assignArtsToSpots(arts, spots, focus) {
   const remaining = spots.slice();
   const placedByArt = new Map();
   const assignments = [];
-  for (const sprite of arts) {
+
+  // 優先絵柄の1枚目: 楕円で正規化した距離が小さい順に取る（僅差はわずかに揺らして毎回同じ並びにしない）
+  const prePlaced = new Set(); // arts 内のインデックス
+  if (focus && arts.some((s) => s.fvCenter)) {
+    const centerScore = (p) =>
+      Math.hypot((p.x - focus.cx) / focus.rx, (p.y - focus.cy) / focus.ry) + rand(0, 0.08);
+    const scored = remaining.map((p) => ({ p, score: centerScore(p) }));
+    arts.forEach((sprite, i) => {
+      if (!sprite.fvCenter || placedByArt.has(sprite) || !scored.length) return;
+      let bestI = 0;
+      for (let k = 1; k < scored.length; k++) if (scored[k].score < scored[bestI].score) bestI = k;
+      const [{ p: spot }] = scored.splice(bestI, 1);
+      remaining.splice(remaining.indexOf(spot), 1);
+      assignments.push({ sprite, spot });
+      placedByArt.set(sprite, [spot]);
+      prePlaced.add(i);
+    });
+  }
+
+  for (let ai = 0; ai < arts.length; ai++) {
+    if (prePlaced.has(ai)) continue;
+    const sprite = arts[ai];
     if (!remaining.length) break;
     const placed = placedByArt.get(sprite) || [];
     let bestI = 0;
@@ -750,7 +786,9 @@ let ambientHoldTimer = 0;
 
 function tagTextOf(sprite) {
   const w = sprite.work || {};
-  return [sprite.client, w.kind, w.title].filter(Boolean).map((t) => `#${t}`).join('　');
+  // タグ一覧（クライアント・ジャンル）＋ タイトル
+  const tags = window.workTags({ ...w, client: sprite.client });
+  return [...tags, w.title].filter(Boolean).map((t) => `#${t}`).join('　');
 }
 
 function showTagsFor(el) {
@@ -905,7 +943,7 @@ function openModal(work, imgURL, client) {
   // タグは作品詳細ページと同じ「#クライアント #ジャンル」
   const tags = document.getElementById('drawerTags');
   tags.innerHTML = '';
-  [client, work.kind].filter(Boolean).forEach((t) => {
+  window.workTags({ ...work, client }).forEach((t) => {
     const li = document.createElement('li');
     li.textContent = `#${t}`;
     tags.appendChild(li);
@@ -1212,31 +1250,49 @@ async function build({ intro }) {
   const base = vw < 560 ? 150 : vw < 900 ? 190 : 235;
   const unit = base * PARAMS.size;
   const excl = { cx: worldW / 2, cy: worldH / 2, rx: vw * 0.40, ry: vh * 0.28 };
-  const spots = layoutStickers(worldW, worldH, unit, excl);
-
   // 写真のスポットは互いに離れた場所を選ぶ（足りなければ余りから充当）
   const minPhotoDist = Math.min(worldW, worldH) / 3.5;
   const photos = PHOTOS; // CMSのみ表示でCMSに無ければ空（loadCMSContent）
-  const photoSpots = [];
-  const shuffled = shuffle(spots);
-  for (const p of shuffled) {
-    if (photoSpots.length >= photos.length) break;
-    if (photoSpots.every((q) => Math.hypot(p.x - q.x, p.y - q.y) >= minPhotoDist)) {
-      photoSpots.push(p);
+  // 写真（FVトピック）はドラッグしないと見えない位置だと「表示されない」と見えるため、
+  // イントロの引きカメラで見える範囲にカードが収まるスポットを優先する（feedback: FVトピック非表示）
+  const introS = Math.max(vw / worldW, 1 / PARAMS.introView);
+  const viewHW = vw / (2 * introS), viewHH = vh / (2 * introS);
+  const inIntroView = (p) => {
+    const w = p.size * 1.15; // 写真カードの幅（下の buildPhoto 呼び出しと同じ）
+    return Math.abs(p.x - worldW / 2) + w / 2 <= viewHW &&
+      Math.abs(p.y - worldH / 2) + w * 0.62 <= viewHH;
+  };
+  // 全事例を最低1枚ずつ置けるだけのステッカースポットを確保する（issue #17）。
+  // 通常は density=1 の1回で足りる。不足する時だけグリッドを少しずつ細かくして作り直す
+  let spots, photoSpots, availableStickerSpots;
+  for (let density = 1; ; density *= 1.12) {
+    spots = layoutStickers(worldW, worldH, unit, excl, density);
+    photoSpots = [];
+    // 初期表示範囲内のスポットを先頭に並べる（範囲内で距離制約を満たせなければ範囲外から補う）
+    const shuffled = [
+      ...shuffle(spots.filter(inIntroView)),
+      ...shuffle(spots.filter((p) => !inIntroView(p))),
+    ];
+    for (const p of shuffled) {
+      if (photoSpots.length >= photos.length) break;
+      if (photoSpots.every((q) => Math.hypot(p.x - q.x, p.y - q.y) >= minPhotoDist)) {
+        photoSpots.push(p);
+      }
     }
+    for (const p of shuffled) {
+      if (photoSpots.length >= photos.length) break;
+      if (!photoSpots.includes(p)) photoSpots.push(p);
+    }
+    availableStickerSpots = spots.filter((p) => !photoSpots.includes(p));
+    if (availableStickerSpots.length >= sprites.length || density > 4) break;
   }
-  for (const p of shuffled) {
-    if (photoSpots.length >= photos.length) break;
-    if (!photoSpots.includes(p)) photoSpots.push(p);
-  }
-  const availableStickerSpots = spots.filter((p) => !photoSpots.includes(p));
   const arts = sprites.length ? artSequence(sprites) : [];
   const centralStickerSpots = centralSpotPool(availableStickerSpots, arts.length, {
     cx: worldW / 2,
     cy: worldH / 2,
     rx: vw,
     ry: vh,
-  });
+  }, sprites.length);
   const stickerSpots = selectDistributedSpots(centralStickerSpots, arts.length, photoSpots);
   const total = stickerSpots.length + photoSpots.length;
 
@@ -1247,7 +1303,8 @@ async function build({ intro }) {
   const zOrder = shuffle([...Array(total).keys()]);
 
   // 同じ絵柄が近くに固まらないよう、絵柄→スポットを距離最大化で割り当てる
-  const assignments = assignArtsToSpots(arts, stickerSpots);
+  // fvCenter（FVキャンバスで中央寄りに優先表示）の事例は、1枚目を文字エリアのすぐ外（中央寄り）に優先して置く
+  const assignments = assignArtsToSpots(arts, stickerSpots, excl);
   assignments.forEach(({ sprite, spot: p }, i) => {
     const { w, h } = stickerDims(sprite, p.size);
     world.appendChild(buildSticker(sprite, {
