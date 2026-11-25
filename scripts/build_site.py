@@ -56,9 +56,11 @@ HIDDEN_PAGES = [
     'community-space.html',   # 事業ページ: COMMUNITY & SPACE
 ]
 
-# TOPの紹介文（検索結果・SNSのシェアに出る）。ABOUTの本文をもとにした仮の文面
-TOP_DESCRIPTION = ('「なんかこんなんやりたい」をカタチに。STUDIO HOLIDAYは、ブランド・組織・体験のデザインを'
-                   '設計と実装の両輪で手がけるデザインチームです。')
+# TOPのページタイトルと紹介文（検索結果・SNSのシェアに出る）。2026-11-25 に確定した文面
+TOP_TITLE = 'STUDIO HOLIDAY | スタジオホリデイ'
+TOP_DESCRIPTION = ('『なんかこんなんやりたい“をカタチに』を合言葉に活動するデザインチーム。'
+                   '企画や設計はもちろん、実装・定着まで運び切ることを領域にしています。'
+                   'ブランド、サービス設計、UX体験領域の“やりたい“を、デザインのチカラでかなえます。')
 TOP_OG_IMAGE = 'assets/business-hero/design-consulting.jpg'   # 仮。SNSシェア用の画像（1200×630）ができたら差し替える
 FAVICON = 'assets/fv-logo.svg'                                # 仮。ファビコン用の画像ができたら差し替える
 
@@ -188,7 +190,10 @@ def build_page(src_rel, out_rel, base, noindex):
     extra = [f'  <link rel="canonical" href="{url}" />',
              f'  <link rel="icon" href="{root}{FAVICON}" type="image/svg+xml" />']
     if out_rel == 'index.html':
-        title = re.search(r'<title>(.*?)</title>', html, re.S).group(1)
+        title = esc(TOP_TITLE)
+        html, n = re.subn(r'<title>.*?</title>', lambda m: f'<title>{title}</title>', html, count=1, flags=re.S)
+        if n != 1:
+            raise SystemExit(f'{src_rel}: <title> が見つかりません')
         extra += [f'  <meta name="description" content="{esc(TOP_DESCRIPTION)}" />',
                   f'  <meta property="og:title" content="{title}" />',
                   '  <meta property="og:type" content="website" />',
