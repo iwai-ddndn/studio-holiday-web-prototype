@@ -74,6 +74,36 @@ def _lines(v):
     return [s.strip() for s in str(v or '').splitlines() if s.strip()]
 
 
+def _tags(v):
+    """タグ欄 → タグのリスト。先頭の「#」「＃」は外し（表示側で1つ付ける）、同じタグは1つにまとめる"""
+    tags, seen = [], set()
+    for line in _lines(v):
+        for t in build_works.split_tags(line):
+            if t.lower() not in seen:
+                seen.add(t.lower())
+                tags.append(t)
+    return tags
+
+
+def _order(c):
+    """表示順（microCMS の order）。未入力・数値でないものは None（site.js の memberOrder と同じ）"""
+    v = c.get('order')
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, (int, float)):
+        return v
+    try:
+        return float(str(v).strip()) if str(v or '').strip() else None
+    except ValueError:
+        return None
+
+
+def sort_by_order(contents):
+    """order の昇順。未入力は後ろへ。同順位は取得順のまま（site.js の sortMembersByOrder と同じ）"""
+    keyed = [(_order(c), i, c) for i, c in enumerate(contents)]
+    return [c for _o, _i, c in sorted(keyed, key=lambda x: (x[0] is None, x[0] if x[0] is not None else 0, x[1]))]
+
+
 def _bio_lines(v):
     """プロフィール。テキストエリアでもリッチエディタ（HTML）でも段落のリストにする"""
     s = str(v or '')
@@ -97,8 +127,8 @@ def fetch_cms_members():
         ).stdout
         return json.loads(out).get('contents') or None
     except (subprocess.CalledProcessError, json.JSONDecodeError):
-        print('[members] microCMSから取得できません（API未作成・失敗）。data/members.json で生成します')
-        return None
+        # 一時的な取得失敗で、公開中のページを手元のサンプルで作り直してしまわないように止める
+        raise SystemExit('[members] microCMSの取得に失敗しました。ページは作り直しません（前回のまま）')
 
 
 def normalize_members(contents):
@@ -123,7 +153,7 @@ def normalize_members(contents):
             'name': name,
             'name_ja': (c.get('name_ja') or '').strip(),
             'role': role,
-            'tags': _lines(c.get('tags')) or ([role] if role else []),
+            'tags': _tags(c.get('tags')) or ([role] if role else []),
             'image': f'{photo}?w=800',
             'tilt': tilt,
             'label': label,
@@ -140,7 +170,7 @@ def load_members():
     microCMS から取れなかった時だけ data/members.json（サンプル入り）で代用し、
     その人には local: True を付けて一覧の <li> に data-local を出す"""
     contents = fetch_cms_members()
-    cms = normalize_members(contents) if contents else []
+    cms = normalize_members(sort_by_order(contents)) if contents else []
     if cms:
         return cms
     return [dict(m, local=True) for m in load_local_members()]

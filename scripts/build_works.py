@@ -63,8 +63,8 @@ def fetch_cms_works():
         contents = json.loads(out).get('contents')
         return contents or None
     except (subprocess.CalledProcessError, json.JSONDecodeError):
-        print('[works] microCMSの取得に失敗。フォールバックデータで生成します')
-        return None
+        # 一時的な取得失敗で、公開中のページを手元のダミーデータで作り直してしまわないように止める
+        raise SystemExit('[works] microCMSの取得に失敗しました。ページは作り直しません（前回のまま）')
 
 
 def load_fallback():
@@ -73,12 +73,11 @@ def load_fallback():
 
 def normalize_works(contents, fallback):
     """CMSのコンテンツを site.js の normalizeWorks と同じ共通形に揃える。
-    slug は CMSの slug フィールド > フォールバックのタイトル一致 > コンテンツID の順で解決"""
-    local_by_title = {w['title']: w for w in fallback}
+    microCMS に入っている内容だけを使う（手元の素材・クレジット・仮原稿では補わない）。
+    slug は CMSの slug フィールド > コンテンツID の順で解決"""
     works, seen = [], set()
     for c in contents:
-        local = local_by_title.get(c.get('title'))
-        slug = c.get('slug') or (local['slug'] if local else c['id'])
+        slug = c.get('slug') or c['id']
         if slug in seen:  # 万一slugが重複したらコンテンツIDで逃がす（ページの上書き防止）
             slug = c['id']
         seen.add(slug)
@@ -91,9 +90,9 @@ def normalize_works(contents, fallback):
             'client': c.get('client') or '',
             'description': c.get('description') or '',
             'body': c.get('body') or '',
-            'credit': c.get('credit') or (local.get('credit', '') if local else ''),
+            'credit': c.get('credit') or '',
             # imgix変換で幅を抑えつつPNG化（切り抜きの透過を保持）
-            'image': f"{sticker['url']}?w=1000&fm=png" if sticker.get('url') else (local['image'] if local else ''),
+            'image': f"{sticker['url']}?w=1000&fm=png" if sticker.get('url') else '',
         })
     return works
 
@@ -101,6 +100,28 @@ def normalize_works(contents, fallback):
 def local_works(fallback):
     return [{**w, 'id': w['slug'], 'body': '', 'credit': w.get('credit', ''), 'client': w.get('client', '')}
             for w in fallback]
+
+def split_tags(s):
+    """タグ文字列を個別のタグに分ける（site.js の splitTags と同じ規則）。
+    区切りは改行・全角スペース・「#」の直前の空白。先頭の「#」「＃」は外す（表示側で1つ付ける）"""
+    out = []
+    for t in re.split(r'\r?\n|\u3000|\s+(?=[#＃])', str(s or '')):
+        t = re.sub(r'^[#＃\s]+', '', t.strip()).strip()
+        if t:
+            out.append(t)
+    return out
+
+
+def work_tags(w):
+    """事例のタグ一覧: [クライアント, ...ジャンル]。同じタグは1つにまとめる（site.js の workTags と同じ）"""
+    tags, seen = [], set()
+    for t in [str(w.get('client') or '').strip()] + split_tags(w.get('kind')):
+        key = t.lower()
+        if t and key not in seen:
+            seen.add(key)
+            tags.append(t)
+    return tags
+
 
 # ==========================================================
 # ▼ HTML部品（site.js の esc / workCard / workCreditHTML / relatedWorks と同じ規則）
@@ -152,7 +173,7 @@ def work_card_html(w, root='../../', href=None):
     """TOPのカードと同じDOM（site.js workCard）。root はサイトルートまでの相対パス"""
     visual = (f'<img src="{esc(page_path(w["image"], root))}" alt="" loading="lazy" />' if w['image']
               else '<span class="work-card-noimg" aria-hidden="true">STUDIO HOLIDAY</span>')
-    tags = ''.join(f'<span>#{esc(t)}</span>' for t in (w['client'], w['kind']) if t)
+    tags = ''.join(f'<span>#{esc(t)}</span>' for t in work_tags(w))
     return (
         f'<a class="work-card" href="{href or "../" + esc(w["slug"]) + "/"}">'
         f'<span class="work-card-visual">{visual}</span>'
@@ -180,19 +201,11 @@ def credit_html(work):
 
 
 def body_html(work):
-    """記事本文: CMSの body > data/works-sample/<slug>.html の仮原稿 > 入稿待ちの注記"""
+    """記事本文: microCMSの body だけを出す。未入稿なら何も出さない（仮原稿や入稿待ちの注記は出さない）"""
     if work['body']:
         # CMSのリッチエディタHTMLはそのまま埋め込む（画像はCMSの絶対URL）
         return f'<div class="work-body">{rewrite_body_paths(work["body"])}</div>'
-    sample = SAMPLE_DIR / f'{work["slug"]}.html'
-    if sample.exists():
-        html = re.sub(r'<!--.*?-->', '', sample.read_text(encoding='utf-8'), flags=re.S).strip()
-        if html:
-            note = ('<p class="work-draft-note">※ レイアウト確認用の仮原稿です。'
-                    'microCMSの「本文」に入稿すると差し替わります。（仮）</p>')
-            return f'<div class="work-body">{note}{rewrite_body_paths(html)}</div>'
-    return ('<p class="work-note">※ 詳細記事の本文はmicroCMSの「本文」入稿待ちです。'
-            'ここに事例記事がそのまま入ります。（仮）</p>')
+    return ''
 
 # ==========================================================
 # ▼ ページテンプレート（ヘッダー・フッターはTOPと同じDOM。root はサイトルートまでの相対パス）
@@ -201,7 +214,7 @@ def body_html(work):
 FONTS_URL = ('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900'
              '&amp;family=Roboto+Condensed:wght@300;600'
              '&amp;family=Noto+Sans+JP:wght@100;400;600;700;800;900&amp;display=swap')
-ASSET_VER = '20261110-1'
+ASSET_VER = '20261125-1'
 
 
 def head_html(title, description, og_url, og_image, og_type, root):
@@ -236,7 +249,7 @@ def render_page(work, all_works):
     '''事例詳細（Figma 326:1330）: ライムの帯に事例ビジュアル → タイトル・タグ・本文 → Related Works'''
     root = '../../'
     title = f'{work["title"]} — WORKs | STUDIO HOLIDAY'
-    tags = [t for t in (work['client'], work['kind']) if t]
+    tags = work_tags(work)
 
     hero_img = (f'<img src="{esc(page_path(work["image"]))}" alt="{esc(work["title"])}" />'
                 if work['image'] else '<span class="wd-noimg" aria-hidden="true">STUDIO HOLIDAY</span>')
