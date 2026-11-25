@@ -2,7 +2,15 @@
 
 更新日: 2026-11-25
 
-残っている作業だけを載せている。終わった準備（ソースの統合、URLの整理、公開の仕組み）は末尾の「付録A」に結果だけ残した。
+## 方針
+
+新サイトのファイルを、今 `studioholiday.jp` がつながっているエックスサーバーに置く。WordPress と入れ替える形になる。
+
+- DNS は変えない。メール（アカウント39件）にも触らない。
+- 正式なURLは `https://studioholiday.jp/` のまま。
+- 毎朝の自動更新は、最初は付けない。内容を変えたら、ファイルを上げ直す（5章）。GitHub からの自動転送は後から足す（6章）。
+
+DNS を GitHub に向ける案は、メールの設定変更と39人ぶんの確認が要るため、やめた。
 
 ---
 
@@ -10,229 +18,182 @@
 
 | 項目 | 状態 |
 | --- | --- |
-| 新サイト（リハーサル） | https://iwai-ddndn.github.io/studio-holiday-web-prototype/ で、本番と同じURL構成で公開中。検索除けを付けている |
-| 確認用サイト | https://iwai-ddndn.github.io/studio-holiday-web-proposal-b/index-b.html （事業ページも見られる） |
-| 現行サイト | エックスサーバー上の WordPress。`https://studioholiday.jp/`（`www` はここへ転送） |
-| DNS | エックスサーバーで管理。岩井さんが管理画面に入れる |
-| メール | 配送先（MX）が `studioholiday.jp` 自身を指している。このままサイトのDNSを変えると届かなくなる（3章 手順A で対策） |
+| アップロードするファイル | `xserver-upload/studioholiday-site.zip`（約43MB、195ファイル）。2026-11-25 時点の microCMS の内容で作成 |
+| リハーサル | https://iwai-ddndn.github.io/studio-holiday-web-prototype/ （本番と同じURL構成。ヘッダー常時表示などの最新の修正5点は未反映） |
+| 確認用サイト | https://iwai-ddndn.github.io/studio-holiday-web-proposal-b/index-b.html （最新の修正を反映済み。事業ページも見られる） |
+| 現行サイト | エックスサーバー（サーバー番号 sv72）上の WordPress |
+| サブドメイン | `lab`（ホリデイラボ）、`minnadegohan`、`substack` の3つ。今回は触らない |
 
-DNSの現在値（2026-11-25 に外から確認）:
-
-| ホスト | 種別 | 値 |
-| --- | --- | --- |
-| `studioholiday.jp` | A | 202.226.37.33 |
-| `www` | A | 202.226.37.33 |
-| `studioholiday.jp` | MX | `studioholiday.jp`（優先度 0） |
-| `studioholiday.jp` | TXT | SPF: `v=spf1 +a:sv72.xserver.jp +a:studioholiday.jp +mx include:spf.sender.xserver.jp ~all` |
-| `substack` | CNAME | Substack（今回は触らない） |
-| `lab` | CNAME | Shopify（今回は触らない） |
-| `*`（その他のサブドメインすべて） | A | 202.226.37.33（ワイルドカード。今回は触らない） |
+zip の中身は、最新の修正5点（ヘッダー常時表示、下層FVのステッカー、WORKSの並び順、SPの2列）を含む。確認用サイトで見た内容と同じ。
 
 ---
 
-## 2. 切り替えまでに済ませること
+## 2. アップロードの前に済ませること
 
-### 2-1. 先方に確認すること
+### 2-1. public_html の中身を確かめる
 
-切り替えの日時を決める前に、次を確認する。「岩井さんが見る」の欄は、管理画面で確かめられる項目。
+ファイルマネージャで `studioholiday.jp` → `public_html` を開き、一覧のスクリーンショットを撮る。次の3種類に仕分ける。
 
-**A. メール（切り替えで止まらないかの確認）**
-
-| # | 確認すること | 誰が見る | 問題になる場合 |
-| --- | --- | --- | --- |
-| A-1 | `@studioholiday.jp` のアドレスを使っている人数と、アドレスの一覧 | 岩井さん（サーバーパネルのメールアカウント一覧）＋先方 | 一覧に無い利用者がいると、確認が漏れる |
-| A-2 | 各自のメールソフトの受信サーバー名・送信サーバー名 | 先方（各自） | `studioholiday.jp` と入れている人は書き換えが要る。`sv72.xserver.jp` なら何もしなくてよい |
-| A-3 | スマホやタブレットなど、2台目以降の端末の設定 | 先方（各自） | パソコンは `sv72.xserver.jp` でも、スマホだけ `studioholiday.jp` になっていることがある |
-| A-4 | Gmail などへ取り込んでいる人（POP受信、Gmail から `@studioholiday.jp` として送信）の、取り込み元・送信サーバー名 | 先方（各自） | A-2 と同じ |
-| A-5 | 人以外でメールを送っているもの。複合機のスキャン送信、予約・会計などのサービス、WordPress のお問い合わせフォーム通知 | 先方 | 送信サーバーに `studioholiday.jp` を指定していると送れなくなる |
-| A-6 | メールの転送設定やメーリングリストを使っているか | 岩井さん（サーバーパネル） | サーバー側の設定なので、切り替えの影響は受けない。把握のために見ておく |
-| A-7 | Microsoft 365 をこのドメインで使っているか | 先方 | DNS に Microsoft の所有確認（`MS=…`）が残っている。使っているなら、その TXT は消さない |
-
-確認の結果、A-2〜A-5 で `studioholiday.jp` を指定しているものが無ければ、利用者側の作業はゼロになる。ある場合は、3章 手順A-4 で書き換えてもらう。
-
-`mail.studioholiday.jp` のような名前を指定している場合は、書き換えなくてよい。DNS に「サブドメインはすべてエックスサーバーへ向ける」設定（ワイルドカード）があり、今回はそこを変えないため。
-
-**B. 現行サイト（消えて困るものが無いかの確認）**
-
-| # | 確認すること | 誰が見る | 補足 |
-| --- | --- | --- | --- |
-| B-1 | 現行サイトのお問い合わせフォーム（WordPress）と `hello@studioholiday.jp` の扱い | 先方 | 新サイトのお問い合わせは Google フォームになる。フォームの回答を誰が受け取るかと、`hello@` を使い続けるかを決める |
-| B-2 | 現行サイトにしか無い情報や、外部から直接リンクされているページ・画像・PDF | 先方 | 切り替え後は開けなくなる。必要なものは新サイトか microCMS に移す |
-| B-3 | 名刺・メール署名・SNSプロフィール・Googleビジネスプロフィールなどに載せているURL | 先方 | `https://studioholiday.jp/` のままなら対応不要 |
-| B-4 | WordPress とサーバー契約を、切り替え後もしばらく残すこと | 先方 | 切り戻し先になる。メールもこのサーバーで動き続ける |
-| B-5 | サブドメインで動いているもの | 岩井さん（DNSレコード一覧） | 外から確認できたのは `substack`（Substack）と `lab`（Shopify）。どちらも今回は変えない。ほかにあれば、変えない対象に加える |
-
-**C. 計測・検索**
-
-| # | 確認すること | 誰が見る | 補足 |
-| --- | --- | --- | --- |
-| C-1 | Google Search Console を誰のアカウントで使っているか | 先方 | 切り替え後にサイトマップを送信する。所有確認の TXT はすでにある |
-| C-2 | Googleアナリティクスなどのアクセス解析を使っているか | 先方 | 使う場合は計測IDをもらい、切り替え前に新サイトへ入れる |
-
-**D. 当日の段取り**
-
-| # | 決めること | 補足 |
+| 種類 | 例 | 扱い |
 | --- | --- | --- |
-| D-1 | 切り替える日時 | 岩井さんと先方が同時に確認できる時間帯。メールの少ない時間がよい |
-| D-2 | 先方の確認担当 | 当日、メールの送受信とサイトの表示を確認する人 |
-| D-3 | 最終OKを出す人 | 切り替え後の表示を見て、公開を確定する人 |
-| D-4 | 問題が出たときの連絡先 | 切り替え後の数日間、メールが届かないなどの連絡を受ける窓口 |
+| WordPress のファイル | `wp-admin`、`wp-content`、`wp-includes`、`index.php`、`wp-config.php` などの `wp-*.php`、`.htaccess`、`xmlrpc.php`、`license.txt`、`readme.html` | 退避する（3章 手順2） |
+| サブドメインのフォルダ | `lab`、`minnadegohan`、`substack` | **触らない** |
+| それ以外 | 手で置いたファイルやフォルダ、`.user.ini`、`.well-known` など | 1つずつ判断する。迷うものは残す |
 
-### 2-2. 中身の仕上げ（出すまでに直したいもの）
+新サイトのファイル名は次のとおり。同じ名前のものが public_html にすでにあれば、上書きされる前に退避する。
 
-| # | 内容 | 直す場所 |
+`index.html`、`404.html`、`work.html`、`robots.txt`、`sitemap.xml`、`.htaccess`、`styles.css`、`site.js`、`main.js`、`cms-config.js`、`assets/`、`data/`、`members/`、`works/`、`proposal-b/`
+
+### 2-2. 先方に確認すること
+
+| # | 確認すること | 補足 |
 | --- | --- | --- |
-| 1 | TOPの紹介文（検索結果・SNSシェアに出る）が仮の文面 | 文面が決まれば Claude が差し替える |
-| 2 | SNSシェア用の画像が仮（BUSINESSの写真） | 1200×630 の画像があれば差し替える |
-| 3 | ファビコンが仮（アーチのロゴ） | 画像があれば差し替える |
-| 4 | 修正リスト（`studio-holiday-web-feedback`）の未完了 Issue | 公開前に必須のものを選ぶ |
-| 5 | アクセス解析（Googleアナリティクスなど）を入れるか | 使う場合は計測IDが必要 |
+| 1 | 切り替える日時と、先方の確認担当 | 作業は10〜20分。その間だけサイトが見えにくくなる |
+| 2 | `minnadegohan.studioholiday.jp` と `lab.studioholiday.jp` を今も使っているか | 今回は触らないが、切り替え後に表示が変わっていないかを見てもらう |
+| 3 | 現行サイトのお問い合わせフォームと `hello@studioholiday.jp` の扱い | 新サイトのお問い合わせは Google フォームになる。回答を誰が受け取るかを決める |
+| 4 | 現行サイトにしか無い情報や、外部から直接リンクされている画像・PDF | 切り替え後は開けなくなる。必要なものは先に移す |
+| 5 | アクセス解析（Googleアナリティクスなど）を使っているか | 使う場合は計測IDをもらい、zip を作り直す |
+| 6 | Search Console を誰のアカウントで使っているか | 切り替え後にサイトマップを送信する |
 
-1〜3は仮のままでも公開できる。
+メールの設定は、確認しなくてよい。
 
-事例とメンバーの内容は、すべて microCMS から出している。全ページ検査（付録B）は 2026-11-25 時点で「問題なし」（事例25件・メンバー9人）。
+### 2-3. 中身の仕上げ（仮のままでも公開できる）
 
-### 2-3. DNSの下準備（切り替えの1時間以上前。前日がおすすめ）
+| # | 内容 | 必要なもの |
+| --- | --- | --- |
+| 1 | TOPの紹介文（検索結果・SNSシェアに出る）が仮の文面 | 確定した文面 |
+| 2 | SNSシェア用の画像が仮（BUSINESSの写真） | 1200×630 の画像 |
+| 3 | ファビコンが仮（アーチのロゴ） | ファビコン用の画像 |
 
-岩井さんがエックスサーバーの管理画面で行う。先方の立ち会いは要らない。
-
-1. **今の設定を残す。** DNSレコード設定の一覧をスクリーンショットで保存する。切り戻しのときに見る。
-2. **切り替えを早く効かせる準備をする。** `studioholiday.jp` と `www` の A レコードの TTL を 300（秒）に変える。TTL は「古い設定を覚えておく時間」で、今の値（通常 3600）のままだと、切り替えや切り戻しが行き渡るのに最大1時間かかる。
-3. **GitHub でドメインの所有確認をする。** GitHub の右上のアイコン → Settings → Pages → 「Add a domain」に `studioholiday.jp` を入れる。表示された TXT レコード（名前は `_github-pages-challenge-iwai-ddndn`）をエックスサーバーのDNSに追加し、GitHub の画面で Verify を押す。他人にこのドメインを使われる事故を防ぐための手順。
+差し替えたら zip を作り直す（5章）。
 
 ---
 
-## 3. 当日の手順（先方と同時に確認する）
+## 3. 当日の手順
 
-通話やチャットをつないだまま進める。操作は岩井さん、確認は岩井さんと先方の両方で行う。
+操作は岩井さんがファイルマネージャで行う。先方とは、手順5の確認を同時に行う。
 
-所要時間の目安は、手順Aを前日に済ませていれば30分〜1時間。当日にまとめて行う場合は、手順Aのあとに1時間ほど待つ。
+### 手順1: バックアップを取る
 
-### 手順A: メールを守る（サイトを切り替える前に必ず行う）
+1. サーバーパネル → バックアップで、自動バックアップが取られていることを確かめる。
+2. ファイルマネージャで、`studioholiday.jp` フォルダの中（`public_html` と同じ階層）に、新しいフォルダ `wp_backup_20261125` を作る。public_html の外なので、ウェブからは見えない。
 
-メールは「`studioholiday.jp` の A レコードが指すサーバー」に届く設定になっている。配送先を、エックスサーバーのサーバー名へ直接向け直す。
+### 手順2: WordPress のファイルを退避する
 
-| # | 誰が | 何をする |
-| --- | --- | --- |
-| A-1 | 岩井さん | エックスサーバーのサーバーパネルで、サーバー名（`sv***.xserver.jp`）を確認する。SPF の記述からは `sv72.xserver.jp` と読めるが、管理画面で確かめる |
-| A-2 | 岩井さん | DNSレコード設定で、MX の値を `studioholiday.jp` から A-1 のサーバー名に書き換える（優先度は 0 のまま） |
-| A-3 | 岩井さん | SPF の TXT から `+a:studioholiday.jp` を消す。残すと、GitHub のサーバーをメールの送信元として認める記述になる |
-| A-4 | 先方 | 2-1 の確認で、サーバー名に `studioholiday.jp` を指定していた人・機器があれば、A-1 のサーバー名に変える（無ければ飛ばす） |
-| A-5 | 先方 | 社外のアドレス（Gmail など）との間で、送信と受信を1通ずつ試す |
+`public_html` の中で、2-1 で「WordPress のファイル」に仕分けたものを選び、`wp_backup_20261125` へ移動する。コピーではなく移動。
 
-A-5 で送受信できれば次へ進む。当日に行う場合は、A-2 から1時間ほど置いてから A-5 を試す。古い設定が残っている間は、失敗が見えないため。
+- サブドメインのフォルダ（`lab`、`minnadegohan`、`substack`）は動かさない。
+- `.htaccess` も忘れずに移す。残っていると、新サイトの転送設定とぶつかる。
+- データベースには触らない。
 
-届かない場合は、MX を元の `studioholiday.jp` に戻して中止する。
+この時点から手順3が終わるまで、サイトは表示されない。
 
-### 手順B: 新サイトを本番用の設定にする
+### 手順3: 新サイトを上げる
 
-| # | 誰が | 何をする |
-| --- | --- | --- |
-| B-1 | 岩井さん | GitHub のリポジトリ `studio-holiday-web-prototype` → Settings → Secrets and variables → Actions → Variables で、`SITE_BASE_URL` を `https://studioholiday.jp`、`SITE_NOINDEX` を `off` にする |
-| B-2 | 岩井さん | Actions → 「Deploy site to GitHub Pages」→ Run workflow を押し、成功（緑）を待つ。2〜3分かかる |
+1. `public_html` を開き、「アップロード」で `studioholiday-site.zip` を上げる。
+2. 上がった zip を選び、「展開」を押す。展開先は `public_html` そのもの（フォルダを新しく作らない）。
+3. `public_html` の直下に `index.html` と `assets` などが並んでいることを確かめる。`studioholiday-site` のようなフォルダの中に入ってしまった場合は、中身を1つ上へ移動する。
+4. zip を削除する。
 
-これで検索除けが外れ、シェア用のURLが `studioholiday.jp` になる。B-1 と B-2 は、Claude に頼めば代わりに実行できる。
+ファイルマネージャで zip を上げられない・展開できない場合は、FTP ソフト（FileZilla など）で、zip を手元で展開した中身を `public_html` へ上げる。`.htaccess` は隠しファイルなので、表示設定を確かめる。
 
-### 手順C: ドメインを切り替える
+### 手順4: 表示を確かめる（岩井さん）
 
-| # | 誰が | 何をする |
-| --- | --- | --- |
-| C-1 | 岩井さん | リポジトリの Settings → Pages → Custom domain に `studioholiday.jp` を入れて Save を押す |
-| C-2 | 岩井さん | エックスサーバーのDNSレコード設定で、下の表のとおり書き換える |
-| C-3 | 岩井さん | Pages の画面で「DNS check successful」が出るのを待つ |
-| C-4 | 岩井さん | 同じ画面の「Enforce HTTPS」にチェックを入れる。証明書の発行に数分〜1時間かかり、その間は https で警告が出ることがある |
+| 確認すること | 期待する結果 |
+| --- | --- |
+| `https://studioholiday.jp/` | 新サイトのTOPが開く |
+| `http://studioholiday.jp/` と `https://www.studioholiday.jp/` | `https://studioholiday.jp/` へ転送される |
+| 事例・メンバーの詳細ページ | 開く |
+| `https://studioholiday.jp/aaa`（存在しないURL） | 「ページが見つかりません」のページが出る |
+| `https://minnadegohan.studioholiday.jp/` と `https://lab.studioholiday.jp/` | 切り替え前と同じ表示 |
+| `https://substack.studioholiday.jp/` | 今までどおり開く |
 
-書き換える内容:
+旧サイトが出る場合は、サーバーパネル → 高速化 → サーバーキャッシュ設定でキャッシュを削除し、再読み込みする。
 
-| ホスト | 変更前 | 変更後 |
-| --- | --- | --- |
-| `studioholiday.jp` | A 202.226.37.33 | A レコードを4つ: 185.199.108.153 / 185.199.109.153 / 185.199.110.153 / 185.199.111.153 |
-| `www` | A 202.226.37.33 | A を消して、CNAME `iwai-ddndn.github.io` |
+画面が真っ白になる、または「500 Internal Server Error」が出る場合は、`.htaccess` が原因のことが多い。`public_html` の `.htaccess` を一時的に `htaccess.txt` へ名前変更して、表示が戻るか確かめる。
 
-MX、TXT、`substack`、`lab`、ワイルドカード（`*`）には触らない。
-
-### 手順D: 同時に確認する
+### 手順5: 先方と同時に確認する
 
 | 確認すること | 岩井さん | 先方 |
 | --- | --- | --- |
-| `https://studioholiday.jp/` で新サイトが開き、鍵マークが付く | ○ | ○ |
-| `www.studioholiday.jp` と `http://` が `https://studioholiday.jp/` へ転送される | ○ | |
-| 事例・メンバーの詳細ページが開く | ○ | ○ |
+| TOP・事例・メンバーが表示される | ○ | ○ |
 | お問い合わせボタンから Google フォームが開く | ○ | ○ |
 | スマホで表示が崩れない | ○ | ○ |
-| メールを社外と送受信できる | | ○ |
-| `https://substack.studioholiday.jp/` が今までどおり開く | ○ | |
-| ページのソースに `noindex` が無く、`/robots.txt` が全許可になっている | Claude | |
+| メールを社外と送受信できる（念のため） | | ○ |
+| サブドメインのサイトが今までどおり | ○ | ○ |
 
-先方の画面で旧サイトが出る場合は、古い設定がまだ残っている。数分待ってから再読み込みするか、スマホの回線（Wi-Fi を切る）で試す。
+確認が済んだら、Claude に「公開した」と伝える。配信中のファイルを手元と照合し、検索除けが無いことと、全ページのリンクを検査する。
 
 ---
 
 ## 4. 切り戻し
 
-表示やメールに問題が出たら、DNS を元に戻す。2-3 のスクリーンショットを見ながら行う。
+1. `public_html` から、新サイトのファイル（2-1 の一覧）を削除する。サブドメインのフォルダは消さない。
+2. `wp_backup_20261125` の中身を、`public_html` へ移動して戻す。
 
-1. `studioholiday.jp` の A レコード4つを消し、A 202.226.37.33 に戻す。
-2. `www` の CNAME を消し、A 202.226.37.33 に戻す。
-3. リポジトリの Settings → Pages → Custom domain を空にして Save を押す。
-
-TTL を 300 にしてあれば、数分で旧サイトに戻る。WordPress とサーバー契約を残しておくのは、このため。
-
-メールの MX（手順A）は、戻さなくてよい。エックスサーバーへ直接届く設定なので、サイトがどちらを向いていても届く。
+DNS を変えていないので、戻した瞬間に旧サイトへ戻る。
 
 ---
 
-## 5. 切り替えたあと
+## 5. 公開後の運用
 
-| いつ | 何をする |
+自動更新が無い間は、次のときにファイルを上げ直す。
+
+| こういうとき | 上げ直しが要るか |
 | --- | --- |
-| 当日 | Google Search Console に `https://studioholiday.jp/sitemap.xml` を送信する（所有確認の TXT はすでにある。誰のアカウントかを先方に確認） |
-| 翌朝 | Actions の「Deploy site to GitHub Pages」が成功しているか見る（毎朝 6:45 に自動で動く） |
-| 数日後 | 問題が無ければ、A レコードの TTL を元の値（3600）に戻す |
-| 1〜2週間後 | 先方と相談して、旧 WordPress の扱いを決める |
+| microCMS で、既存の事例・メンバーの文章や画像を直した | TOPと一覧は自動で変わる。詳細ページは上げ直すまで古いまま |
+| microCMS で、事例・メンバーを追加した | 要る。上げ直すまで、TOPや一覧のカードを押しても詳細ページが無い（404になる） |
+| microCMS で、事例・メンバーを削除・非公開にした | 要る。上げ直すまで、詳細ページがURL直打ちで見える |
+| Substack に記事を出した | 不要（電光掲示板は上げ直すまで前回の一覧のまま。気になれば上げ直す） |
+| デザインや文言を直した | 要る |
 
-旧サイトのURLについて: 記事URL（`/?p=123`）は新サイトの TOP が開く。画像の直リンク（`/wp-content/uploads/…`）は 404 になる。旧サイトはほぼ1ページなので、個別の転送設定は作らない。
+上げ直しの手順:
+
+1. Claude に「zip を作り直して」と頼む。microCMS の最新で作り直し、全ページを検査した zip が `xserver-upload/` にできる。
+2. ファイルマネージャで `public_html` に zip を上げて展開する（上書き）。
+3. 削除した事例・メンバーがある場合は、`works/` と `members/` の中の、そのIDのフォルダを消す。どれを消すかは Claude が伝える。
 
 ---
 
-## 6. 後日: 会社の GitHub への移管
+## 6. 後日: GitHub からの自動転送と、会社の GitHub への移管
 
-会社の Organization ができたら行う。
+### 自動転送（上げ直しを不要にする）
 
-1. リポジトリを Transfer する（`studio-holiday-web-prototype`、修正リストの `studio-holiday-web-feedback`、確認用の `studio-holiday-web-proposal-b`）。履歴と Issue は残る。
-2. 移管先で、Pages の設定（Source と Custom domain）、Variables（`SITE_BASE_URL` と `SITE_NOINDEX`）、ワークフローの動作を確認する。
-3. 移管先の Organization で、ドメインの所有確認をもう一度行う。
-4. DNS の `www` の CNAME を `iwai-ddndn.github.io` から `<org名>.github.io` に書き換える。`studioholiday.jp` の A レコードは GitHub 共通の値なので変えない。
-5. microCMS を会社の名義・支払いに移すかを決める。
+GitHub Actions が毎朝、作ったファイルをエックスサーバーへ SSH で送る形にする。必要な準備:
+
+1. サーバーパネル → SSH設定を ON にし、公開鍵認証用の鍵を作る（今は「SSH設定はありません」の状態）。
+2. 鍵とサーバー情報を、GitHub リポジトリの Secrets に登録する（岩井さんが行う）。
+3. Claude が、転送用のワークフローを追加する。サブドメインのフォルダを消さない設定にする。
+
+### 会社の GitHub への移管
+
+会社の Organization ができたら、リポジトリを Transfer する（`studio-holiday-web-prototype`、`studio-holiday-web-feedback`、`studio-holiday-web-proposal-b`）。履歴と Issue は残る。公開先がエックスサーバーなので、DNS の変更は要らない。自動転送を入れている場合は、Secrets を移管先で登録し直す。
 
 ---
 
 ## 付録A: 済んでいる準備（2026-11-25）
 
-- 案Bのソースを `studio-holiday-web-prototype` の `main` に統合した。確認用リポジトリへ直接入っていた16件のPRも取り込み済み。
-- 公開時のURLを整理した（`index-b.html` → `index.html`、`b/works/` → `works/`、`b/members/` → `members/`）。
-- 表示と生成を microCMS の内容だけにした。ハッシュタグの「#」の重複も解消した。
-- お問い合わせボタン（ヘッダー・フッター・CONTACT）を Google フォームへ向けた。
+- 案Bのソースを `studio-holiday-web-prototype` の `main` に統合した。
+- 公開時のURLを整理した（`index.html`、`works/`、`members/`）。
+- 表示と生成を microCMS の内容だけにした。ハッシュタグの「#」の重複を解消した。
+- お問い合わせボタンを Google フォームへ向けた。
 - `robots.txt`、`sitemap.xml`、`404.html`、OGP、canonical を入れた。
-- GitHub Pages の公開を GitHub Actions に切り替えた。毎朝 6:45 に microCMS と Substack の最新で作り直して公開する。
+- エックスサーバー用の `.htaccess`（`http` と `www` の転送、404ページ）を用意し、手元の Apache で動作を確かめた。サブドメインには転送が効かないようにしてある。
+- 事業ページ3つは本番に出していない（付録B）。
 
-## 付録B: 日々の運用
-
-| やりたいこと | 方法 |
-| --- | --- |
-| microCMS の変更をすぐ反映する | Actions → 「Deploy site to GitHub Pages」→ Run workflow（放っておいても翌朝 6:45 に反映される） |
-| デザインや文言を直す | `studio-holiday-web-prototype` の `main` に入れる。push すると自動で公開される。確認用リポジトリには直接入れない（二重管理になる） |
-| 全ページを検査する | `python3 scripts/check_site.py _site`。microCMS との過不足、リンク切れ、「#」の重複、仮の文言、ステッカー画像の未登録を調べる |
-| 事例に画像を出す | microCMS の「ステッカー」欄に画像を登録する。未登録の事例は、TOPの壁に貼られず、一覧と詳細でも画像が出ない |
-| 確認用サイトを更新する | `sh scripts/deploy_proposal_b.sh` |
-
-## 付録C: 事業ページを公開するとき
+## 付録B: 事業ページを公開するとき
 
 事業ページ3つ（DESIGN CONSULTING / FOOD DESIGN / COMMUNITY & SPACE）は、本番には出していない。ファイルはリポジトリに残っていて、確認用サイトでは見られる。
 
 1. `design-process.html`、`food-design.html`、`community-space.html` を直す（FOOD DESIGN と COMMUNITY & SPACE の見出しには「（仮）」が残っている）。
-2. 確認用サイトに出して確認する（`sh scripts/deploy_proposal_b.sh`）。
+2. 確認用サイトに出して確認する。
 3. `scripts/build_site.py` の `HIDDEN_PAGES` から、公開するページの行を消す。
-4. `main` に push する。ページが公開され、フッターのリンクも自動で戻る。
+4. zip を作り直して上げる。ページが公開され、フッターのリンクも自動で戻る。
 
-TOP の BUSINESS カードから事業ページへのリンクは、別に外してある（修正リスト #23）。戻す場合は `index-b.html` の BUSINESS カードを直す。
+## 付録C: コマンド（Claude 用）
+
+| やること | コマンド |
+| --- | --- |
+| 本番用の一式を作る | `python3 scripts/build_works.py && python3 scripts/build_pages.py && python3 scripts/build_proposal_b.py && python3 scripts/build_site.py --apache` |
+| 全ページを検査する | `python3 scripts/check_site.py _site` |
+| 確認用サイトを更新する | `sh scripts/deploy_proposal_b.sh` |
