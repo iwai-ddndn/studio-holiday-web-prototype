@@ -453,6 +453,20 @@ body {
   object-fit: cover;
   -webkit-user-drag: none;
 }
+/* 外部サイトへのリンクであることを示すアイコン（カードの右下・キャプションの横） */
+.photo-ext {
+  position: absolute;
+  right: 8px;
+  bottom: 9px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  color: var(--ink);
+  pointer-events: none;
+}
+.photo-card:has(.photo-ext) .photo-cap { padding-right: 22px; padding-left: 22px; }
+.home-page .photo-card:has(.photo-ext) .photo-cap { padding-left: 8px; }
 .photo-cap {
   display: block;
   padding-top: 7px;
@@ -1980,3 +1994,34 @@ body.drawer-open { overflow: hidden; }
   animation: twBlink 0.7s steps(1) infinite;
 }
 @keyframes twBlink { 50% { opacity: 0; } }
+
+/* ---------- CMSのみ表示モード（?cms=only）の件数バッジ ---------- */
+.cms-only-badge {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 3000;
+  display: grid;
+  gap: 4px;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--ink);
+  color: var(--white);
+  font: 12px/1.5 var(--font-ja);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+.cms-only-badge strong { color: var(--lime); font-size: 13px; }
+.cms-only-badge a { color: var(--lime); text-decoration: underline; justify-self: start; }
+.cms-only-empty {
+  align-self: center;
+  max-width: 320px;
+  padding: 20px;
+  border: 2px dashed currentColor;
+  border-radius: 12px;
+  font: 14px/1.6 var(--font-ja);
+  list-style: none;
+}
+
+/* ?cms=only: 手元データ（サンプル等）由来のメンバーは隠し、microCMSのメンバーだけにする */
+.is-cms-only [data-local] { display: none !important; }

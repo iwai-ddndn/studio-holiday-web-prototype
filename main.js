@@ -41,29 +41,15 @@ let STICKERS = [];
  * 常に最前面・クリックで About へ */
 const LOGO = { file: 'sh-logo.png', alt: 'STUDIO HOLIDAY', href: '#about' };
 
-/* 実際のK,D,C,,,記事。画像もローカルに保持し、クリックで元記事を開く。 */
-const PHOTOS = [
+/* FVの壁に貼る「外部リンクの写真カード」（記事・イベントレポートなど）。
+ * microCMS の fv-links に1件でもあればそちらで置き換える（loadCMSContent）。
+ * 下はCMSに無いとき用の既定値（実際のK,D,C,,,記事。画像はローカルに保持）。
+ * 自社事例は壁にステッカーとして出るので、写真カードには入れない */
+let PHOTOS = [
   { cap: '【イベント】台湾料理ワークショップ', img: './assets/articles/taiwan-workshop.jpg', emoji: '📷', href: 'https://kdc-foodlab.com/post/j-Dju3A8', external: true, bg: '#eefafa' },
   { cap: '【イベント】きくがわ応援大使交流会in　K,D,C,,,', img: './assets/articles/kikugawa-event.png', emoji: '📷', href: 'https://kdc-foodlab.com/post/UzQU7SgF', external: true, bg: '#eefafa' },
   { cap: '【会員情報】CACAO HUNTERS　特別イベント', img: './assets/articles/cacao-hunters.png', emoji: '📷', href: 'https://kdc-foodlab.com/post/COdVcAEz', external: true, bg: '#eefafa' },
   { cap: '【インタビュー】日本製を世界へ――地方から未来をつなぐルフィ株式会社の挑戦', img: './assets/articles/luffy-interview.jpg', emoji: '📷', href: 'https://kdc-foodlab.com/post/X1Kh8nm8', external: true, bg: '#eefafa' },
-  { cap: 'ポン・デ・ライオン', img: './assets/works_pondelion01.jpg', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  { cap: 'スシロー', img: './assets/works_sushiro.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  { cap: 'エビシー', img: './assets/works/source/ebisun-osaka.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  { cap: 'いちばんのおしごと', img: './assets/works/source/ichiban-no-oshigoto.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  { cap: 'itomaki AC Adapter', img: './assets/works/source/itomaki-ac-adapter.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  { cap: '休日コーラ GINGER APPLE', img: './assets/works/source/holiday-cola.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  /* ▼ Drive「Webサイト:事例集」掲載事例（紹介文はWORKSシート反映待ち） */
-  { cap: 'うねり 企業ブランディング', img: './assets/works/jirei/uneri-ogp.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  { cap: '十山ブランディング', img: './assets/works/jirei/juzan-photo1.jpg', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  { cap: '採用ブランディング支援', img: './assets/works/jirei/recruit-branding-pc.jpg', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  { cap: '「みんなで知りたい」シリーズ', img: './assets/works/jirei/minna-shiritai-1.jpg', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  { cap: 'yappy', img: './assets/works/jirei/yappy-a2-layout.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  { cap: 'K,D,C,,,', img: './assets/works/jirei/kdc-top-visual.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  { cap: 'K,D,C,,,meet クラフトシードル', img: './assets/works/jirei/craft-cidre.jpg', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  { cap: '休日COLA', img: './assets/works/jirei/holiday-cola-top.png', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  { cap: '休日COLA de お知らせ（2026夏）', img: './assets/works/jirei/holiday-cola-card.jpg', emoji: '📷', href: './works.html', bg: '#eefafa' },
-  { cap: '学際型メッシュネットワーク', img: './assets/works/jirei/mesh-network.jpg', emoji: '📷', href: './works.html', bg: '#eefafa' },
 ];
 
 const genericWork = (alt) => ({
@@ -417,10 +403,10 @@ function outlineToPathD(pts) {
     .join('') + 'Z';
 }
 
-/* 台紙・素材は常にCMS（microCMSの stickerBase / stickerColor / stickerFinish）の指定どおり */
+/* ?tune の「台紙/素材（プレビュー）」が選ばれていれば、CMSの指定より優先して全ステッカーに当てる */
 const lookFor = (item) => ({
-  base: (item.look && item.look.base) || '#ffffff',
-  finish: (item.look && item.look.finish) || 'normal',
+  base: PARAMS.stickerBase || (item.look && item.look.base) || '#ffffff',
+  finish: PARAMS.stickerFinish || (item.look && item.look.finish) || 'normal',
 });
 
 const spriteOf = async (item) => {
@@ -435,7 +421,7 @@ let spritesPromise = null;
 function getSprites() {
   spritesPromise ??= Promise.all(STICKERS.map(spriteOf)).then(async (list) => {
     const okList = list.filter(Boolean);
-    if (okList.length) return okList;
+    if (okList.length || window.CMS_ONLY) return okList; // CMSのみ表示ではダミー素材に戻さない
     // CMS画像が1枚も読めなかった（CORS・リンク切れ等）→ ローカル素材で作り直す
     STICKERS = window.WORKS_FALLBACK.map((w) => stickerOfWork({ ...w, id: w.slug }));
     return (await Promise.all(STICKERS.map(spriteOf))).filter(Boolean);
@@ -705,6 +691,9 @@ function buildSticker(sprite, opts) {
   return el;
 }
 
+const escHTML = (s) => String(s).replace(/[&<>"]/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
 function buildPhoto(data, opts) {
   const el = document.createElement('a');
   el.className = 'photo-card';
@@ -715,9 +704,13 @@ function buildPhoto(data, opts) {
   el.style.left = opts.x + 'px';
   el.style.top = opts.y + 'px';
   el.style.zIndex = opts.z;
+  const ext = data.external
+    ? '<span class="photo-ext" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></span>'
+    : '';
   el.innerHTML =
     `<span class="photo-img" style="background:${data.bg}"><span class="photo-emoji">${data.emoji}</span></span>` +
-    `<span class="photo-cap">${data.cap}${data.external ? ' ↗' : ''}</span>`;
+    `<span class="photo-cap">${escHTML(data.cap)}</span>` + ext;
+  if (data.external) el.setAttribute('aria-label', `${data.cap}（外部サイトを開く）`);
   if (data.img) {
     const img = document.createElement('img');
     img.alt = '';
@@ -984,20 +977,11 @@ const DEFAULT_PARAMS = {
   fvTexture: 'halftone',    // FVのテクスチャ（本番デフォルト: アナログハーフトーン）
   fvTexColor: '#dff5f7',    // テクスチャの色（方眼の線・ドット等。halftoneでは無効）
   fvTexSize: 24,            // テクスチャの細かさ（px。halftoneではタイル幅の倍率）
+  stickerBase: '',          // 台紙のプレビュー（''=CMS設定どおり / #hex / 'none'）
+  stickerFinish: '',        // 素材のプレビュー（''=CMS設定どおり / normal / holo / glitter / clear）
 };
 let PARAMS = { ...DEFAULT_PARAMS };
 try { Object.assign(PARAMS, JSON.parse(localStorage.getItem('sh-tune')) || {}); } catch { /* 保存なし */ }
-// 台紙・素材のプレビュー上書きは廃止（常にCMS設定どおり）。過去に保存された上書き値を捨てる
-try {
-  const stored = JSON.parse(localStorage.getItem('sh-tune'));
-  if (stored && ('stickerBase' in stored || 'stickerFinish' in stored)) {
-    delete stored.stickerBase;
-    delete stored.stickerFinish;
-    localStorage.setItem('sh-tune', JSON.stringify(stored));
-  }
-} catch { /* 保存なし */ }
-delete PARAMS.stickerBase;
-delete PARAMS.stickerFinish;
 // 2026-08: FV中央の差し替えに合わせてステッカー密度を一段上げる。
 // チューニング済みの保存値がある場合のみ、一度だけ相対的に詰める
 try {
@@ -1024,6 +1008,12 @@ try {
   }
 } catch { /* 保存なし */ }
 PARAMS.size = Math.max(0.95, PARAMS.size);
+// 台紙・素材の一括プレビューは ?tune を付けて開いている時だけ効かせる。
+// （保存値が残ったまま通常表示でもCMSの指定を上書きし、「CMSで設定したのに反映されない」になるのを防ぐ）
+if (!/[?&]tune\b/.test(location.search)) {
+  PARAMS.stickerBase = '';
+  PARAMS.stickerFinish = '';
+}
 // 旧パラメータ（fvGrid: 0/1）からの引き継ぎ
 if (PARAMS.fvGrid === 1 && !('fvTexture' in (JSON.parse(localStorage.getItem('sh-tune') || '{}')))) {
   PARAMS.fvTexture = 'grid';
@@ -1226,20 +1216,21 @@ async function build({ intro }) {
 
   // 写真のスポットは互いに離れた場所を選ぶ（足りなければ余りから充当）
   const minPhotoDist = Math.min(worldW, worldH) / 3.5;
+  const photos = PHOTOS; // CMSのみ表示でCMSに無ければ空（loadCMSContent）
   const photoSpots = [];
   const shuffled = shuffle(spots);
   for (const p of shuffled) {
-    if (photoSpots.length >= PHOTOS.length) break;
+    if (photoSpots.length >= photos.length) break;
     if (photoSpots.every((q) => Math.hypot(p.x - q.x, p.y - q.y) >= minPhotoDist)) {
       photoSpots.push(p);
     }
   }
   for (const p of shuffled) {
-    if (photoSpots.length >= PHOTOS.length) break;
+    if (photoSpots.length >= photos.length) break;
     if (!photoSpots.includes(p)) photoSpots.push(p);
   }
   const availableStickerSpots = spots.filter((p) => !photoSpots.includes(p));
-  const arts = artSequence(sprites);
+  const arts = sprites.length ? artSequence(sprites) : [];
   const centralStickerSpots = centralSpotPool(availableStickerSpots, arts.length, {
     cx: worldW / 2,
     cy: worldH / 2,
@@ -1416,6 +1407,14 @@ function initTunePanel() {
     '</select></label>' +
     '<label>テクスチャの色<input type="color" data-key="fvTexColor" /></label>' +
     '<label>テクスチャの細かさ<output id="tune-fvTexSize"></output><input type="range" data-key="fvTexSize" min="8" max="64" step="1" /></label>' +
+    '<label>台紙（プレビュー）<select data-key="stickerBase">' +
+      '<option value="">CMS設定どおり</option><option value="#ffffff">白</option>' +
+      '<option value="#d5f409">ライム</option><option value="#1a1a1a">黒</option><option value="none">フチなし</option>' +
+    '</select></label>' +
+    '<label>素材（プレビュー）<select data-key="stickerFinish">' +
+      '<option value="">CMS設定どおり</option><option value="normal">通常</option>' +
+      '<option value="holo">ホログラム</option><option value="glitter">ラメ</option><option value="clear">クリア</option>' +
+    '</select></label>' +
     '<div class="tune-actions">' +
     '<button type="button" data-act="intro">イントロ再生</button>' +
     '<button type="button" data-act="reset">リセット</button></div>';
@@ -1434,6 +1433,8 @@ function initTunePanel() {
     panel.querySelector('[data-key="fvTexColor"]').value = PARAMS.fvTexColor;
     panel.querySelector('[data-key="fvTexSize"]').value = PARAMS.fvTexSize;
     panel.querySelector('#tune-fvTexSize').textContent = PARAMS.fvTexSize + 'px';
+    panel.querySelector('[data-key="stickerBase"]').value = PARAMS.stickerBase || '';
+    panel.querySelector('[data-key="stickerFinish"]').value = PARAMS.stickerFinish || '';
   };
   sync();
 
@@ -1441,7 +1442,7 @@ function initTunePanel() {
   panel.addEventListener('input', (e) => {
     const k = e.target.dataset.key;
     if (!k) return;
-    if (k === 'fvBg' || k === 'fvTexture' || k === 'fvTexColor') {
+    if (k === 'fvBg' || k === 'fvTexture' || k === 'fvTexColor' || k === 'stickerBase' || k === 'stickerFinish') {
       PARAMS[k] = e.target.value;
     } else {
       PARAMS[k] = +e.target.value;
@@ -1449,6 +1450,7 @@ function initTunePanel() {
     localStorage.setItem('sh-tune', JSON.stringify(PARAMS));
     sync();
     if (k.startsWith('fv')) { applyFvParams(); return; } // 背景系は再ビルド不要
+    if (k.startsWith('sticker')) spritesPromise = null; // 台紙・素材は焼き直し（画像の読み込みは再利用）
     clearTimeout(debounce);
     debounce = setTimeout(() => build({ intro: false }), 250);
   });
@@ -1482,14 +1484,11 @@ async function loadCMSContent() {
   const works = await window.getWorks();
   STICKERS = works.filter((w) => w.image).map(stickerOfWork);
 
-  // 壁の写真のうち自社事例のもの（href: './works.html'）は、
-  // キャプションと同名の事例ページへ送る。該当が無ければWORKs一覧へ
-  const byTitle = new Map(works.map((w) => [w.title, w]));
-  PHOTOS.forEach((p) => {
-    if (p.href !== './works.html') return;
-    const w = byTitle.get(p.cap);
-    p.href = w ? window.workURL(w) : './index.html#works';
-  });
+  // 外部リンクの写真カード → microCMS fv-links。無ければ既定（K,D,C,,,記事）、
+  // CMSのみ表示では既定値を出さない
+  const links = await window.getFvLinks();
+  if (links.length) PHOTOS = links;
+  else if (window.CMS_ONLY) PHOTOS = [];
 }
 
 /* ==========================================================
@@ -1500,6 +1499,8 @@ async function loadCMSContent() {
    ========================================================== */
 
 const SUBSTACK_URL = 'https://substack.studioholiday.jp/';
+
+const TICKER_POSTS = 5; // 電光掲示板に流す最新記事の数
 
 async function fetchSubstackPosts() {
   const get = async (url) => {
@@ -1517,7 +1518,7 @@ async function fetchSubstackPosts() {
   // 1) GitHub Actionsが日次生成する data/newsletter.json（同一オリジンなので最も確実）
   try {
     const posts = (await (await get('./data/newsletter.json')).json()).posts;
-    if (posts && posts.length) return posts.slice(0, 10);
+    if (posts && posts.length) return posts.slice(0, TICKER_POSTS);
   } catch { /* 次の手段へ */ }
 
   // 2) フィードを直接取得（SubstackがCORSを許可した場合に将来有効になる保険）
@@ -1530,7 +1531,7 @@ async function fetchSubstackPosts() {
         url: item.querySelector('link')?.textContent.trim() || SUBSTACK_URL,
       }))
       .filter((p) => p.title);
-    if (posts.length) return posts.slice(0, 10);
+    if (posts.length) return posts.slice(0, TICKER_POSTS);
   } catch (e) {
     console.warn('[substack] フィード取得に失敗。仮タイトルのまま表示します:', e);
   }
@@ -1555,7 +1556,10 @@ async function applySubstackTicker() {
 }
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-loadCMSContent().finally(() => {
+const cmsLoaded = loadCMSContent();
+// 壁と同じ加工済みステッカー（CMSの事例画像 + 台紙の指定）を、ほかのセクションの飾りにも使えるようにする
+window.stickerSpritesReady = cmsLoaded.catch(() => {}).then(() => getSprites());
+cmsLoaded.finally(() => {
   build({ intro: !reducedMotion }).then(() => {
     if (reducedMotion) skipIntro();
   });

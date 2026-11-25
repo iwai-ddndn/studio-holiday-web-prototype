@@ -5,7 +5,7 @@
 
 1. ルート直下の手書きページ（ROOT_PAGES）の <header class="site-header">〜</header> と
    <footer class="fig-footer">〜</footer> を scripts/site_chrome.py の定義で差し替える
-2. data/members.json から
+2. microCMS の members（未作成・取得失敗時は data/members.json）から
      - TOP（index.html）の MEMBERS 帯の一覧（<ul class="members-list">〜</ul>）
      - メンバー一覧 members/index.html
      - メンバー詳細 members/<slug>/index.html（WORK詳細と同じ構成）
@@ -14,10 +14,12 @@
 フッターの WORKs 欄は scripts/build_works.py と同じ取得規則（microCMS → フォールバック）で確定する。
 依存: python3 標準ライブラリのみ。
 """
+import html
 import json
 import pathlib
 import re
 import shutil
+import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -42,8 +44,105 @@ def load_works():
     return build_works.normalize_works(contents, fallback) if contents else build_works.local_works(fallback)
 
 
-def load_members():
+def load_local_members():
     return json.loads(MEMBERS_JSON.read_text(encoding='utf-8'))
+
+
+# 名前ラベルの位置と傾きは見た目の調整用なので、CMSでは入力させず並び順で割り振る
+# （data/members.json の並びと同じ周期）
+LABEL_CYCLE = [('l', -6.16), ('s', 3.76), ('m', -1.79), ('r', 4.2)]
+# 背景色（microCMS のセレクト）。選ぶとイラスト表示（円の中に余白をとって収める）になる
+MEMBER_BG = {
+    'ライム': '#e9f5b8', 'ブルー': '#cfe7ff', 'ピンク': '#ffe1ec',
+    'イエロー': '#fff0c2', 'パープル': '#e6e0ff',
+}
+SLUG_RE = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*$')
+
+
+def _first(v):
+    """microCMS のセレクトは配列で返るので先頭を取る（文字列でも受ける）"""
+    if isinstance(v, list):
+        return v[0] if v else ''
+    return v or ''
+
+
+def _lines(v):
+    """テキストエリア → 空行を除いた行のリスト（配列で来ても受ける）"""
+    if isinstance(v, list):
+        return [str(s).strip() for s in v if str(s).strip()]
+    return [s.strip() for s in str(v or '').splitlines() if s.strip()]
+
+
+def _bio_lines(v):
+    """プロフィール。テキストエリアでもリッチエディタ（HTML）でも段落のリストにする"""
+    s = str(v or '')
+    if '<' in s:
+        s = re.sub(r'<br\s*/?>|</p>|</h\d>|</li>', '\n', s)
+        s = html.unescape(re.sub(r'<[^>]+>', '', s))
+    return _lines(s)
+
+
+def fetch_cms_members():
+    """microCMS members を取得。未設定・API未作成・失敗時は None（data/members.json へ）"""
+    domain, key = build_works.read_cms_config()
+    if not domain or not key:
+        return None
+    url = f'https://{domain}.microcms.io/api/v1/members?limit=100'
+    try:
+        # build_works.py と同じく curl で取得（urllibはSSL証明書の環境差があるため）
+        out = subprocess.run(
+            ['curl', '-sfL', '--max-time', '30', '-H', f'X-MICROCMS-API-KEY: {key}', url],
+            capture_output=True, text=True, check=True,
+        ).stdout
+        return json.loads(out).get('contents') or None
+    except (subprocess.CalledProcessError, json.JSONDecodeError):
+        print('[members] microCMSから取得できません（API未作成・失敗）。data/members.json で生成します')
+        return None
+
+
+def normalize_members(contents):
+    """CMSのコンテンツを data/members.json と同じ形に揃える。
+    必須項目（slug・name・photo）が欠けたものはページを作れないので飛ばす"""
+    members, seen = [], set()
+    for c in contents:
+        # slug が無ければ microCMS のコンテンツID（編集可能）をURLに使う
+        slug = (c.get('slug') or c.get('id') or '').strip()
+        name = (c.get('name') or '').strip()
+        photo = (c.get('photo') or {}).get('url')
+        if not SLUG_RE.match(slug) or not name or not photo or slug in seen:
+            print(f'[members] スキップ（slug・名前・写真の不足、またはslug重複）: {c.get("id")} {name}')
+            continue
+        seen.add(slug)
+        label, tilt = LABEL_CYCLE[len(members) % len(LABEL_CYCLE)]
+        bg = _first(c.get('bg')).strip()
+        bg = MEMBER_BG.get(bg, bg if re.fullmatch(r'#[0-9a-fA-F]{3,8}', bg) else '')
+        role = (c.get('role') or '').strip()
+        m = {
+            'slug': slug,
+            'name': name,
+            'name_ja': (c.get('name_ja') or '').strip(),
+            'role': role,
+            'tags': _lines(c.get('tags')) or ([role] if role else []),
+            'image': f'{photo}?w=800',
+            'tilt': tilt,
+            'label': label,
+            'bio': _bio_lines(c.get('bio')),
+        }
+        if bg:
+            m['bg'] = bg
+        members.append(m)
+    return members
+
+
+def load_members():
+    """microCMS のメンバーを先に並べ、data/members.json（サンプル入り）で補う。
+    同じ slug の人はCMSを優先。手元データ由来の人には local: True を付け、
+    一覧の <li> に data-local を出す（?cms=only ではCSSで隠してCMSの人だけにする）"""
+    contents = fetch_cms_members()
+    cms = normalize_members(contents) if contents else []
+    slugs = {m['slug'] for m in cms}
+    local = [dict(m, local=True) for m in load_local_members() if m['slug'] not in slugs]
+    return cms + local
 
 # ==========================================================
 # ▼ 部品
@@ -55,10 +154,10 @@ def page_path(src, root):
 
 def member_item_html(m, root, href):
     """丸い写真 + 傾いたライムの名前ラベル（TOPのMEMBERS帯・一覧・詳細の他メンバーで共用）"""
-    cls = 'member-photo is-illust' if m.get('sample') else 'member-photo'
+    cls = 'member-photo is-illust' if m.get('sample') or m.get('bg') else 'member-photo'
     style = f' style="--bg:{m["bg"]}"' if m.get('bg') else ''
     return (
-        f'<li class="member"><a class="member-link" href="{href}">'
+        f'<li class="member"{" data-local" if m.get("local") else ""}><a class="member-link" href="{href}">'
         f'<span class="{cls}"{style}><img src="{esc(page_path(m["image"], root))}" alt="" loading="lazy" /></span>'
         f'<span class="member-name member-name--{m.get("label", "m")}" style="--tilt:{m.get("tilt", 0)}deg">{esc(m["name"])}</span>'
         '</a></li>'
@@ -94,7 +193,7 @@ def render_member_page(m, members, works):
     root = '../../'
     title = f'{m["name"]} — MEMBERS | STUDIO HOLIDAY'
     desc = (m.get('bio') or [''])[0]
-    cls = 'md-photo is-illust' if m.get('sample') else 'md-photo'
+    cls = 'md-photo is-illust' if m.get('sample') or m.get('bg') else 'md-photo'
     style = f' style="--bg:{m["bg"]}"' if m.get('bg') else ''
     tags = ''.join(f'<li>#{esc(t)}</li>' for t in m.get('tags', []))
     bio = '\n        '.join(f'<p>{esc(p)}</p>' for p in m.get('bio', []))
@@ -105,7 +204,7 @@ def render_member_page(m, members, works):
               'data/members.json で実メンバーに差し替えてください。（仮）</p>') if m.get('sample') else ''
     return f'''{head_html(title, desc, f"{BASE_URL}/members/{m['slug']}/", "", root)}
 <body class="sub-page member-page">
-  <!-- scripts/build_pages.py が data/members.json から生成。手で編集しないこと。 -->
+  <!-- scripts/build_pages.py が microCMS（members）／data/members.json から生成。手で編集しないこと。 -->
 {header_html(root)}
 
   <main>
@@ -151,7 +250,7 @@ def render_members_index(members, works):
     items = members_list_html(members, root, lambda m: f'./{m["slug"]}/', 8)
     return f'''{head_html(title, desc, f"{BASE_URL}/members/", "", root)}
 <body class="sub-page members-page">
-  <!-- scripts/build_pages.py が data/members.json から生成。手で編集しないこと。 -->
+  <!-- scripts/build_pages.py が microCMS（members）／data/members.json から生成。手で編集しないこと。 -->
 {header_html(root)}
 
   <main>
