@@ -1,6 +1,6 @@
 # 本番公開 手順書（studioholiday.jp を新サイトに切り替える）
 
-更新日: 2026-11-26（バックアップ完了を反映）
+更新日: 2026-11-26（手順2に、移動するファイルを1つずつ書いた）
 
 ## 方針
 
@@ -37,7 +37,7 @@ DNS を GitHub に向ける案は、メールの設定変更と39人ぶんの確
 | 扱い | 対象 |
 | --- | --- |
 | **触らない**（サブドメインのフォルダ） | `lab`、`minnadegohan`、`minnadegohan_old`、`substack` |
-| **退避する**（WordPress） | フォルダ: `wp-admin`、`wp-content`、`wp-includes`。ファイル: `.htaccess`、`index.php`、`license.txt`、`readme.html`、`xmlrpc.php`、`wp-` で始まる `.php` 16個（`wp-activate.php` 〜 `wp-trackback.php`、`wp-config.php` を含む）、`campdaisuki.php`（WordPress のログイン画面。2026-11-26 にURLを開いて確認） |
+| **退避する**（WordPress） | フォルダ: `wp-admin`、`wp-content`、`wp-includes`。ファイル: `.htaccess`、`index.php`、`license.txt`、`readme.html`、`xmlrpc.php`、`wp-` で始まる `.php` 13個（`wp-config.php` を含む）。1つずつの名前は3章の手順2の表にある、`campdaisuki.php`（WordPress のログイン画面。2026-11-26 にURLを開いて確認） |
 | そのままでよい | `default_page.png`（エックスサーバーの初期ファイル。害は無い） |
 
 新サイトのファイル名（`index.html`、`404.html`、`work.html`、`robots.txt`、`sitemap.xml`、`.htaccess`、`styles.css`、`site.js`、`main.js`、`cms-config.js`、`assets/`、`data/`、`members/`、`works/`、`proposal-b/`）と重なるのは `.htaccess` だけ。これは退避する。
@@ -61,12 +61,6 @@ DNS を GitHub に向ける案は、メールの設定変更と39人ぶんの確
 
 TOPのタイトルと紹介文、SNSシェア用の画像（1200×630）、ファビコンは、2026-11-26 にそろえて組み込んだ。アップロード用の zip は `xserver-upload/studioholiday-site.zip`。
 
---- | --- | --- |
-| 1 | SNSシェア用の画像が仮（BUSINESSの写真） | 1200×630 の画像 |
-| 2 | ファビコンが仮（アーチのロゴ） | ファビコン用の画像 |
-
-2つがそろったら Claude に渡す。差し替えたうえで、アップロード用の zip をまとめて作る。
-
 ---
 
 ## 3. 当日の手順
@@ -86,13 +80,68 @@ TOPのタイトルと紹介文、SNSシェア用の画像（1200×630）、フ�
 
 ### 手順2: WordPress のファイルを退避する
 
-`public_html` の中で、2-1 で「WordPress のファイル」に仕分けたものを選び、`wp_backup_20261125` へ移動する。コピーではなく移動。
+旧サイト（WordPress）のファイルを、ウェブから見えない場所へ移す。この手順は、ここに書いてあることだけで進められる。
 
-- サブドメインのフォルダ（`lab`、`minnadegohan`、`minnadegohan_old`、`substack`）は動かさない。
-- `.htaccess` も忘れずに移す。残っていると、新サイトの転送設定とぶつかる。
-- データベースには触らない。
+**開く場所（移動元）**
 
-この時点から手順3が終わるまで、サイトは表示されない。
+ファイルマネージャの左のツリーで、`studioholiday.jp` → `public_html` の順に押す。右側に27個の名前が並ぶ。
+
+**移動先**
+
+`studioholiday.jp` → `wp_backup_20261125`（左のツリーで `public_html` と同じ段にあるフォルダ。手順1で用意したもの）。
+
+**やること**
+
+下の表は、右側の一覧と同じ並び順。「移動する」の22個にチェックを入れ、`wp_backup_20261125` へ移動する。コピーではなく移動。残る5個には触らない。
+
+| # | 名前 | 種類 | やること |
+| --- | --- | --- | --- |
+| 1 | `lab` | フォルダ | **動かさない** |
+| 2 | `minnadegohan` | フォルダ | **動かさない** |
+| 3 | `minnadegohan_old` | フォルダ | **動かさない** |
+| 4 | `substack` | フォルダ | **動かさない** |
+| 5 | `wp-admin` | フォルダ | 移動する |
+| 6 | `wp-content` | フォルダ | 移動する |
+| 7 | `wp-includes` | フォルダ | 移動する |
+| 8 | `.htaccess` | ファイル | 移動する |
+| 9 | `campdaisuki.php` | ファイル | 移動する |
+| 10 | `default_page.png` | ファイル | **動かさない** |
+| 11 | `index.php` | ファイル | 移動する |
+| 12 | `license.txt` | ファイル | 移動する |
+| 13 | `readme.html` | ファイル | 移動する |
+| 14 | `wp-activate.php` | ファイル | 移動する |
+| 15 | `wp-blog-header.php` | ファイル | 移動する |
+| 16 | `wp-comments-post.php` | ファイル | 移動する |
+| 17 | `wp-config-sample.php` | ファイル | 移動する |
+| 18 | `wp-config.php` | ファイル | 移動する |
+| 19 | `wp-cron.php` | ファイル | 移動する |
+| 20 | `wp-links-opml.php` | ファイル | 移動する |
+| 21 | `wp-load.php` | ファイル | 移動する |
+| 22 | `wp-login.php` | ファイル | 移動する |
+| 23 | `wp-mail.php` | ファイル | 移動する |
+| 24 | `wp-settings.php` | ファイル | 移動する |
+| 25 | `wp-signup.php` | ファイル | 移動する |
+| 26 | `wp-trackback.php` | ファイル | 移動する |
+| 27 | `xmlrpc.php` | ファイル | 移動する |
+
+覚え方: 動かさないのは、上の4つのフォルダと `default_page.png` だけ。それ以外は全部移動する。
+
+移動の操作は、チェックを入れたものを右クリックして「移動」を選ぶか、左のツリーの `wp_backup_20261125` へドラッグする（この操作は実際の画面では未確認。メニューの名前が違う場合は、その画面を Claude に見せる）。
+
+**移動したあとの確かめ**
+
+- `public_html` に残っているのが、`lab`、`minnadegohan`、`minnadegohan_old`、`substack`、`default_page.png` の5個だけ。
+- `wp_backup_20261125` の中に、22個（フォルダ3個とファイル19個）が入っている。
+
+一覧が上の表と違う場合（名前が増えている・減っている）は、移動する前に手を止めて、その画面を Claude に見せる。表は 2026-11-25 の画面をもとにしている。
+
+**触らないもの**
+
+- 上の表で「動かさない」とした5個。4つのフォルダはサブドメインのサイトの中身で、動かすとそのサイトが見えなくなる。
+- `public_html` より上の段にあるフォルダ（`mail`、`autoreply`、`htpasswd`、`log`、`script`、`xserver_php`、`.spamassassin`）。`mail` はメールの中身。
+- データベース。ここで言うデータベースは、WordPress の記事や設定を保存している MySQL のことで、`holiday_wp`、`holiday_wp1`、`holiday_wp2`、`holiday_wp3`、`holiday_mt` の5つ。ファイルマネージャには出てこない。サーバーパネルの「データベース」欄（「MySQL設定」「MySQL復元」「phpmyadmin」）で扱うもので、当日はこの欄を開かなければ触ることはない。残しておけば、4章の切り戻しで旧サイトをそのまま戻せる。
+
+この時点から手順3が終わるまで、`https://studioholiday.jp/` は表示されない。
 
 ### 手順3: 新サイトを上げる
 
