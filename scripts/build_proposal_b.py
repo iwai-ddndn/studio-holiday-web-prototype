@@ -25,7 +25,7 @@ import re
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / 'b'
-ASSET_VER = '20261126-2'
+ASSET_VER = '20261126-3'
 
 # 事業ページのヒーロー（見出し画像）に敷く写真。きりちゃん作の3事業サムネイル（feedback #15）
 HERO_IMAGES = {
