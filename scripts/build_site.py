@@ -61,8 +61,17 @@ TOP_TITLE = 'STUDIO HOLIDAY | スタジオホリデイ'
 TOP_DESCRIPTION = ('『“なんかこんなんやりたい”をカタチに』を合言葉に活動するデザインチーム。'
                    '企画や設計はもちろん、実装・定着まで運び切ることを領域にしています。'
                    'ブランド、サービス設計、UX体験領域の“やりたい”を、デザインのチカラでかなえます。')
-TOP_OG_IMAGE = 'assets/business-hero/design-consulting.jpg'   # 仮。SNSシェア用の画像（1200×630）ができたら差し替える
-FAVICON = 'assets/fv-logo.svg'                                # 仮。ファビコン用の画像ができたら差し替える
+TOP_OG_IMAGE = 'assets/ogp.png'          # SNSシェア用の画像（1200×630）
+FAVICON_ICO = 'assets/favicon.ico'       # 公開時はサイトの直下（/favicon.ico）にも置く。16・32・48px 入り
+FAVICON_PNG = 'assets/favicon.png'       # 256×256
+TOUCH_ICON = 'assets/apple-touch-icon.png'   # iPhone のホーム画面用。180×180
+
+
+def icon_links(root):
+    """ファビコンの <link>。root はそのページからサイト直下への相対パス（末尾は /）"""
+    return [f'  <link rel="icon" href="{root}favicon.ico" sizes="48x48" />',
+            f'  <link rel="icon" href="{root}{FAVICON_PNG}" type="image/png" sizes="256x256" />',
+            f'  <link rel="apple-touch-icon" href="{root}{TOUCH_ICON}" />']
 
 SKIP_SCHEMES = re.compile(r'^(?:[a-z][a-z0-9+.-]*:|//|#)', re.I)
 TAG_RE = re.compile(r'<(a|link|img|script|source|iframe|video|audio)\b[^>]*>', re.I)
@@ -187,8 +196,7 @@ def build_page(src_rel, out_rel, base, noindex):
     url = page_url(base, out_rel)
     root = posixpath.relpath('.', posixpath.dirname(out_rel) or '.')
     root = './' if root == '.' else root + '/'
-    extra = [f'  <link rel="canonical" href="{url}" />',
-             f'  <link rel="icon" href="{root}{FAVICON}" type="image/svg+xml" />']
+    extra = [f'  <link rel="canonical" href="{url}" />'] + icon_links(root)
     if out_rel == 'index.html':
         title = esc(TOP_TITLE)
         html, n = re.subn(r'<title>.*?</title>', lambda m: f'<title>{title}</title>', html, count=1, flags=re.S)
@@ -199,7 +207,9 @@ def build_page(src_rel, out_rel, base, noindex):
                   '  <meta property="og:type" content="website" />',
                   f'  <meta property="og:description" content="{esc(TOP_DESCRIPTION)}" />',
                   f'  <meta property="og:url" content="{url}" />',
-                  f'  <meta property="og:image" content="{base}/{TOP_OG_IMAGE}" />']
+                  f'  <meta property="og:image" content="{base}/{TOP_OG_IMAGE}" />',
+                  '  <meta property="og:image:width" content="1200" />',
+                  '  <meta property="og:image:height" content="630" />']
     if 'og:site_name' not in html:
         extra.append('  <meta property="og:site_name" content="STUDIO HOLIDAY" />')
     if 'twitter:card' not in html:
@@ -216,6 +226,7 @@ def build_page(src_rel, out_rel, base, noindex):
 def copy_assets():
     for f in COPY_FILES:
         shutil.copy2(ROOT / f, OUT / f)
+    shutil.copy2(ROOT / FAVICON_ICO, OUT / 'favicon.ico')
     for d in COPY_DIRS:
         shutil.copytree(ROOT / d, OUT / d, ignore=shutil.ignore_patterns('.DS_Store'))
 
@@ -247,6 +258,7 @@ def write_extras(pages, base, noindex):
 
     # 404はどの階層のURLでも出るので、パスはサイトのルートからの絶対パスで書く
     prefix = urlparse(base).path.rstrip('/')
+    icons = '\n'.join(icon_links(prefix + '/'))
     (OUT / '404.html').write_text(f'''<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -254,9 +266,9 @@ def write_extras(pages, base, noindex):
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex" />
   <title>ページが見つかりません | STUDIO HOLIDAY</title>
-  <link rel="icon" href="{prefix}/{FAVICON}" type="image/svg+xml" />
+{icons}
   <style>
-    body {{ margin: 0; min-height: 100vh; display: grid; place-items: center; background: #d7f205; color: #111;
+    body {{ margin: 0; min-height: 100vh; display: grid; place-items: center; background: #bbff38; color: #111;
            font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif; text-align: center; }}
     main {{ padding: 48px 24px; }}
     img {{ width: min(240px, 60vw); height: auto; }}
