@@ -60,7 +60,7 @@ HIDDEN_PAGES = [
 TOP_TITLE = 'STUDIO HOLIDAY | スタジオホリデイ'
 TOP_DESCRIPTION = ('『“なんかこんなんやりたい”をカタチに』を合言葉に活動するデザインチーム。'
                    '企画や設計はもちろん、実装・定着まで運び切ることを領域にしています。'
-                   'ブランド、サービス設計、UX体験領域の“やりたい“を、デザインのチカラでかなえます。')
+                   'ブランド、サービス設計、UX体験領域の“やりたい”を、デザインのチカラでかなえます。')
 TOP_OG_IMAGE = 'assets/business-hero/design-consulting.jpg'   # 仮。SNSシェア用の画像（1200×630）ができたら差し替える
 FAVICON = 'assets/fv-logo.svg'                                # 仮。ファビコン用の画像ができたら差し替える
 

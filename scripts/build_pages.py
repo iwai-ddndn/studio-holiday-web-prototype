@@ -167,7 +167,7 @@ def normalize_members(contents):
 
 def load_members():
     """microCMS のメンバーだけでページを作る（TOPのMEMBERSも site.js がCMSの内容で描く）。
-    microCMS から取れなかった時だけ data/members.json（サンプル入り）で代用し、
+    microCMS から取れなかった時だけ data/members.json で代用し、
     その人には local: True を付けて一覧の <li> に data-local を出す"""
     contents = fetch_cms_members()
     cms = normalize_members(sort_by_order(contents)) if contents else []
