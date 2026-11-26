@@ -233,7 +233,7 @@ def body_html(work):
 FONTS_URL = ('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900'
              '&amp;family=Roboto+Condensed:wght@300;600'
              '&amp;family=Noto+Sans+JP:wght@100;400;600;700;800;900&amp;display=swap')
-ASSET_VER = '20261126-1'
+ASSET_VER = '20261126-2'
 
 
 def head_html(title, description, og_url, og_image, og_type, root):

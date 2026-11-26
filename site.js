@@ -29,59 +29,6 @@
 // ?cms=only を付けた時は、件数を確かめるバッジも出す（CMS_BADGE）
 const CMS_ONLY = true;
 const CMS_BADGE = /[?&]cms=only\b/.test(location.search);
-
-/* 確認用: メインカラーの見比べ。?color=bbff38 を付けて開くと、その色と今の色を切り替えるボタンが左下に出る。
- * 選んだ色はタブを閉じるまで他のページにも引き継ぐ。?color=off でやめる。色が決まったらこのブロックは消す。 */
-(() => {
-  let store = null;
-  try { store = window.sessionStorage; } catch (e) { return; }
-  const m = /[?&]color=([0-9a-f]{6}|off)\b/i.exec(location.search);
-  if (m && m[1].toLowerCase() === 'off') { store.removeItem('pbColorTry'); store.removeItem('pbColorOn'); }
-  else if (m) { store.setItem('pbColorTry', m[1].toLowerCase()); store.setItem('pbColorOn', '1'); }
-  const tryColor = store.getItem('pbColorTry');
-  if (!tryColor) return;
-  const root = document.documentElement;
-  const current = getComputedStyle(root).getPropertyValue('--fig-lime').trim() || '#dfff0f';
-  // 見出しステッカー（assets/headings/*.png）は色が画像に焼き込まれているので、色相をずらして近い色に見せる（確認用の近似）
-  const hue = (hex) => {
-    const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.replace('#', '').slice(i, i + 2), 16));
-    const max = Math.max(r, g, b), d = max - Math.min(r, g, b);
-    if (!d) return 0;
-    return 60 * (max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4);
-  };
-  const shift = /^#[0-9a-f]{6}$/i.test(current) ? Math.round(hue(tryColor) - hue(current)) : 0;
-  const style = document.createElement('style');
-  style.textContent = `.pb-color-try img[src*="assets/headings/"] { filter: hue-rotate(${shift}deg) !important; }` +
-    `.pb-color-try .sticker-head img[src*="assets/headings/"] { filter: hue-rotate(${shift}deg) drop-shadow(0 10px 14px rgba(0, 0, 0, 0.16)) !important; }`;
-  document.head.appendChild(style);
-  const apply = () => {
-    const on = store.getItem('pbColorOn') === '1';
-    if (on) root.style.setProperty('--fig-lime', '#' + tryColor);
-    else root.style.removeProperty('--fig-lime');
-    root.classList.toggle('pb-color-try', on);
-  };
-  apply();
-  const mount = () => {
-    const box = document.createElement('div');
-    box.setAttribute('style', 'position:fixed;left:12px;bottom:12px;z-index:99999;display:flex;gap:4px;padding:4px;' +
-      'background:#1a1a1a;border-radius:999px;font:700 12px/1 sans-serif;box-shadow:0 2px 10px #0004');
-    const render = () => {
-      const on = store.getItem('pbColorOn') === '1';
-      box.innerHTML = [[current, '今の色', !on], ['#' + tryColor, '新しい色', on]].map(([c, label, active]) =>
-        `<button type="button" data-on="${label === '新しい色' ? 1 : 0}" style="all:unset;cursor:pointer;padding:8px 12px;border-radius:999px;` +
-        `background:${c};color:#1a1a1a;opacity:${active ? 1 : 0.45};outline:${active ? '2px solid #fff' : 'none'}">${label} ${c}</button>`).join('');
-    };
-    box.addEventListener('click', (e) => {
-      const b = e.target.closest('button');
-      if (!b) return;
-      store.setItem('pbColorOn', b.dataset.on);
-      apply(); render();
-    });
-    render();
-    document.body.appendChild(box);
-  };
-  if (document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
-})();
 window.CMS_ONLY = CMS_ONLY;
 // 先にクラスを付けて、CMS外（data-local）のメンバーが一瞬見えるのを防ぐ
 if (CMS_ONLY) document.documentElement.classList.add('is-cms-only');

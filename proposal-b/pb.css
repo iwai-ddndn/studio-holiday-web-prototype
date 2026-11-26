@@ -1,7 +1,7 @@
 /* ===== STUDIO HOLIDAY — デザイン案B（モーション強化版） =====
  * styles.css の上に重ねて読む。FV（壁）・ドロワー・事例カードの部品は styles.css のものを使い、
  * FV以下のセクションは pb- で始まるクラスで組み直している。
- * カラー・画像は本番と同じ（ink #1a1a1a / lime #dfff0f / 白 / ハーフトーン）。
+ * カラー・画像は本番と同じ（ink #1a1a1a / lime #bbff38 / 白 / ハーフトーン）。
  * html.pb-js … JSが動く環境。html.pb-motion … GSAPが読めてモーションが有効な時だけ付く。
  */
 
