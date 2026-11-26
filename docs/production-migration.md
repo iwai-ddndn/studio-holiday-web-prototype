@@ -37,8 +37,7 @@ DNS を GitHub に向ける案は、メールの設定変更と39人ぶんの確
 | 扱い | 対象 |
 | --- | --- |
 | **触らない**（サブドメインのフォルダ） | `lab`、`minnadegohan`、`minnadegohan_old`、`substack` |
-| **退避する**（WordPress） | フォルダ: `wp-admin`、`wp-content`、`wp-includes`。ファイル: `.htaccess`、`index.php`、`license.txt`、`readme.html`、`xmlrpc.php`、`wp-` で始まる `.php` 16個（`wp-activate.php` 〜 `wp-trackback.php`、`wp-config.php` を含む） |
-| **先方に確認してから決める** | `campdaisuki.php`（WordPress 標準のファイルではない。何に使っているか不明） |
+| **退避する**（WordPress） | フォルダ: `wp-admin`、`wp-content`、`wp-includes`。ファイル: `.htaccess`、`index.php`、`license.txt`、`readme.html`、`xmlrpc.php`、`wp-` で始まる `.php` 16個（`wp-activate.php` 〜 `wp-trackback.php`、`wp-config.php` を含む）、`campdaisuki.php`（WordPress のログイン画面。2026-11-26 にURLを開いて確認） |
 | そのままでよい | `default_page.png`（エックスサーバーの初期ファイル。害は無い） |
 
 新サイトのファイル名（`index.html`、`404.html`、`work.html`、`robots.txt`、`sitemap.xml`、`.htaccess`、`styles.css`、`site.js`、`main.js`、`cms-config.js`、`assets/`、`data/`、`members/`、`works/`、`proposal-b/`）と重なるのは `.htaccess` だけ。これは退避する。
@@ -51,7 +50,6 @@ DNS を GitHub に向ける案は、メールの設定変更と39人ぶんの確
 | --- | --- | --- |
 | 1 | 切り替える日時と、先方の確認担当 | 作業は10〜20分。その間だけサイトが見えにくくなる |
 | 2 | `minnadegohan.studioholiday.jp` と `lab.studioholiday.jp` を今も使っているか | 今回は触らないが、切り替え後に表示が変わっていないかを見てもらう |
-| 2b | `public_html` にある `campdaisuki.php` を何に使っているか | 使っているなら残す。使っていなければ WordPress と一緒に退避する |
 | 3 | 現行サイトのお問い合わせフォームと `hello@studioholiday.jp` の扱い | 新サイトのお問い合わせは Google フォームになる。回答を誰が受け取るかを決める |
 | 4 | 現行サイトにしか無い情報や、外部から直接リンクされている画像・PDF | 切り替え後は開けなくなる。必要なものは先に移す |
 | 5 | アクセス解析（Googleアナリティクスなど）を使っているか | 使う場合は計測IDをもらい、zip を作り直す |
